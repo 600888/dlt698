@@ -11,6 +11,10 @@ if(WIN32)
     if(core_type STREQUAL "SHARED_LIBRARY")
         add_custom_command(TARGET consumer POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:dlt698::core> $<TARGET_FILE_DIR:consumer>)
+        foreach(component session service)
+            add_custom_command(TARGET consumer POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_FILE:dlt698::${component}> $<TARGET_FILE_DIR:consumer>)
+        endforeach()
         if(TARGET dlt698::transport)
             add_custom_command(TARGET consumer POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 $<TARGET_FILE:dlt698::transport> $<TARGET_FILE_DIR:consumer>)

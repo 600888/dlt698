@@ -1,6 +1,6 @@
 # DL/T 698.45 C++17 分层实现与 Python 发布计划
 
-编制日期：2026-10-04。状态：第一批 C++ 核心、基础 GET 与 TCP 通道已实现，整体计划继续执行。逐项进度及验证证据见 [支持矩阵](../docs/protocol-coverage.md)。基线：本目录的 `dlt69845-2017.pdf`，DL/T 698.45—2017。
+编制日期：2026-10-04。状态：第三批已加入普通/列表 SET/ACTION、同步客户机、串口通道和串行时序适配；M3/M4 仍需周期心跳、时间标签及真实设备验收。逐项进度及验证证据见 [支持矩阵](../docs/protocol-coverage.md)。基线：本目录的 `dlt69845-2017.pdf`，DL/T 698.45—2017。
 
 目标是先建立可独立使用、可测试、可安装的 C++17 协议库，再通过 pybind11 提供 Python API，最终交付可直接从 PyPI 安装的二进制包。实现顺序为：协议基础 → 通信与会话 → 完整服务 → 对象与安全完善 → C++ 稳定 → Python 绑定 → 分发发布。
 
@@ -305,12 +305,20 @@ M0 先确定可获得的 ESAM/主站安全模块、SDK、算法/profile 和授�
 
 - [ ] 建立 `docs/protocol-coverage.md`：每个服务 CHOICE、Data 标签、RSD/MS 分支、对象族和安全机制单独一行。
 - [ ] 建立 `tests/vectors/` 格式，包含来源章节/页码、原始 hex、预期树、错误偏移和人工复核状态。
-- [ ] 定义公共模型、错误体系、限制默认值、通道/executor/provider 合约及同步 API 的线程约束。
+- [x] 建立公共模型、错误体系、限制默认值及异步通道/executor/读取 provider 合约。
+- [x] 补充 SyncClientService 及其等待、外部运行线程/显式驱动、事件循环内拒绝和关闭约束。
 - [x] CMake 安装导出、纯 core 构建、MSVC/GCC/Clang CI 配置、CTest 和独立消费方示例（远程 CI 执行状态另见支持矩阵）。
 - [ ] 实现 M1、M2，优先覆盖短 GET 报文及完整响应的独立解码/编码。
-- [ ] 实现 LINK、预设/显式 CONNECT、普通与列表 GET/SET/ACTION、时间标签和远端错误。
-- [ ] MemoryChannel + 模拟对象验证闭环后，接入 TCP listener/dialer 与串口。
-- [ ] 提供解帧工具、主站示例、终端模拟示例，形成第一个可试用的 C++ 开发版本。
+- [x] 实现 LINK/CONNECT/RELEASE/ERROR codec、公共/预设连接与普通/列表 GET。
+- [x] 实现基础 Session：精确地址/方向/PIID/OAD 匹配、单在途、序号隔离、超时/取消/释放及闲置失效。
+- [x] MemoryChannel + ObjectRegistry/MemoryObject + 异步 ClientService/ServerService 验证对象读取闭环，并接入 TCP listener/dialer，覆盖两种协议角色拨号方向。
+- [x] 实现普通/列表 SET/ACTION codec、会话、写入/方法 provider、权限/类型检查及部分成功。
+- [x] 接入原始 SerialChannel 和 SerialLinkChannel：FE 前导、33 位收发间隔、排空/方向驱动接口及虚拟时间测试。
+- [ ] 使用实际串口/RS-485 设备验证收发、USB 排空、方向切换及物理间隔。
+- [ ] 实现周期心跳与 TimeTag 有效性；远端错误原码已保留。
+- [x] 提供解帧工具及 memory_get 主站/终端内存示例，支持 CONNECT → 部分成功 GET → RELEASE。
+- [x] 提供 memory_mutation 同步示例，经过串行前导/间隔适配执行 SET → ACTION → GET。
+- [ ] 提供独立 TCP/串口主站与终端模拟命令行示例，完成 M3/M4 首个可用版本验收。
 
 ### M5–M9：完善 C++ 并冻结绑定面
 
@@ -451,6 +459,6 @@ sdist 包含编译所需源码、CMake、schemas 生成结果、绑定、许可�
 
 ### 8.3 下一次实现的起点
 
-从 M0 开始：建立 CMake/CTest/安装消费方骨架、逐项覆盖表和标准向量格式，冻结 Reader/Writer、Result、Data、Frame、通道及 provider 的职责。随后实现 **基础 Data → 链路帧 → 普通 GET APDU → MemoryChannel 模拟交互 → TCP/串口** 的第一条完整路径。
+当前已形成 **Data → 链路帧 → LINK/CONNECT → 普通/列表 GET/SET/ACTION → 对象 provider → RELEASE** 的内存和 TCP 路径。第三批加入同步等待、写入/方法 schema、原始串口及可单独测试的串行链路适配；真实串口和 RS-485 验收另列，不与软件模拟混为完成。
 
-首条路径通过后再扩展 SET/ACTION、会话及完整服务。每次实现更新覆盖表和验收证据；README 按实际能力描述，不把本计划中的功能提前写成已实现。
+下一批继续 M3/M4 的周期心跳、TimeTag 语义及独立 TCP/串口主站/终端示例；取得设备后完成真实串口互操作。之后推进 M5 的独立链路分帧、GET Next、记录及后续 then-get 组合服务。每次实现更新覆盖表和验收证据；README 按实际能力描述，不提前宣告未完成能力。

@@ -2,8 +2,7 @@ set(DLT698_ASIO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../third/asio/includ
 if(NOT EXISTS "${DLT698_ASIO_INCLUDE_DIR}/asio.hpp")
     message(FATAL_ERROR "Standalone Asio not found. Set DLT698_ASIO_INCLUDE_DIR or disable DLT698_BUILD_TRANSPORT.")
 endif()
-find_package(Threads REQUIRED)
-add_library(dlt698_transport ../src/transport/tcp.cpp)
+add_library(dlt698_transport ../src/transport/tcp.cpp ../src/transport/serial.cpp)
 add_library(dlt698::transport ALIAS dlt698_transport)
 set_target_properties(dlt698_transport PROPERTIES EXPORT_NAME transport VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR} CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)

@@ -18,7 +18,8 @@ run("@CMAKE_COMMAND@" -S "@CMAKE_CURRENT_SOURCE_DIR@/package_consumer" -B "${con
     "-DCMAKE_MAKE_PROGRAM=@CMAKE_MAKE_PROGRAM@" "-DCMAKE_MT=@CMAKE_MT@"
     "-DCMAKE_RC_COMPILER=${consumer_rc}" "-DCMAKE_RC_COMPILER_INIT=${consumer_rc}"
     "-DCMAKE_BUILD_TYPE=@CMAKE_BUILD_TYPE@")
-run("@CMAKE_COMMAND@" --build "${consumer_build}" --config "${CONFIG}")
+# 每次用本次安装的公开头文件完整重建，避免调用方缓存掩盖头文件/导出变化。
+run("@CMAKE_COMMAND@" --build "${consumer_build}" --config "${CONFIG}" --clean-first)
 if(EXISTS "${consumer_build}/${CONFIG}/consumer@CMAKE_EXECUTABLE_SUFFIX@")
     run("${consumer_build}/${CONFIG}/consumer@CMAKE_EXECUTABLE_SUFFIX@")
 else()

@@ -1,6 +1,6 @@
 # 协议实现进度
 
-更新日期：2026-10-04。当前为第一批开发实现，尚非完整协议库。标准基线：DL/T 698.45—2017。阶段依据见 [实施计划](../plan/implementation-plan.md)。
+更新日期：2026-10-04。第三批已加入普通/列表 SET/ACTION、同步适配及串口/串行链路，M3/M4 的时间标签、周期心跳和真实设备验收仍待完成，尚非完整协议库。标准基线：DL/T 698.45—2017。阶段依据见 [实施计划](../plan/implementation-plan.md)。
 
 已建立根目录与 `cpp/` 独立 CMake 入口、安装导出、标准向量、CTest 和三平台 CI 配置。网络模块采用用户提供的 standalone Asio 1.38.2，入口 `third/asio/include/asio.hpp`；Asio 仅为传输模块的私有编译依赖。
 
@@ -17,14 +17,22 @@
 | 流解析 | 已实现 | 半帧、粘帧、噪声、校验失败恢复；合法但不完整帧须由调用方超时 reset | core，每个切分点/噪声洪流 |
 | 链路分帧格式与逐帧确认 | 未实现 | 当前 Frame 可保存分帧标志和原始链路用户数据 | 待补 |
 | GET Normal/NormalList | 请求/响应已实现 | PIID、逐项 Data/DAR、可选 TimeTag；FollowReport 存在时返回不支持 | 附录 D.3.1/D.3.2 固定向量、tcp |
+| SET Normal/NormalList | 请求/响应 codec 与会话已实现 | 原始 DAR、精确 OAD/顺序匹配；无重试或列表回滚 | mutation，附录 D.4.1/D.4.2、tcp |
+| ACTION 普通/列表 | 请求/响应 codec 与会话已实现 | DAR/可选 Data、完整 OMD 模式匹配，区分 NULL 与没有数据 | mutation，附录 D.5.1 与规范构造列表、tcp |
 | TCP 客户端/监听/双向通道 | 已实现 | DNS/连接、单个在途读、串行全量写、关闭、队列限制 | tcp，含 GET 回环与销毁测试 |
-| 异步执行器 | IoRuntime 已实现 | 应用负责 run/run_for；没有隐藏工作线程 | tcp |
-| 安装包 | 静态/共享目标已实现 | 导出 core/transport/聚合目标；不安装 Asio 头文件 | installed_consumer |
-| 预连接与应用会话 | 未实现 | LINK/CONNECT/RELEASE、协商、心跳、请求匹配/超时均待补 | 待补 |
-| ClientService/ServerService/providers | 未实现 | 当前 TCP 测试使用测试端的 GET 应答逻辑 | 待补 |
-| 串口与 RS-485 时序 | 未实现 | 不宣告 RTU 通信已支持 | 待补 |
-| 对象目录及单位换算 | 未实现 | 目前仅保留原始 OAD/OMD 和精确 Data | 待补 |
-| 安全 | 未实现 | 没有 mock 认证成功或实际密码后端 | 待补 |
+| 连接与异常 APDU | LINK/CONNECT/RELEASE/ERROR 双向 codec 已实现 | LINK 不附加 Client/Server 尾部；认证机制仅表示线格式 | connection，附录 D.1/D.2 及规范构造向量 |
+| 异步执行器 | ManualExecutor、IoRuntime::executor 已实现 | 串行投递与单调计时；应用负责驱动，没有隐藏工作线程 | session、tcp，取消/异常/销毁 |
+| 内存通道 | MemoryChannel 已实现 | 分块读取，接收缓存及投递前写字节/条数预算；无部分写入 | session，缓存/待写超限、EOF、未驱动销毁 |
+| 安装包 | 静态/共享目标已实现 | 导出 core/session/service/transport/聚合目标；不安装 Asio 头文件，MSVC 传递 /utf-8 | installed_consumer |
+| 预连接与应用会话 | 基础 Session 已实现 | 公共 CONNECT、版本/能力/尺寸协商、单次 LINK、预设连接、RELEASE/闲置通知；精确单地址、单在途事务 | session、tcp，两种拨号方向 |
+| 请求路由与生命周期 | 已实现基础行为 | SA/CA/DIR/PRM/PIID/OAD/列表匹配、序号隔离、超时/取消关闭、重入；周期心跳和 TimeTag 语义待补 | session，错配/重复/迟到/耗尽/时钟异常/析构 |
+| ClientService/ServerService/providers | GET/SET/ACTION 异步普通、列表已实现 | 每项 Data/DAR/可选 Data，按顺序独立执行；超时后远端副作用结果未知 | mutation、session、tcp、内存示例 |
+| 同步服务 | SyncClientService 已实现 | 显式 drive 或应用后台运行线程；循环回调内调用拒绝，适配器不创建线程 | mutation、tcp，重入/超时/驱动异常/外部线程 |
+| 原始串口 | SerialChannel 已实现 | 速率/字格式/流控、串行队列与关闭；真实设备收发未验证 | tcp，参数/打开失败路径及编译/安装 |
+| 串行时序适配 | SerialLinkChannel 已实现 | 四 FE、收发 33 位间隔、投递前预算、方向与真实排空 hooks；无 hook 时只做时间估算 | serial_link，虚拟时间/重复排空/关闭/故障；memory_mutation 闭环 |
+| RS-485 物理验收 | 未验证 | 手动切换必须有真实排空驱动；USB/流控/适配器需硬件测量 | 待设备 |
+| 对象 schema/provider | 通用读写及方法 schema 已实现 | 显式 writable、方法权限/参数/返回类型、一级索引、异常映射 DAR；标准目录及单位换算待补 | mutation、session，部分成功/类型/权限/重入/异常 |
+| 安全 | CONNECT 认证 CHOICE codec 已实现 | Session 仅接受 NullSecurity，拒绝其他机制；实际认证/SECURITY 封装未实现 | connection、session，非公共机制拒绝 |
 | Python 绑定和分发 | 未开始 | C++ 稳定阶段之后进行 | 待补 |
 
 ## Data 标签覆盖
@@ -80,22 +88,24 @@
 
 | 服务 | 已实现 | 尚待实现 |
 | --- | --- | --- |
-| LINK | 无 | Request：登录/心跳/退出；Response |
-| CONNECT | 无 | Request/Response，各认证 CHOICE、版本/能力/尺寸协商 |
-| RELEASE | 无 | Request/Response/Notification |
+| LINK | 登录/心跳/退出 Request，Response；单次会话交互 | 自动周期心跳、完整心跳重试策略 |
+| CONNECT | Request/Response、四种认证 CHOICE 线格式；公共连接协商 | 非公共机制真实认证及安全策略 |
+| RELEASE | Request/Response/Notification；会话释放及空闲失效 | TimeTag 语义 |
 | GET | Normal、NormalList 请求/响应 | Record、RecordList、Next、MD5 请求/响应 |
-| SET | 无 | Normal、NormalList、ThenGetNormalList 请求/响应 |
-| ACTION | 无 | Normal、NormalList、ThenGetNormalList 请求/响应 |
+| SET | Normal、NormalList 请求/响应及服务 | ThenGetNormalList 请求/响应 |
+| ACTION | 普通、列表请求/响应及服务 | ThenGetNormalList 请求/响应 |
 | REPORT | 无 | List、RecordList、TransData 通知/确认 |
 | PROXY | 无 | GetList、GetRecord、SetList、SetThenGetList、ActionList、ActionThenGetList、TransCommand 请求/响应 |
 | SECURITY | 无 | Request/Response 全部明文/密文/验证结果分支及真实后端 |
 | FollowReport | 无 | 普通结果/记录结果 |
-| ERROR | 无 | 客户机与服务器异常响应 |
+| ERROR | 客户机/服务器异常响应 codec；保留远端类型原码 | TimeTag 语义 |
 
-下一批优先实现 LINK/CONNECT/RELEASE、基础 Session（PIID 匹配、超时和关闭）、对象 provider 与 ClientService/ServerService；再加入 SET/ACTION 和串口。链路分帧与 GET Next 分别进入 M5。
+下一批继续 M3/M4：补周期心跳、TimeTag 语义及独立 TCP/串口命令行示例，完成真实设备验收。then-get、链路分帧与 GET Next 进入后续组合服务阶段；不提前宣告对应能力。
 
 ## 本地验证范围
 
-Windows x64 已验证配置：MinGW GCC 15.1 Debug 静态库、Release 共享库、关闭传输的 Release 纯核心；MSVC 19.39 Release 共享库。每个适用配置执行 core、tcp、installed_consumer。MSVC 使用本机 SDK/Ninja 环境解决安装路径差异，没有修改系统环境或第三方源码。
+本批 Windows x64 验证：MSVC 19.39 Release 共享库、严格警告，通过 core、connection、mutation、serial_link、session、tcp、installed_consumer 共 7 项；MinGW GCC 15.1 Release 静态库、关闭 Asio 传输、严格警告，通过相应 6 项。安装消费方独立使用同步 SET、串行适配及原始串口导出符号。memory_mutation 运行输出 SET DAR=0、ACTION DAR=0、GET UInt16=42。
 
-GitHub Actions 已配置 Ubuntu/Windows/macOS 静态/共享及纯核心检查；尚未在远程执行，不能据此宣告 Linux/macOS 已验证。真实设备、串口、安全后端、sanitizer 和 fuzz 验证均未开展。
+项目自身全部 C/C++ 源码使用根目录 .clang-format 格式化，并运行 --style=file --dry-run --Werror；公开头文件使用中文 Doxygen，关键实现有中文注释。第一批曾验证的 MinGW TCP/共享配置不视为本批结果；本机 MinGW TCP 当前因线程创建错误未通过，本批真实 TCP 证据来自 MSVC。未修改系统环境或第三方源码。
+
+GitHub Actions 已配置 Ubuntu/Windows/macOS 静态/共享及纯核心检查；尚未在远程执行，不能据此宣告 Linux/macOS 已验证。串口目前只完成软件模拟/打开失败测试，真实串口、RS-485 设备、安全后端、sanitizer 和 fuzz 验证均未开展。

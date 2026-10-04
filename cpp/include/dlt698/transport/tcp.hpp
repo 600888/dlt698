@@ -4,6 +4,7 @@
  */
 #pragma once
 #include <chrono>
+#include <dlt698/common/executor.hpp>
 #include <dlt698/transport/channel.hpp>
 #include <dlt698/transport_export.hpp>
 #include <memory>
@@ -45,12 +46,18 @@ class IoRuntime {
      * @pre 所有 run/run_for 调用均已返回。
      */
     DLT698_TRANSPORT_API void restart();
+    /** @brief 创建由当前运行时驱动的串行会话执行器。
+     * @return 独立 strand 上的执行器和单调计时器实现，允许从不同线程投递任务。
+     * @note 调用方仍须驱动 run/run_for；执行器会保持运行时内部上下文存活。
+     */
+    DLT698_TRANSPORT_API std::shared_ptr<IExecutor> executor();
 
    private:
     struct Impl;
     std::shared_ptr<Impl> impl_;
     friend class TcpChannel;
     friend class TcpListener;
+    friend class SerialChannel;
 };
 
 /// 通道资源配置；读取块长度为 1 至 1 MiB，两个写入上限都必须非零。

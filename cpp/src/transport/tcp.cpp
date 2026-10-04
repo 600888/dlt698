@@ -1,65 +1,17 @@
 #include <asio.hpp>
+#include <atomic>
 #include <deque>
 #include <dlt698/transport/tcp.hpp>
+#include <map>
 #include <mutex>
 
+#include "detail.hpp"
+
 namespace dlt698::transport {
-namespace {
-Error io_error(const asio::error_code& ec) {
-    return {ec == asio::error::operation_aborted ? ErrorCode::cancelled
-            : ec == asio::error::eof             ? ErrorCode::closed
-                                                 : ErrorCode::io_error,
-            0, ec.message()};
-}
-
-template <class H, class R>
-void deliver(H& handler, R result) noexcept {
-    // 用户回调异常不能穿透 Asio 或阻断其他完成通知；应用应在自己的回调中记录异常。
-    if (handler) {
-        try {
-            handler(std::move(result));
-        } catch (...) {
-        }
-    }
-}
-
-void validate(const ChannelOptions& options) {
-    if (!options.read_chunk_bytes || options.read_chunk_bytes > 1024 * 1024 ||
-        !options.max_pending_write_bytes || !options.max_pending_writes)
-        throw std::invalid_argument("invalid channel options");
-}
-
-struct WriteBudget {
-    explicit WriteBudget(ChannelOptions value) : options(value) {}
-
-    ChannelOptions options;
-    std::mutex mutex;
-    std::size_t bytes = 0, count = 0;
-
-    bool acquire(std::size_t size) {
-        // 预算在调用线程、投递到 strand 之前预占，因此计数需用互斥锁保护。
-        // 字节数和条数同时受限，空写入也消耗一条预算，防止大量小请求积压。
-        std::lock_guard<std::mutex> lock(mutex);
-        if (count >= options.max_pending_writes || size > options.max_pending_write_bytes - bytes)
-            return false;
-        bytes += size;
-        ++count;
-        return true;
-    }
-
-    void release(std::size_t size) {
-        std::lock_guard<std::mutex> lock(mutex);
-        bytes -= size;
-        --count;
-    }
-};
-}  // namespace
-
-struct IoRuntime::Impl {
-    asio::io_context context;
-    // 维持空闲事件循环，生命周期由应用显式 stop/restart 管理。
-    asio::executor_work_guard<asio::io_context::executor_type> work{asio::make_work_guard(context)};
-};
+using detail::deliver;
+using detail::io_error;
+using detail::validate;
+using detail::WriteBudget;
 
 IoRuntime::IoRuntime() : impl_(std::make_shared<Impl>()) {}
 
@@ -72,6 +24,112 @@ void IoRuntime::run_for(std::chrono::milliseconds duration) { impl_->context.run
 void IoRuntime::stop() { impl_->context.stop(); }
 
 void IoRuntime::restart() { impl_->context.restart(); }
+
+std::shared_ptr<IExecutor> IoRuntime::executor() {
+    struct Executor final : IExecutor, std::enable_shared_from_this<Executor> {
+        struct TimerState {
+            asio::steady_timer timer;
+            Task task;
+            std::atomic<bool> cancelled{false};
+
+            TimerState(asio::io_context& context, Task value)
+                : timer(context), task(std::move(value)) {}
+        };
+
+        struct Token final : ITimer {
+            std::weak_ptr<Executor> owner;
+            std::weak_ptr<TimerState> state;
+
+            void cancel() override {
+                const auto executor = owner.lock();
+                const auto timer = state.lock();
+                if (!timer || !executor) return;
+                timer->cancelled = true;
+                const auto weak_owner = owner;
+                const auto weak_state = state;
+                executor->post([weak_owner, weak_state] {
+                    const auto executor = weak_owner.lock();
+                    const auto timer = weak_state.lock();
+                    if (executor && timer) {
+                        timer->timer.cancel();
+                        std::lock_guard<std::mutex> lock(executor->mutex);
+                        executor->timers.erase(timer.get());
+                    }
+                });
+            }
+        };
+
+        std::shared_ptr<Impl> runtime;
+        asio::strand<asio::io_context::executor_type> serial;
+        std::mutex mutex;
+        std::map<TimerState*, std::shared_ptr<TimerState>> timers;
+
+        explicit Executor(std::shared_ptr<Impl> value)
+            : runtime(std::move(value)), serial(asio::make_strand(runtime->context)) {}
+
+        void post(Task task) override {
+            asio::post(serial, [task = std::move(task)] {
+                try {
+                    if (task) task();
+                } catch (...) { /* 隔离应用任务异常。 */
+                }
+            });
+        }
+
+        std::shared_ptr<ITimer> schedule(Clock::duration delay, Task task) override {
+            if (delay < Clock::duration::zero() || delay > Clock::time_point::max() - now())
+                throw std::invalid_argument("timer delay");
+            const auto deadline = now() + delay;
+            auto state = std::make_shared<TimerState>(runtime->context, std::move(task));
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                timers.emplace(state.get(), state);
+            }
+            auto token = std::make_shared<Token>();
+            token->owner = shared_from_this();
+            token->state = state;
+            const std::weak_ptr<Executor> weak_owner = shared_from_this();
+            const std::weak_ptr<TimerState> weak_state = state;
+            // 等待处理器仅持有弱引用，由执行器保活计时器，避免上下文和计时器互相保活。
+            post([weak_owner, weak_state, deadline] {
+                const auto owner = weak_owner.lock();
+                const auto state = weak_state.lock();
+                if (!owner || !state) return;
+                if (state->cancelled) {
+                    std::lock_guard<std::mutex> lock(owner->mutex);
+                    owner->timers.erase(state.get());
+                    return;
+                }
+                state->timer.expires_at(deadline);
+                state->timer.async_wait(asio::bind_executor(
+                    owner->serial, [weak_owner, weak_state](asio::error_code error) {
+                        const auto owner = weak_owner.lock();
+                        const auto state = weak_state.lock();
+                        if (!owner || !state) return;
+                        {
+                            std::lock_guard<std::mutex> lock(owner->mutex);
+                            owner->timers.erase(state.get());
+                        }
+                        if (!error && !state->cancelled) {
+                            try {
+                                if (state->task) state->task();
+                            } catch (...) {
+                            }
+                        }
+                    }));
+            });
+            return token;
+        }
+
+        Clock::time_point now() const noexcept override { return Clock::now(); }
+
+        bool is_current() const noexcept override {
+            return runtime->context.get_executor().running_in_this_thread();
+        }
+    };
+
+    return std::make_shared<Executor>(impl_);
+}
 
 struct TcpChannel::Impl : std::enable_shared_from_this<TcpChannel::Impl> {
     struct Write {
@@ -416,4 +474,5 @@ void TcpListener::close() {
         impl->acceptor.close(ignored);
     });
 }
+
 }  // namespace dlt698::transport

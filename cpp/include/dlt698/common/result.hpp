@@ -4,6 +4,7 @@
  */
 #pragma once
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <utility>
@@ -26,14 +27,19 @@ enum class ErrorCode {
     timeout,
     cancelled,
     busy,
-    address_mismatch
+    address_mismatch,
+    direction_mismatch,
+    not_associated,
+    association_failed,
+    remote_error
 };
 
 /// 失败诊断；offset 的单位由接口约定，二进制编解码通常使用字节偏移。
 struct Error {
-    ErrorCode code;          ///< 错误分类。
-    std::size_t offset = 0;  ///< 输入或输出的出错位置；无对应位置时通常为零。
-    std::string context;     ///< 字段名称或传输层错误描述。
+    ErrorCode code;                                ///< 错误分类。
+    std::size_t offset = 0;                        ///< 输入或输出的出错位置；无对应位置时通常为零。
+    std::string context;                           ///< 字段名称或传输层错误描述。
+    std::optional<std::uint8_t> remote_code = {};  ///< 远端 ERROR-Response 等结果的原始编码。
 };
 
 /**
