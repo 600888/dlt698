@@ -4,6 +4,7 @@
 #pragma once
 #include <dlt698/common/executor.hpp>
 #include <dlt698/protocol/apdu/apdu.hpp>
+#include <dlt698/protocol/link/fragment.hpp>
 #include <dlt698/protocol/link/frame.hpp>
 #include <dlt698/session_export.hpp>
 #include <dlt698/transport/channel.hpp>
@@ -17,8 +18,8 @@ struct SessionOptions {
     protocol::link::ServerAddress server;
     std::uint8_t client_address = 0;
     Limits limits;
-    protocol::apdu::AssociationParameters parameters{0x0010, {0xe1, 0x8c}, {}, 1024, 1024,
-                                                     1,      1024,         100};
+    protocol::apdu::AssociationParameters parameters{
+        0x0010, {0xf3, 0x8c, 0x08}, {}, 1024, 1024, 1, 1024, 100};
     protocol::apdu::FactoryVersion factory;
     std::chrono::milliseconds request_timeout{5000};
     std::chrono::milliseconds id_reuse_delay{
@@ -26,12 +27,19 @@ struct SessionOptions {
     bool require_login = false;       ///< 远程场景可要求先由协议服务器发起 LINK 登录。
     bool preset_association = false;  ///< 显式启用本地通道的预设连接，使用本地能力和限制。
     bool clock_trusted = false;
+    std::uint16_t heartbeat_seconds =
+        0;  ///< 服务器登录成功后自动心跳周期，零为关闭；失败关闭通道。
+    std::optional<model::Ti> request_time_tag;  ///< 客户机请求自动添加时间标签；响应须原样回传。
+    std::chrono::milliseconds fragment_timeout{1000};    ///< 单片确认的单调超时。
+    std::chrono::milliseconds reassembly_timeout{5000};  ///< 重组没有进展时的单调超时。
+    unsigned fragment_retries = 2;  ///< 0 至 16 次，仅重发未获确认的相同片段，不重放应用请求。
+    bool prefer_get_blocks = true;  ///< 超长 GET 优先按完整属性/记录行应用分块，其块仍可链路分帧。
     std::function<model::DateTime()>
         calendar_clock;  ///< 空时使用 UTC；注入时钟在执行器中调用，抛异常会关闭会话并返回 invalid_value。
 };
 
 /**
- * @brief 一个通道上的协议会话，支持公共连接与 GET/SET/ACTION 普通、列表事务。
+ * @brief 一个通道上的会话，支持公共连接、读写/方法、记录及两类分段事务。
  * @note 所有状态和回调在提供的串行执行器上处理；TCP 拨号方向与协议角色独立。
  * 超时或取消关闭物理通道，以隔离线上没有 generation 字段的迟到响应。
  * 析构时排队任务不保活会话；已提交请求仍须驱动执行器才能收到 closed 回调。
@@ -50,6 +58,9 @@ class Session {
     using ReleaseHandler = std::function<void(Result<void>)>;
     using RequestHandler =
         std::function<protocol::apdu::GetResponse(const protocol::apdu::GetRequest&)>;
+    using RecordHandler = std::function<void(Result<protocol::apdu::GetRecordResponse>)>;
+    using RecordRequestHandler =
+        std::function<protocol::apdu::GetRecordResponse(const protocol::apdu::GetRecordRequest&)>;
     using DiagnosticHandler = std::function<void(const Error&)>;
     /** @brief 创建尚未启动的会话。
      * @param[in] channel 已连接的字节通道。
@@ -71,6 +82,18 @@ class Session {
      * @param[in] handler 在会话执行器内同步调用的处理器，不得阻塞等待同一执行器。
      */
     DLT698_SESSION_API void set_request_handler(RequestHandler handler);
+    /** @brief 注册记录查询处理器，返回拥有全部行数据的快照。
+     * @param[in] handler 在串行执行器内调用，不得阻塞；缺省返回 DAR=4。
+     * @note Session 缓存本次结果直到分块完成/超时，后续分页不再次调用 provider。
+     */
+    DLT698_SESSION_API void set_record_handler(RecordRequestHandler handler);
+    /** @brief 读取记录或记录列表，并自动收齐 GET Next 数据块。
+     * @param[in] records 非空查询；每项保存完整 RSD/RCSD。
+     * @param[in] list false 恰好一项，true 使用 RecordList。
+     * @param[in] handler 返回有精确列类型的完整快照或错误。
+     */
+    DLT698_SESSION_API void async_get_record(std::vector<protocol::apdu::GetRecord> records,
+                                             bool list, RecordHandler handler);
     /** @brief 注册服务器 SET 处理器。
      * @param[in] handler 在执行器内同步执行，不得阻塞；未注册时逐项返回拒绝 DAR。
      */
@@ -89,7 +112,7 @@ class Session {
     DLT698_SESSION_API void async_connect(ConnectHandler handler);
     /** @brief 由协议服务器发起登录、单次心跳或退出登录。
      * @param[in] type 预连接请求类型。
-     * @param[in] heartbeat_seconds 线上心跳周期（秒），当前版本不自动周期发送。
+     * @param[in] heartbeat_seconds 线上心跳周期（秒），自动周期另由 options 配置。
      * @param[in] handler 返回响应或错误。
      */
     DLT698_SESSION_API void async_link(protocol::apdu::LinkRequestType type,
@@ -98,7 +121,7 @@ class Session {
      * @param[in] attributes 非空的精确 OAD 列表。
      * @param[in] list false 时必须恰好一个属性，true 使用 NormalList。
      * @param[in] handler 返回按原顺序保留 Data/DAR 的响应或错误。
-     * @note 当前服务路径只接受无 TimeTag 的请求，时间标签语义将在后续阶段实现。
+     * @note 自动收齐分块；TimeTag 由 options 配置，超时/取消关闭通道隔离迟到结果。
      */
     DLT698_SESSION_API void async_get(std::vector<model::Oad> attributes, bool list,
                                       GetHandler handler);

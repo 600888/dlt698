@@ -25,6 +25,26 @@ void ClientService::async_get_list(std::vector<model::Oad> attributes,
     session_->async_get(std::move(attributes), true, std::move(handler));
 }
 
+void ClientService::async_get_record(
+    protocol::apdu::GetRecord record,
+    std::function<void(Result<protocol::apdu::RecordResult>)> handler) {
+    session_->async_get_record(
+        {std::move(record)}, false,
+        [handler = std::move(handler)](Result<protocol::apdu::GetRecordResponse> r) mutable {
+            if (handler) {
+                if (!r)
+                    handler(r.error());
+                else
+                    handler(std::move(r).value().records.front());
+            }
+        });
+}
+
+void ClientService::async_get_record_list(std::vector<protocol::apdu::GetRecord> records,
+                                          session::Session::RecordHandler handler) {
+    session_->async_get_record(std::move(records), true, std::move(handler));
+}
+
 void ClientService::async_set(model::Oad attribute, model::Data value,
                               std::function<void(Result<std::uint8_t>)> handler) {
     session_->async_set(
@@ -78,6 +98,13 @@ ServerService::ServerService(std::shared_ptr<session::Session> session,
             response.attributes.push_back({attr, objects->read(attr)});
         return response;
     });
+    session_->set_record_handler(
+        [objects = objects_](const protocol::apdu::GetRecordRequest& request) {
+            protocol::apdu::GetRecordResponse response;
+            for (const auto& q : request.records)
+                response.records.push_back(objects->read_record(q));
+            return response;
+        });
     session_->set_set_handler([objects = objects_](const protocol::apdu::SetRequest& request) {
         protocol::apdu::SetResponse response;
         for (const auto& item : request.attributes)

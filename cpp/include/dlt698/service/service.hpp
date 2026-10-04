@@ -25,6 +25,19 @@ class ClientService {
      */
     DLT698_SERVICE_API void async_get_list(std::vector<model::Oad> attributes,
                                            session::Session::GetHandler handler);
+    /** @brief 查询一项记录，自动收齐分块。
+     * @param[in] record 完整行列查询。
+     * @param[in] handler 返回精确记录结果或事务错误。
+     */
+    DLT698_SERVICE_API void async_get_record(
+        protocol::apdu::GetRecord record,
+        std::function<void(Result<protocol::apdu::RecordResult>)> handler);
+    /** @brief 查询记录列表，保持逐项 DAR 和原顺序。
+     * @param[in] records 非空记录列表。
+     * @param[in] handler 返回完整快照或错误。
+     */
+    DLT698_SERVICE_API void async_get_record_list(std::vector<protocol::apdu::GetRecord> records,
+                                                  session::Session::RecordHandler handler);
     /** @brief 设置单个属性。
      * @param[in] attribute 精确 OAD。
      * @param[in] value 精确 Data。

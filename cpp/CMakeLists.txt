@@ -40,8 +40,12 @@ add_library(dlt698_core
     src/transport/memory.cpp
     src/transport/serial_link.cpp
     src/codec/data_codec.cpp
+    src/codec/record_codec.cpp
     src/protocol/link/frame.cpp
+    src/protocol/link/fragment.cpp
     src/protocol/apdu/get.cpp
+    src/protocol/apdu/get_block.cpp
+    src/protocol/apdu/time_tag.cpp
     src/protocol/apdu/mutation.cpp
     src/protocol/apdu/connection.cpp
     src/protocol/apdu/apdu.cpp)

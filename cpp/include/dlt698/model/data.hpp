@@ -5,6 +5,7 @@
 #pragma once
 #include <array>
 #include <dlt698/common/bytes.hpp>
+#include <memory>
 #include <variant>
 
 namespace dlt698::model {
@@ -35,10 +36,16 @@ enum class DataType : std::uint8_t {
     date_time_s = 28,
     oi = 80,
     oad = 81,
+    road = 82,
     omd = 83,
     ti = 84,
     tsa = 85,
-    scaler_unit = 89
+    region = 88,
+    scaler_unit = 89,
+    rsd = 90,
+    csd = 91,
+    ms = 92,
+    rcsd = 96
 };
 
 /**
@@ -207,11 +214,45 @@ struct ScalerUnit {
 };
 
 /// 精确类型数据容器，通过 variant 保留协议标签和对应的拥有型数据。
+/** @brief 不可变、拥有内存的记录描述符节点，避免 Data 与 RSD/Region 的递归定义循环。
+ * @note 构造和 as 模板在 record.hpp 中定义；复制共享不可变内容，不能经别名修改快照。
+ */
+class RecordData {
+   public:
+    /** @brief 从 ROAD/Region/RSD/CSD/MS/RCSD 创建不可变描述符。
+     * @tparam T record.hpp 定义的描述符类型。
+     * @param[in] value 拥有全部嵌套 Data 内存的值，移动到节点。
+     */
+    template <class T>
+    explicit RecordData(T value);
+    /** @brief 获取保存的协议类型。
+     * @return 精确的记录描述符 Data 标签；节点已移动时返回 null，但不能再编码。
+     */
+    DLT698_API DataType type() const;
+    /** @brief 按精确类型读取不可变内容。
+     * @tparam T 描述符类型。
+     * @return 在当前节点生命周期内有效的常量引用。
+     * @throws std::bad_variant_access 类型不符或对象已被移动。
+     */
+    template <class T>
+    const T& as() const;
+    /** @brief 比较精确描述符类型及所有嵌套字段。
+     * @param[in] a 左侧节点。
+     * @param[in] b 右侧节点。
+     * @return 类型和内容一致为 true，两个已移动节点也相等。
+     */
+    DLT698_API friend bool operator==(const RecordData& a, const RecordData& b);
+
+   private:
+    struct Impl;
+    std::shared_ptr<const Impl> impl_;
+};
+
 struct Data {
     using Payload = std::variant<Null, Array, Structure, Boolean, BitString, Int8, Int16, Int32,
                                  Int64, UInt8, UInt16, UInt32, UInt64, Enum, Float32, Float64,
                                  OctetString, VisibleString, Utf8String, DateTime, Date, Time,
-                                 DateTimeS, Oi, Oad, Omd, Ti, Tsa, ScalerUnit>;
+                                 DateTimeS, Oi, Oad, Omd, Ti, Tsa, ScalerUnit, RecordData>;
     Payload payload = Null{};
     /** @brief 创建协议 null 值。 */
     Data() = default;
@@ -229,7 +270,14 @@ struct Data {
      * @return 当前 payload 对应的 DataType。
      */
     DataType type() const {
-        return std::visit([](const auto& v) { return std::decay_t<decltype(v)>::type; }, payload);
+        return std::visit(
+            [](const auto& v) {
+                if constexpr (std::is_same_v<std::decay_t<decltype(v)>, RecordData>)
+                    return v.type();
+                else
+                    return std::decay_t<decltype(v)>::type;
+            },
+            payload);
     }
 
     /**

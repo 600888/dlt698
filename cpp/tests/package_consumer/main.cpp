@@ -11,6 +11,14 @@ int main() {
     // 仅通过安装后的公开头文件和库调用 API，验证导出目标不依赖源码目录。
     const auto data = dlt698::codec::encode_data(dlt698::model::UInt16{2413});
     if (!data || dlt698::to_hex(data.value()) != "12 09 6D") return 1;
+    const dlt698::model::Data selector =
+        dlt698::model::RecordData{dlt698::model::Rsd{dlt698::model::Selector9{1}}};
+    const auto selector_wire = dlt698::codec::encode_data(selector);
+    if (!selector_wire || dlt698::to_hex(selector_wire.value()) != "5A 09 01" ||
+        !(dlt698::codec::decode_data(selector_wire.value()).value() == selector))
+        return 6;
+    dlt698::protocol::link::LinkFragmenter fragments({1, 2, 3}, 1, 10);
+    if (!fragments.acknowledge(0) || fragments.current().sequence != 1) return 7;
     auto executor = std::make_shared<dlt698::ManualExecutor>();
     auto channels = dlt698::transport::MemoryChannel::pair(executor);
     dlt698::session::SessionOptions client_options, server_options;
@@ -23,8 +31,17 @@ int main() {
     auto objects = std::make_shared<dlt698::service::ObjectRegistry>();
     auto provider = std::make_shared<dlt698::service::MemoryObject>();
     provider->set(2, dlt698::model::UInt16{2413});
-    if (!objects->register_object(
-            {0x2000, "电压", {{2, dlt698::model::DataType::uint16, true, true}}}, provider))
+    provider->bind_record(3, [](const dlt698::protocol::apdu::GetRecord& q) {
+        return dlt698::protocol::apdu::RecordResult{
+            q.attribute,
+            {dlt698::model::Oad{0x2000, 2, 0}},
+            std::vector<dlt698::protocol::apdu::RecordRow>{{dlt698::model::UInt16{42}}}};
+    });
+    if (!objects->register_object({0x2000,
+                                   "电压",
+                                   {{2, dlt698::model::DataType::uint16, true, true},
+                                    {3, dlt698::model::DataType::null, true, false, true}}},
+                                  provider))
         return 2;
     dlt698::service::ServerService server_api(server, objects);
     dlt698::service::ClientService client_api(client);
@@ -41,6 +58,12 @@ int main() {
         client, [executor](auto elapsed) { executor->advance(elapsed); });
     const auto set = sync.set({0x2000, 2, 0}, dlt698::model::UInt16{2400});
     if (!set || set.value()) return 4;
+    const auto record = sync.get_record({{0x2000, 3, 0}, dlt698::model::SelectAll{}, {}});
+    if (!record ||
+        std::get<std::vector<dlt698::protocol::apdu::RecordRow>>(record.value().result)[0][0]
+                .as<dlt698::model::UInt16>()
+                .value != 42)
+        return 8;
     client->close();
     server->close();
     executor->run_ready();

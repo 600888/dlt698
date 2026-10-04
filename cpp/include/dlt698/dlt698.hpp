@@ -7,4 +7,7 @@
 #include <dlt698/common/bytes.hpp>
 #include <dlt698/protocol/apdu/apdu.hpp>
 #include <dlt698/protocol/apdu/get.hpp>
+#include <dlt698/protocol/apdu/get_block.hpp>
+#include <dlt698/protocol/apdu/time_tag.hpp>
+#include <dlt698/protocol/link/fragment.hpp>
 #include <dlt698/protocol/link/frame.hpp>

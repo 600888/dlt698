@@ -1,9 +1,9 @@
 /**
  * @file get.hpp
- * @brief GET Normal/NormalList 请求、响应及其 APDU 编解码。
+ * @brief GET 普通、列表、记录及自解析分块的请求、响应与 APDU 编解码。
  */
 #pragma once
-#include <dlt698/codec/data_codec.hpp>
+#include <dlt698/codec/record_codec.hpp>
 #include <optional>
 
 namespace dlt698::protocol::apdu {
@@ -11,6 +11,15 @@ namespace dlt698::protocol::apdu {
 struct TimeTag {
     model::DateTimeS sent_at;  ///< 发送时间。
     model::Ti allowed_delay;   ///< 允许的传输延时。
+
+    /** @brief 比较时间标签的所有线上字段。
+     * @param[in] a 左侧标签。
+     * @param[in] b 右侧标签。
+     * @return 时标和允许延时相同时为 true。
+     */
+    friend bool operator==(const TimeTag& a, const TimeTag& b) {
+        return a.sent_at == b.sent_at && a.allowed_delay == b.allowed_delay;
+    }
 };
 
 /// GET 请求，Normal 恰含一个属性，NormalList 必须为非空列表。
@@ -36,7 +45,52 @@ struct GetResponse {
     std::optional<TimeTag> time_tag;
 };
 
-using GetApdu = std::variant<GetRequest, GetResponse>;
+/** @brief 完整记录查询；行条件由 provider 解释，空 columns 表示全选。 */
+struct GetRecord {
+    model::Oad attribute;
+    model::Rsd rows;
+    model::Rcsd columns;
+};
+
+struct GetRecordRequest {
+    std::uint8_t piid = 0;
+    bool list = false;
+    std::vector<GetRecord> records;
+    std::optional<TimeTag> time_tag;
+};
+
+using RecordRow = std::vector<model::Data>;
+
+/** @brief 拥有表头与行数据的快照；每行 Data 数量等于 columns 数量，ROAD 列也占一个 Data。 */
+struct RecordResult {
+    model::Oad attribute;
+    model::Rcsd columns;
+    std::variant<std::uint8_t, std::vector<RecordRow>> result;
+};
+
+struct GetRecordResponse {
+    std::uint8_t piid_acd = 0;
+    bool list = false;
+    std::vector<RecordResult> records;
+    std::optional<TimeTag> time_tag;
+};
+
+struct GetNextRequest {
+    std::uint8_t piid = 0;
+    std::uint16_t block = 0;  ///< 最近正确接收的块号，保持原请求 PIID/优先级。
+    std::optional<TimeTag> time_tag;
+};
+
+struct GetNextResponse {
+    std::uint8_t piid_acd = 0;
+    bool last = false;
+    std::uint16_t block = 0;
+    std::variant<std::uint8_t, std::vector<AttributeResult>, std::vector<RecordResult>> result;
+    std::optional<TimeTag> time_tag;
+};
+
+using GetApdu = std::variant<GetRequest, GetResponse, GetRecordRequest, GetRecordResponse,
+                             GetNextRequest, GetNextResponse>;
 /**
  * @brief 解码完整的 GET 请求或响应 APDU。
  * @param[in] bytes 恰好一个 APDU，不包含链路帧封装或尾随字节。
@@ -46,8 +100,8 @@ using GetApdu = std::variant<GetRequest, GetResponse>;
  */
 DLT698_API Result<GetApdu> decode_get(ByteView bytes, const Limits& limits = {});
 /**
- * @brief 编码 GET Normal/NormalList 请求或响应。
- * @param[in] apdu 待编码消息；Normal 恰含一个属性，NormalList 至少含一个属性。
+ * @brief 编码 GET 普通、列表、记录或 Next 请求/响应。
+ * @param[in] apdu 普通/记录非列表恰含一项，列表非空；Next 错误块必须为末块。
  * @param[in] limits 输出字节数、属性数及每个 Data 树的资源上限。
  * @return APDU 字节序列，或属性数、字段值非法及资源超限等错误。
  * @note 响应始终写入 FollowReport 不存在的标记。

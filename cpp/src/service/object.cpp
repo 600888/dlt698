@@ -7,6 +7,10 @@ std::uint8_t IObjectProvider::write(const model::Oad&, const model::Data&) { ret
 
 ActionValue IObjectProvider::invoke(const model::Omd&, const model::Data&) { return {3, {}}; }
 
+protocol::apdu::RecordResult IObjectProvider::read_record(const protocol::apdu::GetRecord& q) {
+    return {q.attribute, q.columns, std::uint8_t{3}};
+}
+
 struct ObjectRegistry::Impl {
     struct Entry {
         ObjectSchema schema;
@@ -60,7 +64,7 @@ ObjectValue ObjectRegistry::read(const model::Oad& attribute) const {
         if (!schema) return std::uint8_t{4};
         provider = it->second.provider;
     }
-    if (!schema->readable) return std::uint8_t{3};
+    if (!schema->readable || schema->record) return std::uint8_t{3};
     // provider 属于应用代码，不能在目录锁内调用，避免重入注册或其他业务锁造成死锁。
     try {
         auto value = provider->read(attribute);
@@ -73,8 +77,44 @@ ObjectValue ObjectRegistry::read(const model::Oad& attribute) const {
     }
 }
 
+protocol::apdu::RecordResult ObjectRegistry::read_record(const protocol::apdu::GetRecord& q) const {
+    auto fail = [&](std::uint8_t dar) {
+        return protocol::apdu::RecordResult{q.attribute, q.columns, dar};
+    };
+    std::shared_ptr<IObjectProvider> provider;
+    {
+        std::lock_guard<std::mutex> lock(impl_->mutex);
+        const auto it = impl_->objects.find(q.attribute.oi);
+        if (it == impl_->objects.end()) return fail(4);
+        const AttributeSchema* schema = nullptr;
+        for (const auto& attr : it->second.schema.attributes)
+            if (attr.number == (q.attribute.attribute & 31)) schema = &attr;
+        if (!schema) return fail(4);
+        if (!schema->readable) return fail(3);
+        if (!schema->record) return fail(5);
+        provider = it->second.provider;
+    }
+    try {
+        auto result = provider->read_record(q);
+        if (!(result.attribute == q.attribute) ||
+            (!q.columns.empty() && !(q.columns == result.columns)))
+            return fail(7);
+        if (const auto rows = std::get_if<std::vector<protocol::apdu::RecordRow>>(&result.result)) {
+            if (!rows->empty() && result.columns.empty()) return fail(7);
+            for (const auto& row : *rows)
+                if (row.size() != result.columns.size()) return fail(7);
+        }
+        return result;
+    } catch (...) {
+        return fail(255);
+    }
+}
+
 struct MemoryObject::Impl {
     std::mutex mutex;
+    std::map<std::uint8_t,
+             std::function<protocol::apdu::RecordResult(const protocol::apdu::GetRecord&)>>
+        records;
     std::map<std::uint8_t, model::Data> attributes;
     std::map<std::uint8_t, std::function<ActionValue(const model::Omd&, const model::Data&)>>
         methods;
@@ -92,7 +132,7 @@ std::uint8_t ObjectRegistry::write(const model::Oad& attribute, const model::Dat
         if (!schema) return 4;
         provider = it->second.provider;
     }
-    if (!schema->writable) return 3;
+    if (!schema->writable || schema->record) return 3;
     if (!attribute.index && value.type() != schema->type) return 7;
     try {
         return provider->write(attribute, value);
@@ -123,6 +163,26 @@ ActionValue ObjectRegistry::invoke(const model::Omd& method, const model::Data& 
     } catch (...) {
         return {255, {}};
     }
+}
+
+void MemoryObject::bind_record(
+    std::uint8_t attribute,
+    std::function<protocol::apdu::RecordResult(const protocol::apdu::GetRecord&)> handler) {
+    if (!attribute || attribute > 31 || !handler) throw std::invalid_argument("record callback");
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    impl_->records[attribute] = std::move(handler);
+}
+
+protocol::apdu::RecordResult MemoryObject::read_record(const protocol::apdu::GetRecord& q) {
+    std::function<protocol::apdu::RecordResult(const protocol::apdu::GetRecord&)> handler;
+    {
+        std::lock_guard<std::mutex> lock(impl_->mutex);
+        const auto it = impl_->records.find(q.attribute.attribute & 31);
+        if (it == impl_->records.end()) return {q.attribute, q.columns, std::uint8_t{4}};
+        handler = it->second;
+    }
+    // 复制处理器后释放对象锁，允许记录后端在查询过程中读取相关属性。
+    return handler(q);
 }
 
 MemoryObject::MemoryObject() : impl_(std::make_unique<Impl>()) {}

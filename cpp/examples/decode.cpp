@@ -24,7 +24,17 @@ int main(int argc, char** argv) {
     auto apdu = dlt698::protocol::apdu::decode_get(f.payload);
     if (apdu)
         std::visit(
-            [](const auto& m) { std::cout << "GET attributes: " << m.attributes.size() << '\n'; },
+            [](const auto& m) {
+                using T = std::decay_t<decltype(m)>;
+                if constexpr (std::is_same_v<T, dlt698::protocol::apdu::GetRequest> ||
+                              std::is_same_v<T, dlt698::protocol::apdu::GetResponse>)
+                    std::cout << "GET attributes: " << m.attributes.size() << '\n';
+                else if constexpr (std::is_same_v<T, dlt698::protocol::apdu::GetRecordRequest> ||
+                                   std::is_same_v<T, dlt698::protocol::apdu::GetRecordResponse>)
+                    std::cout << "GET records: " << m.records.size() << '\n';
+                else
+                    std::cout << "GET block: " << m.block << '\n';
+            },
             apdu.value());
     return 0;
 }

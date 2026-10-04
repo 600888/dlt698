@@ -20,6 +20,7 @@ struct AttributeSchema {
     model::DataType type = model::DataType::null;
     bool readable = true;
     bool writable = false;  ///< 写入须显式授权，已有读取 schema 不会自动变成可写。
+    bool record = false;    ///< 记录型属性须显式声明，由 read_record 解释行列选择。
 };
 
 struct MethodSchema {
@@ -45,6 +46,13 @@ class IObjectProvider {
      * @return 精确 Data 或原始 DAR；不得阻塞等待调用它的会话执行器。
      */
     virtual ObjectValue read(const model::Oad& attribute) = 0;
+    /** @brief 查询记录，默认返回拒绝 DAR=3。
+     * @param[in] query 完整 OAD/RSD/RCSD；空 RCSD 为全选，实际响应必须给出表头。
+     * @return 拥有所有列与行内存的快照或 DAR；提供者负责选择器业务语义。
+     * @note 调用期间不得保留借用引用或阻塞同一执行器，跨查询的一致性由提供者决定。
+     */
+    DLT698_SERVICE_API virtual protocol::apdu::RecordResult read_record(
+        const protocol::apdu::GetRecord& query);
     /** @brief 写入属性，默认拒绝以保持既有只读 provider 合约。
      * @param[in] attribute 完整 OAD，索引/特征由 provider 解释。
      * @param[in] value 精确 Data，调用期间有效，不得保留借用引用。
@@ -84,6 +92,12 @@ class ObjectRegistry {
      * @note 释放目录锁后调用 provider，索引非零的元素类型由 provider 保证。
      */
     DLT698_SERVICE_API ObjectValue read(const model::Oad& attribute) const;
+    /** @brief 检查记录声明与读权限后查询，目录锁外调用 provider。
+     * @param[in] query 完整记录查询。
+     * @return 拥有行列内存的结果；3 拒绝、4 未定义、5 非记录属性、255 提供者异常。
+     */
+    DLT698_SERVICE_API protocol::apdu::RecordResult read_record(
+        const protocol::apdu::GetRecord& query) const;
     /** @brief 检查写权限和完整属性类型后调用 provider。
      * @param[in] attribute 精确 OAD，索引非零的元素校验由 provider 负责。
      * @param[in] value 写入的精确 Data。
@@ -141,6 +155,20 @@ class MemoryObject final : public IObjectProvider {
     DLT698_SERVICE_API void bind_method(
         std::uint8_t number,
         std::function<ActionValue(const model::Omd&, const model::Data&)> handler);
+    /** @brief 注册应用提供的模拟记录查询器，在对象锁外调用。
+     * @param[in] attribute 1 至 31 的记录属性编号。
+     * @param[in] handler 非空处理器，须返回拥有内存且列宽一致的快照，解释全部所需选择器。
+     * @throws std::invalid_argument 属性编号非法或回调为空。
+     */
+    DLT698_SERVICE_API void bind_record(
+        std::uint8_t attribute,
+        std::function<protocol::apdu::RecordResult(const protocol::apdu::GetRecord&)> handler);
+    /** @brief 查询已绑定的记录，未绑定返回 DAR=4。
+     * @param[in] query 完整查询；处理器可重入本对象的读写操作。
+     * @return 记录快照或 DAR；异常由目录转为 255。
+     */
+    DLT698_SERVICE_API protocol::apdu::RecordResult read_record(
+        const protocol::apdu::GetRecord& query) override;
     /** @brief 调用已注册模拟方法，仅接受模式零。
      * @param[in] method 精确 OMD。
      * @param[in] parameter 精确参数。

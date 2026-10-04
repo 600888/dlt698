@@ -4,6 +4,8 @@
 #include <limits>
 #include <type_traits>
 
+#include "record_detail.hpp"
+
 namespace dlt698::codec {
 static_assert(sizeof(float) == 4 && sizeof(double) == 8, "Protocol requires binary32 and binary64");
 
@@ -213,6 +215,13 @@ model::Data read_impl(Reader& r, const Limits& limits, std::size_t depth, std::s
             if (unit > 5) invalid(offset, "TI unit");
             return Ti{unit, number<std::uint16_t>(r)};
         }
+        case DataType::road:
+        case DataType::region:
+        case DataType::rsd:
+        case DataType::csd:
+        case DataType::ms:
+        case DataType::rcsd:
+            return detail::read_descriptor(r, tag, limits, depth, nodes);
         case DataType::scaler_unit:
             return ScalerUnit{number<std::int8_t>(r), r.u8("physical unit")};
         default:
@@ -243,7 +252,9 @@ void write_impl(Writer& w, const model::Data& data, const Limits& limits, std::s
                 validate_bits(value, offset);
                 write_length(w, value.bit_count);
                 w.bytes(value.value);
-            } else if constexpr (std::is_same_v<T, Oad>)
+            } else if constexpr (std::is_same_v<T, RecordData>)
+                detail::write_descriptor(w, value, limits, depth, nodes);
+            else if constexpr (std::is_same_v<T, Oad>)
                 write_oad(w, value);
             else if constexpr (std::is_same_v<T, Omd>) {
                 w.be(value.oi, 2);
@@ -283,6 +294,17 @@ void write_impl(Writer& w, const model::Data& data, const Limits& limits, std::s
         data.payload);
 }
 }  // namespace
+
+namespace detail {
+model::Data read_nested(Reader& r, const Limits& l, std::size_t depth, std::size_t& nodes) {
+    return read_impl(r, l, depth, nodes);
+}
+
+void write_nested(Writer& w, const model::Data& v, const Limits& l, std::size_t depth,
+                  std::size_t& nodes) {
+    write_impl(w, v, l, depth, nodes);
+}
+}  // namespace detail
 
 std::size_t read_length(Reader& r, std::size_t limit) {
     const auto offset = r.position();

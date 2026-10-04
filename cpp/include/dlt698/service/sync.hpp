@@ -40,6 +40,18 @@ class SyncClientService {
      */
     DLT698_SERVICE_API Result<protocol::apdu::GetResponse> get_list(
         std::vector<model::Oad> attributes);
+    /** @brief 同步查询记录，自动完成两种分段处理。
+     * @param[in] record 完整记录查询。
+     * @return 拥有行列内存的结果、DAR 或本地错误。
+     */
+    DLT698_SERVICE_API Result<protocol::apdu::RecordResult> get_record(
+        protocol::apdu::GetRecord record);
+    /** @brief 同步查询记录列表，保留逐项结果。
+     * @param[in] records 非空查询列表。
+     * @return 完整有序快照或本地错误。
+     */
+    DLT698_SERVICE_API Result<protocol::apdu::GetRecordResponse> get_record_list(
+        std::vector<protocol::apdu::GetRecord> records);
     /** @brief 同步设置属性，不自动重试。
      * @param[in] attribute 精确 OAD。
      * @param[in] value 精确 Data。

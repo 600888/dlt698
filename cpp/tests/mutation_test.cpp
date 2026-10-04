@@ -118,7 +118,7 @@ void services_and_sync() {
     SyncClientService sync(client, [executor](auto elapsed) { executor->advance(elapsed); });
     auto associated = sync.connect();
     CHECK(associated && !associated.value().result);
-    CHECK(associated.value().parameters.protocol[0] == 0xe1);
+    CHECK(associated.value().parameters.protocol[0] == 0xf3);
     CHECK(associated.value().parameters.protocol[1] == 0x8c);
     CHECK(sync.set({0x2000, 2, 0}, model::UInt16{25}).value() == 0);
     CHECK(std::get<model::Data>(sync.get({0x2000, 2, 0}).value()) ==

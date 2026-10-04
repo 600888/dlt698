@@ -1,6 +1,9 @@
 #include <algorithm>
 #include <atomic>
 #include <ctime>
+#include <deque>
+#include <dlt698/protocol/apdu/get_block.hpp>
+#include <dlt698/protocol/apdu/time_tag.hpp>
 #include <dlt698/session/session.hpp>
 
 namespace dlt698::session {
@@ -57,6 +60,8 @@ std::uint8_t id_of(const apdu::Apdu& message) {
                           std::is_same_v<T, apdu::ReleaseResponse> ||
                           std::is_same_v<T, apdu::ReleaseNotification> ||
                           std::is_same_v<T, apdu::GetResponse> ||
+                          std::is_same_v<T, apdu::GetRecordResponse> ||
+                          std::is_same_v<T, apdu::GetNextResponse> ||
                           std::is_same_v<T, apdu::SetResponse> ||
                           std::is_same_v<T, apdu::ActionResponse>)
                 return v.piid_acd & 0xbf;
@@ -74,7 +79,7 @@ Result<T> typed(Result<apdu::Apdu> result) {
 }  // namespace
 
 struct Session::Impl : std::enable_shared_from_this<Impl> {
-    enum class Kind { link, connect, get, set, action, release };
+    enum class Kind { link, connect, get, record, set, action, release };
 
     struct Pending {
         Kind kind;
@@ -94,6 +99,23 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
     std::array<Clock::time_point, 64> reusable{};
     unsigned next_id = 0;
     RequestHandler request_handler;
+    RecordRequestHandler record_handler;
+    std::unique_ptr<apdu::GetBlockTransfer> collecting;
+    std::vector<apdu::GetNextResponse> serving_blocks;
+    std::size_t serving_block = 0;
+    std::shared_ptr<ITimer> block_timer, heartbeat_timer, tx_timer, rx_timer;
+    link::LinkReassembler reassembler;
+    std::optional<std::uint8_t> rx_control;
+
+    struct Outgoing {
+        link::Frame frame;
+        std::size_t max_frame;
+    };
+
+    std::deque<Outgoing> outgoing;
+    std::optional<Outgoing> transmitting;
+    std::unique_ptr<link::LinkFragmenter> fragmenter;
+    unsigned retries = 0;
     SetRequestHandler set_handler;
     ActionRequestHandler action_handler;
     DiagnosticHandler diagnostic;
@@ -106,10 +128,13 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
           executor(std::move(ex)),
           options(std::move(opt)),
           decoder(options.limits),
+          reassembler(options.limits.max_data_bytes),
           agreement(options.parameters) {}
 
     ~Impl() {
         if (idle_timer) idle_timer->cancel();
+        for (auto& timer : {block_timer, heartbeat_timer, tx_timer, rx_timer})
+            if (timer) timer->cancel();
         channel->close();
         if (pending) {
             pending->timer->cancel();
@@ -144,6 +169,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         if (!pending) return;
         auto item = std::move(*pending);
         pending.reset();
+        collecting.reset();
         item.timer->cancel();
         // 成功或被释放打断的序号均进入隔离期，避免序号循环后立即命中重复响应。
         const auto now = executor->now();
@@ -158,6 +184,13 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         if (state == State::closed) return;
         state = State::closed;
         decoder.reset();
+        reassembler.reset();
+        outgoing.clear();
+        transmitting.reset();
+        fragmenter.reset();
+        serving_blocks.clear();
+        for (auto& timer : {block_timer, heartbeat_timer, tx_timer, rx_timer})
+            if (timer) timer->cancel();
         if (idle_timer) idle_timer->cancel();
         channel->close();
         complete(std::move(error));
@@ -167,6 +200,8 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         // 发送释放通知/应答可能已关闭物理通道，失败终态不能被后续迁移覆盖。
         if (state == State::closed) return;
         state = target;
+        serving_blocks.clear();
+        if (block_timer) block_timer->cancel();
         if (idle_timer) idle_timer->cancel();
         complete(std::move(error));
     }
@@ -207,7 +242,18 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         return limits;
     }
 
-    Result<Bytes> wire(const apdu::Apdu& message) {
+    std::size_t send_frame_limit() const {
+        return (state == State::associated || state == State::releasing)
+                   ? agreement.send_frame_bytes + 2u
+                   : options.parameters.send_frame_bytes + 2u;
+    }
+
+    bool fragmentation() const {
+        return (state == State::associated || state == State::releasing) &&
+               (agreement.protocol[2] & 0x08);
+    }
+
+    Result<link::Frame> wire(const apdu::Apdu& message) {
         const bool link_message = std::holds_alternative<apdu::LinkRequest>(message) ||
                                   std::holds_alternative<apdu::LinkResponse>(message);
         const bool server = options.role == Role::server;
@@ -223,30 +269,199 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         frame.control = static_cast<std::uint8_t>(
             (server ? 0x80 : 0) | (client_initiated ? 0x40 : 0) | (link_message ? 1 : 3));
         frame.payload = std::move(encoded).value();
-        auto limits = options.limits;
-        const auto max_length = state == State::associated || state == State::releasing
-                                    ? agreement.send_frame_bytes
-                                    : options.parameters.send_frame_bytes;
-        limits.max_frame_bytes =
-            std::min<std::size_t>(limits.max_frame_bytes, static_cast<std::size_t>(max_length) + 2);
-        return link::encode_frame(frame, limits);
+        if (frame.payload.size() + 11 + frame.server.bytes.size() > send_frame_limit() &&
+            (!fragmentation() || link_message ||
+             send_frame_limit() <= 13 + frame.server.bytes.size()))
+            return Error{ErrorCode::resource_limit, 0,
+                         "APDU requires unnegotiated link fragmentation"};
+        return frame;
     }
 
-    void send(const apdu::Apdu& message) {
-        auto bytes = wire(message);
+    void write_frame(const link::Frame& frame, std::size_t max_frame, bool finish = false) {
+        auto limits = options.limits;
+        limits.max_frame_bytes = max_frame;
+        auto bytes = link::encode_frame(frame, limits);
         if (!bytes) {
-            report(bytes.error());
             shutdown(bytes.error());
             return;
         }
         const std::weak_ptr<Impl> weak = shared_from_this();
-        channel->async_write(std::move(bytes).value(), [weak](Result<void> result) {
+        channel->async_write(std::move(bytes).value(), [weak, finish](Result<void> result) {
             if (const auto self = weak.lock())
-                self->executor->post([weak, result = std::move(result)] {
-                    if (const auto self = weak.lock())
-                        if (!result) self->shutdown(result.error());
+                self->executor->post([weak, finish, result = std::move(result)] {
+                    if (const auto self = weak.lock()) {
+                        if (!result) {
+                            self->shutdown(result.error());
+                            return;
+                        }
+                        if (finish && self->state != State::closed) {
+                            self->transmitting.reset();
+                            self->pump_output();
+                        }
+                    }
                 });
         });
+    }
+
+    void send_fragment() {
+        if (state == State::closed || !transmitting || !fragmenter) return;
+        const auto f = fragmenter->current();
+        auto encoded = link::encode_fragment(f);
+        if (!encoded) {
+            shutdown(encoded.error());
+            return;
+        }
+        auto frame = transmitting->frame;
+        frame.control |= 0x20;
+        frame.payload = std::move(encoded).value();
+        if (tx_timer) tx_timer->cancel();
+        const bool last = f.type == link::FragmentType::last;
+        if (!last) {
+            const std::weak_ptr<Impl> weak = shared_from_this();
+            try {
+                tx_timer = executor->schedule(options.fragment_timeout, [weak] {
+                    if (const auto self = weak.lock()) {
+                        if (!self->fragmenter || self->state == State::closed) return;
+                        if (self->retries++ >= self->options.fragment_retries)
+                            self->shutdown({ErrorCode::timeout, 0, "link fragment ACK timeout"});
+                        else
+                            self->send_fragment();
+                    }
+                });
+            } catch (...) {
+                shutdown({ErrorCode::invalid_value, 0, "fragment timer range"});
+                return;
+            }
+        }
+        // 末片不等待确认；队列仍等到通道写完成后再发送下一个 APDU，保持顺序。
+        if (last) fragmenter.reset();
+        write_frame(frame, transmitting->max_frame, last);
+    }
+
+    void pump_output() {
+        if (transmitting || outgoing.empty() || state == State::closed) return;
+        transmitting = std::move(outgoing.front());
+        outgoing.pop_front();
+        const auto overhead = 11 + transmitting->frame.server.bytes.size();
+        if (transmitting->frame.payload.size() + overhead <= transmitting->max_frame)
+            write_frame(transmitting->frame, transmitting->max_frame, true);
+        else {
+            auto payload = std::move(transmitting->frame.payload);
+            fragmenter = std::make_unique<link::LinkFragmenter>(
+                std::move(payload), transmitting->max_frame - overhead - 2,
+                options.limits.max_data_bytes);
+            retries = 0;
+            send_fragment();
+        }
+    }
+
+    void enqueue(link::Frame frame) {
+        if (state == State::closed) return;
+        // 单会话发送队列最多八个 APDU，每个 APDU 另受协商及本地字节预算限制。
+        if (outgoing.size() >= 8) {
+            shutdown({ErrorCode::resource_limit, 0, "session APDU queue"});
+            return;
+        }
+        outgoing.push_back({std::move(frame), send_frame_limit()});
+        pump_output();
+    }
+
+    void send(const apdu::Apdu& message) {
+        auto frame = wire(message);
+        if (!frame) {
+            report(frame.error());
+            shutdown(frame.error());
+            return;
+        }
+        enqueue(std::move(frame).value());
+    }
+
+    bool accept_tag(const std::optional<apdu::TimeTag>& tag) {
+        if (!tag) return true;
+        const auto now = calendar();
+        if (!now) return false;
+        auto valid = apdu::valid_time_tag(*tag, seconds_calendar(*now));
+        if (!valid || !valid.value()) {
+            report(valid ? Error{ErrorCode::invalid_value, 0, "expired TimeTag"} : valid.error());
+            return false;
+        }
+        return true;
+    }
+
+    std::optional<apdu::TimeTag> tag_of(const apdu::Apdu& message) const {
+        return std::visit(
+            [](const auto& v) -> std::optional<apdu::TimeTag> {
+                using T = std::decay_t<decltype(v)>;
+                if constexpr (std::is_same_v<T, apdu::LinkRequest> ||
+                              std::is_same_v<T, apdu::LinkResponse>)
+                    return {};
+                else
+                    return v.time_tag;
+            },
+            message);
+    }
+
+    bool response_tag(const std::optional<apdu::TimeTag>& tag) const {
+        return pending && tag == tag_of(pending->request);
+    }
+
+    bool set_request_tag(apdu::Apdu& message) {
+        if (!options.request_time_tag || options.role != Role::client) return true;
+        const auto now = calendar();
+        if (!now) return false;
+        const apdu::TimeTag tag{seconds_calendar(*now), *options.request_time_tag};
+        if (!apdu::valid_time_tag(tag, tag.sent_at)) {
+            shutdown({ErrorCode::invalid_value, 0, "request TimeTag calendar"});
+            return false;
+        }
+        std::visit(
+            [&](auto& v) {
+                using T = std::decay_t<decltype(v)>;
+                if constexpr (!std::is_same_v<T, apdu::LinkRequest> &&
+                              !std::is_same_v<T, apdu::LinkResponse>)
+                    v.time_tag = tag;
+            },
+            message);
+        return true;
+    }
+
+    void arm_heartbeat() {
+        if (heartbeat_timer) heartbeat_timer->cancel();
+        if (!options.heartbeat_seconds || options.role != Role::server || state == State::closed ||
+            state == State::disconnected)
+            return;
+        const std::weak_ptr<Impl> weak = shared_from_this();
+        try {
+            heartbeat_timer =
+                executor->schedule(std::chrono::seconds(options.heartbeat_seconds), [weak] {
+                    if (const auto self = weak.lock()) {
+                        if (self->state == State::closed || self->state == State::disconnected)
+                            return;
+                        if (self->pending) {
+                            self->arm_heartbeat();
+                            return;
+                        }
+                        const auto now = self->calendar();
+                        if (!now) return;
+                        apdu::LinkRequest request;
+                        request.type = apdu::LinkRequestType::heartbeat;
+                        request.heartbeat_seconds = self->options.heartbeat_seconds;
+                        request.requested_at = *now;
+                        self->submit(Kind::link, request, [weak](Result<apdu::Apdu> r) {
+                            if (const auto self = weak.lock()) {
+                                if (!r)
+                                    self->report(r.error());
+                                else if (std::get<apdu::LinkResponse>(r.value()).result & 7)
+                                    self->shutdown(
+                                        {ErrorCode::remote_error, 0, "heartbeat rejected"});
+                                self->arm_heartbeat();
+                            }
+                        });
+                    }
+                });
+        } catch (...) {
+            shutdown({ErrorCode::invalid_value, 0, "heartbeat timer range"});
+        }
     }
 
     void submit(Kind kind, apdu::Apdu message, std::function<void(Result<apdu::Apdu>)> handler) {
@@ -285,12 +500,18 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                     v.piid_acd = static_cast<std::uint8_t>(id);
                 else if constexpr (std::is_same_v<T, apdu::ConnectRequest> ||
                                    std::is_same_v<T, apdu::GetRequest> ||
+                                   std::is_same_v<T, apdu::GetRecordRequest> ||
                                    std::is_same_v<T, apdu::ReleaseRequest> ||
                                    std::is_same_v<T, apdu::SetRequest> ||
                                    std::is_same_v<T, apdu::ActionRequest>)
                     v.piid = static_cast<std::uint8_t>(id);
             },
             message);
+        if (!set_request_tag(message)) {
+            deliver(std::move(handler),
+                    Result<apdu::Apdu>{Error{ErrorCode::invalid_value, 0, "request TimeTag"}});
+            return;
+        }
         auto bytes = wire(message);
         if (!bytes) {
             if (kind == Kind::release) {
@@ -324,13 +545,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         }
         pending.emplace(Pending{kind, static_cast<std::uint8_t>(id), std::move(handler),
                                 std::move(timer), std::move(message)});
-        channel->async_write(std::move(bytes).value(), [weak](Result<void> result) {
-            if (const auto self = weak.lock())
-                self->executor->post([weak, result = std::move(result)] {
-                    if (const auto self = weak.lock())
-                        if (!result) self->shutdown(result.error());
-                });
-        });
+        enqueue(std::move(bytes).value());
     }
 
     template <class Request, class Response, class Handler>
@@ -364,11 +579,12 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
     template <class Request, class Response, class Handler>
     void serve_mutation(const Request& request, Handler& handler, unsigned capability) {
         if (options.role != Role::server) return;
-        if (state != State::associated || request.time_tag ||
+        if (state != State::associated ||
             !(agreement.protocol[capability / 8] & (0x80 >> (capability % 8)))) {
-            send(apdu::ErrorResponse{true, request.piid, 2, {}});
+            send(apdu::ErrorResponse{true, request.piid, 2, request.time_tag});
             return;
         }
+        if (!accept_tag(request.time_tag)) return;
         touch();
         if (state == State::closed) return;
         try {
@@ -384,10 +600,10 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             }
             response.piid_acd = request.piid;
             response.list = request.list;
-            response.time_tag.reset();
+            response.time_tag = request.time_tag;
             send(response);
         } catch (...) {
-            send(apdu::ErrorResponse{true, request.piid, 255, {}});
+            send(apdu::ErrorResponse{true, request.piid, 255, request.time_tag});
         }
     }
 
@@ -395,7 +611,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
     void accept_mutation(apdu::Apdu message) {
         const auto& request = std::get<Request>(pending->request);
         const auto& response = std::get<Response>(message);
-        bool matches = request.list == response.list && !response.time_tag;
+        bool matches = request.list == response.list && response_tag(response.time_tag);
         if constexpr (std::is_same_v<Request, apdu::SetRequest>) {
             matches = matches && request.attributes.size() == response.attributes.size();
             if (matches)
@@ -442,7 +658,147 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         });
     }
 
-    void receive(const link::Frame& frame) {
+    void expire_blocks() {
+        if (block_timer) block_timer->cancel();
+        const std::weak_ptr<Impl> weak = shared_from_this();
+        try {
+            block_timer = executor->schedule(options.request_timeout, [weak] {
+                if (const auto self = weak.lock()) self->serving_blocks.clear();
+            });
+        } catch (...) {
+            shutdown({ErrorCode::invalid_value, 0, "GET snapshot timer range"});
+        }
+    }
+
+    void send_snapshot(apdu::GetSnapshot snapshot) {
+        serving_blocks.clear();
+        if (block_timer) block_timer->cancel();
+        const auto full = std::visit([](const auto& v) -> apdu::Apdu { return v; }, snapshot);
+        auto bytes = apdu::encode_apdu(full, options.limits);
+        if (!bytes) {
+            send(apdu::ErrorResponse{true, id_of(full), 255, tag_of(full)});
+            return;
+        }
+        const auto overhead = 11 + options.server.bytes.size();
+        const auto target = send_frame_limit() > overhead ? send_frame_limit() - overhead : 0;
+        if (options.prefer_get_blocks && (agreement.protocol[0] & 0x02) &&
+            bytes.value().size() > std::min<std::size_t>(target, agreement.apdu_bytes)) {
+            auto split = apdu::GetBlockTransfer::split(
+                std::move(snapshot), std::min<std::size_t>(target, agreement.apdu_bytes),
+                codec_limits(true));
+            if (!split) {
+                send(apdu::ErrorResponse{true, id_of(full), 255, tag_of(full)});
+                return;
+            }
+            serving_blocks = std::move(split).value();
+            serving_block = 0;
+            auto first = serving_blocks.front();
+            if (first.last)
+                serving_blocks.clear();
+            else
+                expire_blocks();
+            send(first);
+            return;
+        }
+        send(full);
+    }
+
+    void serve_next(const apdu::GetNextRequest& request) {
+        if (options.role != Role::server || state != State::associated) return;
+        if (!accept_tag(request.time_tag)) return;
+        if (serving_blocks.empty() || (serving_blocks.front().piid_acd & 0xbf) != request.piid) {
+            send(apdu::GetNextResponse{request.piid, true, request.block, std::uint8_t{11},
+                                       request.time_tag});
+            return;
+        }
+        if (request.block != serving_block ||
+            !(request.time_tag == serving_blocks.front().time_tag)) {
+            serving_blocks.clear();
+            if (block_timer) block_timer->cancel();
+            send(apdu::GetNextResponse{request.piid, true, request.block, std::uint8_t{10},
+                                       request.time_tag});
+            return;
+        }
+        touch();
+        if (state == State::closed) return;
+        ++serving_block;
+        auto next = serving_blocks[serving_block];
+        if (next.last) {
+            serving_blocks.clear();
+            if (block_timer) block_timer->cancel();
+        } else
+            expire_blocks();
+        send(next);
+    }
+
+    void accept_record(apdu::Apdu message) {
+        const auto& request = std::get<apdu::GetRecordRequest>(pending->request);
+        const auto& response = std::get<apdu::GetRecordResponse>(message);
+        bool matches = request.list == response.list &&
+                       request.records.size() == response.records.size() &&
+                       response_tag(response.time_tag);
+        if (matches)
+            for (std::size_t i = 0; i < request.records.size(); ++i) {
+                if (!(request.records[i].attribute == response.records[i].attribute) ||
+                    (!request.records[i].columns.empty() &&
+                     !(request.records[i].columns == response.records[i].columns)))
+                    matches = false;
+            }
+        if (!matches) {
+            report({ErrorCode::invalid_value, 0, "record OAD/RCSD/list mismatch"});
+            return;
+        }
+        touch();
+        complete(std::move(message));
+    }
+
+    void accept_next(const apdu::GetNextResponse& response) {
+        if (!pending || (pending->kind != Kind::get && pending->kind != Kind::record) ||
+            !response_tag(response.time_tag) || !(agreement.protocol[0] & 0x02))
+            return;
+        if (!collecting)
+            collecting = std::make_unique<apdu::GetBlockTransfer>(
+                pending->id, pending->kind == Kind::record, options.limits);
+        auto accepted = collecting->accept(response);
+        if (!accepted) {
+            // 乱序/重复仅诊断，不推进，最终由总事务超时隔离迟到结果；远端 DAR 结束等待。
+            if (accepted.error().code == ErrorCode::invalid_value) {
+                report(accepted.error());
+                return;
+            }
+            complete(accepted.error());
+            return;
+        }
+        touch();
+        if (state == State::closed) return;
+        if (!accepted.value()) {
+            send(apdu::GetNextRequest{pending->id, response.block, tag_of(pending->request)});
+            return;
+        }
+        auto full = std::visit([](auto&& v) -> apdu::Apdu { return std::move(v); },
+                               std::move(*accepted.value()));
+        if (pending->kind == Kind::record) {
+            std::get<apdu::GetRecordResponse>(full).list =
+                std::get<apdu::GetRecordRequest>(pending->request).list;
+            accept_record(std::move(full));
+        } else {
+            auto& response_full = std::get<apdu::GetResponse>(full);
+            const auto& request = std::get<apdu::GetRequest>(pending->request);
+            response_full.list = request.list;
+            if (response_full.attributes.size() != request.attributes.size()) {
+                shutdown({ErrorCode::invalid_value, 0, "GET block descriptor count"});
+                return;
+            }
+            for (std::size_t i = 0; i < request.attributes.size(); ++i)
+                if (!(request.attributes[i] == response_full.attributes[i].attribute)) {
+                    shutdown({ErrorCode::invalid_value, 0, "GET block descriptors"});
+                    return;
+                }
+            complete(std::move(full));
+        }
+    }
+
+    void receive(const link::Frame& frame, bool assembled = false) {
         if (!(frame.server == options.server) || frame.client != options.client_address) {
             report({ErrorCode::address_mismatch, 0, "session SA/CA"});
             return;
@@ -451,14 +807,78 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             report({ErrorCode::direction_mismatch, 3, "session DIR"});
             return;
         }
-        if (frame.control & 0x20) {
-            report({ErrorCode::unsupported_service, 3, "link fragmentation"});
+        const auto receive_limit = state == State::associated
+                                       ? agreement.receive_frame_bytes
+                                       : options.parameters.receive_frame_bytes;
+        if (!assembled && frame.payload.size() + 9 + frame.server.bytes.size() > receive_limit) {
+            report({ErrorCode::resource_limit, 1, "negotiated receive frame limit"});
             return;
         }
-        // 协商后的接收尺寸按完整帧长度域计算；单帧限制不依赖对端自报尺寸。
-        if (state == State::associated &&
-            frame.payload.size() + 9 + frame.server.bytes.size() > agreement.receive_frame_bytes) {
-            report({ErrorCode::resource_limit, 1, "negotiated receive frame limit"});
+        if (frame.control & 0x20) {
+            if (!fragmentation() || (frame.control & 7) != 3) {
+                report({ErrorCode::unsupported_service, 3, "unnegotiated link fragments"});
+                return;
+            }
+            auto f = link::decode_fragment(frame.payload);
+            if (!f) {
+                report(f.error());
+                return;
+            }
+            if (f.value().type == link::FragmentType::acknowledgement) {
+                if (!fragmenter || !transmitting ||
+                    (frame.control & 0xf7) !=
+                        (((transmitting->frame.control | 0x20) ^ 0x80) & 0xf7))
+                    return;
+                auto accepted = fragmenter->acknowledge(f.value().sequence);
+                if (!accepted) {
+                    report(accepted.error());
+                    return;
+                }
+                if (tx_timer) tx_timer->cancel();
+                retries = 0;
+                send_fragment();
+                return;
+            }
+            const auto control = static_cast<std::uint8_t>(frame.control & 0xf7);
+            if (reassembler.active() && rx_control && *rx_control != control) {
+                report({ErrorCode::direction_mismatch, 3, "fragment context changed"});
+                return;
+            }
+            auto accepted = reassembler.accept(f.value());
+            if (!accepted) {
+                report(accepted.error());
+                return;
+            }
+            rx_control = control;
+            if (accepted.value().acknowledge) {
+                auto ack = frame;
+                ack.control ^= 0x80;
+                auto payload = link::encode_fragment(
+                    {link::FragmentType::acknowledgement, *accepted.value().acknowledge, {}});
+                ack.payload = std::move(payload).value();
+                write_frame(ack, send_frame_limit());
+            }
+            if (accepted.value().apdu) {
+                if (rx_timer) rx_timer->cancel();
+                rx_control.reset();
+                auto complete = frame;
+                complete.control &= 0xdf;
+                complete.payload = std::move(*accepted.value().apdu);
+                receive(complete, true);
+                return;
+            }
+            if (!accepted.value().duplicate) {
+                if (rx_timer) rx_timer->cancel();
+                const std::weak_ptr<Impl> weak = shared_from_this();
+                try {
+                    rx_timer = executor->schedule(options.reassembly_timeout, [weak] {
+                        if (const auto self = weak.lock())
+                            self->shutdown({ErrorCode::timeout, 0, "link reassembly timeout"});
+                    });
+                } catch (...) {
+                    shutdown({ErrorCode::invalid_value, 0, "reassembly timer range"});
+                }
+            }
             return;
         }
         auto decoded = apdu::decode_apdu(frame.payload, codec_limits(state == State::associated));
@@ -513,15 +933,17 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         }
         if (auto request = std::get_if<apdu::ConnectRequest>(&message)) {
             if (options.role != Role::server) return;
+            if (!accept_tag(request->time_tag)) return;
             apdu::ConnectResponse response;
             response.piid_acd = request->piid;
             response.factory = options.factory;
+            response.time_tag = request->time_tag;
             response.parameters = options.parameters;
             if (request->parameters.version != options.parameters.version)
                 response.result = 5;
             else if (!std::holds_alternative<apdu::NullSecurity>(request->mechanism) ||
-                     request->time_tag || !valid_parameters(request->parameters) ||
-                     state == State::disconnected || state == State::associated)
+                     !valid_parameters(request->parameters) || state == State::disconnected ||
+                     state == State::associated)
                 response.result = 255;
             else {
                 auto& p = response.parameters;
@@ -555,11 +977,8 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         }
         if (auto request = std::get_if<apdu::ReleaseRequest>(&message)) {
             if (options.role != Role::server) return;
-            if (request->time_tag) {
-                send(apdu::ErrorResponse{true, request->piid, 2, {}});
-                return;
-            }
-            send(apdu::ReleaseResponse{request->piid, 0, {}});
+            if (!accept_tag(request->time_tag)) return;
+            send(apdu::ReleaseResponse{request->piid, 0, request->time_tag});
             if (state != State::closed)
                 leave_association({ErrorCode::not_associated, 0, "peer release"});
             return;
@@ -574,13 +993,48 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                                                                       request->list ? 13 : 12);
             return;
         }
+        if (const auto request = std::get_if<apdu::GetNextRequest>(&message)) {
+            serve_next(*request);
+            return;
+        }
+        if (const auto request = std::get_if<apdu::GetRecordRequest>(&message)) {
+            if (options.role != Role::server) return;
+            if (state != State::associated || !(agreement.protocol[0] & 0x10)) {
+                send(apdu::ErrorResponse{true, request->piid, 2, request->time_tag});
+                return;
+            }
+            if (!accept_tag(request->time_tag)) return;
+            serving_blocks.clear();
+            if (block_timer) block_timer->cancel();
+            touch();
+            if (state == State::closed) return;
+            try {
+                apdu::GetRecordResponse response;
+                if (record_handler)
+                    response = record_handler(*request);
+                else
+                    for (const auto& record : request->records)
+                        response.records.push_back(
+                            {record.attribute, record.columns, std::uint8_t{4}});
+                response.piid_acd = request->piid;
+                response.list = request->list;
+                response.time_tag = request->time_tag;
+                send_snapshot(std::move(response));
+            } catch (...) {
+                send(apdu::ErrorResponse{true, request->piid, 255, request->time_tag});
+            }
+            return;
+        }
         if (auto request = std::get_if<apdu::GetRequest>(&message)) {
             if (options.role != Role::server) return;
             const auto bit = request->list ? 0x20 : 0x40;
-            if (state != State::associated || !(agreement.protocol[0] & bit) || request->time_tag) {
-                send(apdu::ErrorResponse{true, request->piid, 2, {}});
+            if (state != State::associated || !(agreement.protocol[0] & bit)) {
+                send(apdu::ErrorResponse{true, request->piid, 2, request->time_tag});
                 return;
             }
+            if (!accept_tag(request->time_tag)) return;
+            serving_blocks.clear();
+            if (block_timer) block_timer->cancel();
             touch();
             if (state == State::closed) return;
             try {
@@ -594,10 +1048,10 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                 }
                 response.piid_acd = request->piid;
                 response.list = request->list;
-                response.time_tag.reset();
-                send(response);
+                response.time_tag = request->time_tag;
+                send_snapshot(response);
             } catch (...) {
-                send(apdu::ErrorResponse{true, request->piid, 255, {}});
+                send(apdu::ErrorResponse{true, request->piid, 255, request->time_tag});
             }
             return;
         }
@@ -608,10 +1062,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                 report({ErrorCode::not_associated, 0, "unexpected release notification"});
                 return;
             }
-            if (notification->time_tag) {
-                report({ErrorCode::unsupported_service, 0, "release notification TimeTag"});
-                return;
-            }
+            if (!accept_tag(notification->time_tag)) return;
             leave_association({ErrorCode::not_associated, 0, "peer release notification"});
             return;
         }
@@ -620,7 +1071,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             return;
         }
         if (auto error = std::get_if<apdu::ErrorResponse>(&message)) {
-            if (error->time_tag) {
+            if (!response_tag(error->time_tag)) {
                 report({ErrorCode::unsupported_service, 0, "error response TimeTag"});
                 return;
             }
@@ -629,12 +1080,21 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             complete(Error{ErrorCode::remote_error, 0, "remote ERROR-Response", error->type});
             return;
         }
+        if (const auto next = std::get_if<apdu::GetNextResponse>(&message)) {
+            accept_next(*next);
+            return;
+        }
+        if (pending->kind == Kind::record &&
+            std::holds_alternative<apdu::GetRecordResponse>(message)) {
+            accept_record(std::move(message));
+            return;
+        }
         if (pending->kind == Kind::get && std::holds_alternative<apdu::GetResponse>(message)) {
             const auto& request = std::get<apdu::GetRequest>(pending->request);
             const auto& response = std::get<apdu::GetResponse>(message);
             bool matches = request.list == response.list &&
                            request.attributes.size() == response.attributes.size() &&
-                           !response.time_tag;
+                           response_tag(response.time_tag);
             if (matches)
                 for (std::size_t i = 0; i < request.attributes.size(); ++i)
                     if (!(request.attributes[i] == response.attributes[i].attribute)) {
@@ -656,14 +1116,14 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         } else if (pending->kind == Kind::connect &&
                    std::holds_alternative<apdu::ConnectResponse>(message)) {
             const auto& response = std::get<apdu::ConnectResponse>(message);
-            if (response.result && response.time_tag) {
+            if (!response_tag(response.time_tag)) {
                 report({ErrorCode::unsupported_service, 0, "CONNECT rejection TimeTag"});
                 return;
             }
             if (!response.result) {
                 const auto& p = response.parameters;
                 bool valid = valid_parameters(p) && p.version == options.parameters.version &&
-                             !response.security && !response.time_tag;
+                             !response.security && response_tag(response.time_tag);
                 for (std::size_t i = 0; i < p.protocol.size(); ++i)
                     if (p.protocol[i] & ~options.parameters.protocol[i]) valid = false;
                 for (std::size_t i = 0; i < p.function.size(); ++i)
@@ -707,9 +1167,10 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                     state = State::preconnected;
             }
             complete(std::move(message));
+            arm_heartbeat();
         } else if (pending->kind == Kind::release &&
                    std::holds_alternative<apdu::ReleaseResponse>(message)) {
-            if (std::get<apdu::ReleaseResponse>(message).time_tag) {
+            if (!response_tag(std::get<apdu::ReleaseResponse>(message).time_tag)) {
                 report({ErrorCode::unsupported_service, 0, "release response TimeTag"});
                 return;
             }
@@ -725,7 +1186,14 @@ Session::Session(std::shared_ptr<transport::IChannel> channel, std::shared_ptr<I
     if (!channel || !executor || options.server.type != link::AddressType::single ||
         options.server.bytes.empty() || options.server.bytes.size() > 16 ||
         options.server.logical > 3 || !valid_parameters(options.parameters) ||
-        options.request_timeout.count() <= 0 || options.id_reuse_delay < options.request_timeout ||
+        options.request_timeout.count() <= 0 || options.fragment_timeout.count() <= 0 ||
+        options.reassembly_timeout.count() <= 0 || options.fragment_retries > 16 ||
+        options.reassembly_timeout >
+            std::chrono::duration_cast<std::chrono::milliseconds>(Clock::duration::max()) ||
+        options.fragment_timeout >
+            std::chrono::duration_cast<std::chrono::milliseconds>(Clock::duration::max()) ||
+        (options.request_time_tag && options.request_time_tag->unit > 5) ||
+        options.id_reuse_delay < options.request_timeout ||
         options.request_timeout >
             std::chrono::duration_cast<std::chrono::milliseconds>(Clock::duration::max()) ||
         options.limits.max_data_bytes < 80 || !options.limits.max_elements ||
@@ -733,10 +1201,11 @@ Session::Session(std::shared_ptr<transport::IChannel> channel, std::shared_ptr<I
         options.parameters.receive_frame_bytes + 2u > options.limits.max_frame_bytes ||
         options.parameters.apdu_bytes > options.limits.max_data_bytes)
         throw std::invalid_argument("session options");
-    // 仅声明已实现的普通/列表 GET、SET、ACTION；then-get 和记录等组合能力仍关闭。
-    options.parameters.protocol[0] &= 0xe1;
+    // 仅声明已实现的 GET 普通/列表、记录、Next、SET/ACTION 及链路分帧，其他能力关闭。
+    options.parameters.protocol[0] &= 0xf3;
     options.parameters.protocol[1] &= 0x8c;
-    for (std::size_t i = 2; i < options.parameters.protocol.size(); ++i)
+    options.parameters.protocol[2] &= 0x08;
+    for (std::size_t i = 3; i < options.parameters.protocol.size(); ++i)
         options.parameters.protocol[i] = 0;
     if (!(options.parameters.protocol[0] & 0x80))
         throw std::invalid_argument("application association capability required");
@@ -762,6 +1231,7 @@ void Session::start() {
             self->established_at = seconds_calendar(*now);
             self->touch();
         }
+        self->arm_heartbeat();
         self->read();
     });
 }
@@ -771,6 +1241,20 @@ void Session::set_request_handler(RequestHandler handler) {
     impl_->executor->post([weak, handler = std::move(handler)]() mutable {
         if (const auto self = weak.lock()) self->request_handler = std::move(handler);
     });
+}
+
+void Session::set_record_handler(RecordRequestHandler handler) {
+    const std::weak_ptr<Impl> weak = impl_;
+    impl_->executor->post([weak, handler = std::move(handler)]() mutable {
+        if (const auto self = weak.lock()) self->record_handler = std::move(handler);
+    });
+}
+
+void Session::async_get_record(std::vector<apdu::GetRecord> records, bool list,
+                               RecordHandler handler) {
+    impl_->post_mutation<apdu::GetRecordRequest, apdu::GetRecordResponse>(
+        apdu::GetRecordRequest{0, list, std::move(records), {}}, Impl::Kind::record, 3,
+        std::move(handler));
 }
 
 void Session::set_diagnostic_handler(DiagnosticHandler handler) {

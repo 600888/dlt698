@@ -208,7 +208,7 @@ void object_access() {
                                       h.voltage));
     const auto response = h.connect();
     CHECK(response.result == 0);
-    CHECK(response.parameters.protocol[0] == 0xe1);
+    CHECK(response.parameters.protocol[0] == 0xf3);
     CHECK(response.parameters.receive_window == 1);
     CHECK(response.parameters.function == std::array<std::uint8_t, 16>{});
     CHECK(h.client->state() == State::associated);
@@ -596,7 +596,8 @@ void quarantine_and_resources() {
     bounded.client->async_get({{0x2000, 2, 0}}, false, [&](auto r) { last = std::move(r); });
     bounded.executor->run_ready();
     CHECK(last && !*last);
-    CHECK(bounded.server->state() == State::closed);
+    CHECK(last->error().code == ErrorCode::remote_error);
+    CHECK(bounded.server->state() == State::associated);
 }
 
 int main() {

@@ -74,6 +74,18 @@ Result<protocol::apdu::GetResponse> SyncClientService::get_list(
     });
 }
 
+Result<protocol::apdu::RecordResult> SyncClientService::get_record(
+    protocol::apdu::GetRecord record) {
+    return impl_->wait<protocol::apdu::RecordResult>(
+        [&](auto h) { impl_->client.async_get_record(std::move(record), std::move(h)); });
+}
+
+Result<protocol::apdu::GetRecordResponse> SyncClientService::get_record_list(
+    std::vector<protocol::apdu::GetRecord> records) {
+    return impl_->wait<protocol::apdu::GetRecordResponse>(
+        [&](auto h) { impl_->client.async_get_record_list(std::move(records), std::move(h)); });
+}
+
 Result<std::uint8_t> SyncClientService::set(model::Oad attribute, model::Data value) {
     return impl_->wait<std::uint8_t>([&](auto handler) {
         impl_->client.async_set(attribute, std::move(value), std::move(handler));

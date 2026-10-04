@@ -9,7 +9,8 @@ namespace dlt698::protocol::apdu {
 using Apdu =
     std::variant<LinkRequest, LinkResponse, ConnectRequest, ConnectResponse, ReleaseRequest,
                  ReleaseResponse, ReleaseNotification, ErrorResponse, GetRequest, GetResponse,
-                 SetRequest, SetResponse, ActionRequest, ActionResponse>;
+                 SetRequest, SetResponse, ActionRequest, ActionResponse, GetRecordRequest,
+                 GetRecordResponse, GetNextRequest, GetNextResponse>;
 /** @brief 解码当前支持的一个完整 APDU。
  * @param[in] bytes 完整 APDU 字节。
  * @param[in] limits 编解码资源上限。

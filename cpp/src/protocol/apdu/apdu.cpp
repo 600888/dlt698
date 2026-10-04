@@ -22,7 +22,10 @@ Result<Bytes> encode_apdu(const Apdu& message, const Limits& limits) {
     return std::visit(
         [&](const auto& v) -> Result<Bytes> {
             using T = std::decay_t<decltype(v)>;
-            if constexpr (std::is_same_v<T, GetRequest> || std::is_same_v<T, GetResponse>)
+            if constexpr (std::is_same_v<T, GetRequest> || std::is_same_v<T, GetResponse> ||
+                          std::is_same_v<T, GetRecordRequest> ||
+                          std::is_same_v<T, GetRecordResponse> ||
+                          std::is_same_v<T, GetNextRequest> || std::is_same_v<T, GetNextResponse>)
                 return encode_get(GetApdu{v}, limits);
             else if constexpr (std::is_same_v<T, SetRequest> || std::is_same_v<T, SetResponse> ||
                                std::is_same_v<T, ActionRequest> ||
