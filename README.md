@@ -43,7 +43,9 @@ dlt698_decode "68 17 00 43 05 07 09 19 05 16 20 00 15 60 05 01 01 40 01 02 00 00
 
 `dlt698_memory_mutation` 演示经过 FE/串行间隔适配的内存链路：同步 CONNECT → SET → ACTION → GET → RELEASE，输出 `SET DAR=0 ACTION DAR=0 GET UInt16=42`；见 [memory_mutation.cpp](cpp/examples/memory_mutation.cpp)。原始串口与驱动接入方式见 API 文档，真实串口及 RS-485 硬件时序尚未验证。
 
-当前 Session 只开放公共认证；其他认证机制仅支持报文编解码。then-get、ACD/FollowReport、上报、代理、安全后端、完整标准对象目录及 Python 绑定仍待实现。记录选择器的具体采集/数据库语义由应用 provider 实现。真实串口收发与 RS-485 硬件时序尚未验证。
+常用固定点位已内置 14 个 OI，提供标准目录查询、相别/费率 OAD 构造、数组类型及布局校验、精确倍率表示和只读 provider 绑定；见 [标准固定点位](website/docs/protocol/standard-points.md)。运行 `dlt698_standard_points` 可观察电压、电流、电能及通信地址的完整内存示例。
+
+当前 Session 只开放公共认证；其他认证机制仅支持报文编解码。then-get、ACD/FollowReport、上报、代理、安全后端、标准目录的其余对象及 Python 绑定仍待实现。记录选择器的具体采集/数据库语义由应用 provider 实现。真实串口收发与 RS-485 硬件时序尚未验证。
 
 启用传输模块后生成独立的 `dlt698_master`、`dlt698_terminal`，支持 TCP 双向拨号与串口。两个终端分别运行：
 

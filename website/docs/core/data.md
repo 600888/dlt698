@@ -141,6 +141,8 @@ struct ScalerUnit {
 - `Ti` 不做单位换算，比较只比字段本身。
 
 `Tsa` 的内容包含地址描述字节和地址字节，**不包含** A-XDR 外层长度。
+
+`Oad` 的三层含义（OI、属性标识、元素索引）如何共同定位一个测点，见[对象模型与测点寻址](../protocol/point-model.md)。
 :::
 
 ## RecordData

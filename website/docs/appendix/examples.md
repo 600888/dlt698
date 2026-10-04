@@ -15,6 +15,7 @@ description: 仓库附带示例的用途、构建与运行方式。
 | --- | --- | --- |
 | `dlt698_decode` | 解一帧给定十六进制数据 | 否 |
 | `dlt698_memory_get` | 内存通道上的 CONNECT → GET → RELEASE | 否 |
+| `dlt698_standard_points` | 标准点位绑定、OAD 构造、逐项 DAR 和精确工程值 | 否 |
 | `dlt698_memory_mutation` | 内存链路上的同步 CONNECT → SET → ACTION → GET → RELEASE | 否 |
 | `dlt698_master` | 协议客户机：TCP/串口下的 get、set、action、record | 视模式而定 |
 | `dlt698_terminal` | 协议服务器：监听或拨号，接受主站请求 | 视模式而定 |
@@ -51,6 +52,8 @@ dlt698_memory_get
 - [Client/ServerService](../session/service.md)
 
 ## dlt698_memory_mutation
+
+常用标准量的完整示例运行 `dlt698_standard_points`，见[标准固定点位](../protocol/standard-points.md)。
 
 同步客户机 + 串行链路适配的完整示例：内存链路两端都经过 FE 前导和 33 位间隔处理，然后完成同步 CONNECT → SET → ACTION → GET → RELEASE。
 

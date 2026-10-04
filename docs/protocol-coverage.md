@@ -32,7 +32,8 @@
 | 原始串口 | SerialChannel 已实现 | 速率/字格式/流控、串行队列与关闭；真实设备收发未验证 | tcp，参数/打开失败路径及编译/安装 |
 | 串行时序适配 | SerialLinkChannel 已实现 | 四 FE、收发 33 位间隔、投递前预算、方向与真实排空 hooks；无 hook 时只做时间估算 | serial_link，虚拟时间/重复排空/关闭/故障；memory_mutation 闭环 |
 | RS-485 物理验收 | 未验证 | 手动切换必须有真实排空驱动；USB/流控/适配器需硬件测量 | 待设备 |
-| 对象 schema/provider | 通用读写及方法 schema 已实现 | 显式 writable、方法权限/参数/返回类型、一级索引、异常映射 DAR；标准目录及单位换算待补 | mutation、session，部分成功/类型/权限/重入/异常 |
+| 对象 schema/provider | 通用读写及方法 schema 已实现 | 显式 writable、方法权限/参数/返回类型、一级索引、异常映射 DAR | mutation、session，部分成功/类型/权限/重入/异常 |
+| 常用标准点位 | 14 个 OI 的属性元数据、OAD 辅助、精确倍率和只读绑定已实现 | 接线/费率数显式配置；类型/数组长度/资源校验；不自动提供数据或推断远端支持 | standard_points、installed_consumer、dlt698_standard_points；详细范围见 [固定点位](../website/docs/protocol/standard-points.md) |
 | 安全 | CONNECT 认证 CHOICE codec 已实现 | Session 仅接受 NullSecurity，拒绝其他机制；实际认证/SECURITY 封装未实现 | connection、session，非公共机制拒绝 |
 | 主站/终端 CLI | dlt698_master/terminal 已实现 | TCP 拨号方向独立、原始串口 + 串行时序；终端数据为模拟 | 独立进程 TCP 双向拨号 × get/set/action/record 共 8 次 |
 | Python 绑定和分发 | 未开始 | C++ 稳定阶段之后进行 | 待补 |
@@ -75,7 +76,7 @@
 | 86 | MAC | 未实现 |
 | 87 | RN | 未实现 |
 | 88 | Region | 已实现/已测（RecordData 不可变有类型节点） |
-| 89 | Scaler_Unit | 已实现/已测，单位枚举目录待补 |
+| 89 | Scaler_Unit | 已实现/已测；standard::unit_symbol 收录首批使用的单位，完整枚举目录待补 |
 | 90 | RSD | 已实现/已测（RecordData 不可变有类型节点） |
 | 91 | CSD | 已实现/已测（RecordData 不可变有类型节点） |
 | 92 | MS | 已实现/已测（RecordData 不可变有类型节点） |

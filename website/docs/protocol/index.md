@@ -18,10 +18,16 @@ comments: false
 数据层   model::Data（精确类型）
 ```
 
+## 先读这一页
+
+第一次接触 698 的话，先看[对象模型与测点寻址](./point-model.md)。它回答"一个测点是怎么被确定的"，也就是 OI、属性标识和元素索引的三层关系，以及记录型对象为什么只能二维定位。不理解这一层，后面所有 GET/SET 的设计都悬着。
+
 ## 这一部分的页面
 
 | 页面 | 内容 |
 | --- | --- |
+| [对象模型与测点寻址](./point-model.md) | OI + 属性 + 索引的三层展开，记录型对象的间接寻址，点表来源 |
+| [标准固定点位](./standard-points.md) | 14 个常用 OI、OAD 构造、标准值校验、精确倍率与只读绑定 |
 | [链路帧与流解析](./frame.md) | `Frame`、`crc16`、`encode_frame`/`decode_frame`、`FrameStreamDecoder` |
 | [链路分帧](./fragment.md) | `Fragment`、`LinkFragmenter`、`LinkReassembler` |
 | [APDU 编解码](./apdu.md) | 统一 `Apdu` 变体与 `encode_apdu`/`decode_apdu` |

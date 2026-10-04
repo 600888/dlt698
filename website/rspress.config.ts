@@ -24,6 +24,8 @@ const sections = [
     text: '协议层',
     path: 'protocol',
     articles: [
+      ['point-model', '对象模型与测点寻址'],
+      ['standard-points', '标准固定点位'],
       ['frame', '链路帧与流解析'],
       ['fragment', '链路分帧'],
       ['apdu', 'APDU 编解码'],
