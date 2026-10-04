@@ -34,7 +34,8 @@ void print_data(const Data& data) {
     std::cout << "Data: " << to_hex(bytes.value()) << '\n';
 }
 
-void print_result(const ObjectValue& value) {
+// 同一源文件也编译为终端程序，该模式不调用客户机结果打印函数。
+[[maybe_unused]] void print_result(const ObjectValue& value) {
     if (const auto dar = std::get_if<std::uint8_t>(&value))
         std::cout << "DAR=" << unsigned(*dar) << '\n';
     else
