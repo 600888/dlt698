@@ -24,10 +24,14 @@ int main() {
                                  model::UInt32{30000}, model::UInt32{63456}}});
     auto address = std::make_shared<service::MemoryObject>();
     address->set(2, model::OctetString{{0x12, 0x34, 0x56, 0x78, 0x90, 0x12}});
-    if (!service::register_standard_object(*registry, 0x2000, {2}, voltage, layout) ||
-        !service::register_standard_object(*registry, 0x2001, {2}, current, layout) ||
-        !service::register_standard_object(*registry, 0x0010, {2}, energy, layout) ||
-        !service::register_standard_object(*registry, 0x4001, {2}, address, layout))
+    if (!service::register_standard_object(*registry, standard::oi::voltage, {2}, voltage,
+                                           layout) ||
+        !service::register_standard_object(*registry, standard::oi::current, {2}, current,
+                                           layout) ||
+        !service::register_standard_object(*registry, standard::oi::forward_active_energy, {2},
+                                           energy, layout) ||
+        !service::register_standard_object(*registry, standard::oi::communication_address, {2},
+                                           address, layout))
         return 1;
     service::ServerService server(terminal, registry);
     service::ClientService client(master);
@@ -38,16 +42,16 @@ int main() {
     executor->run_ready();
     if (!association || !*association || association->value().result) return 2;
 
-    auto a_voltage = standard::phase_oad(0x2000, standard::Phase::a, layout);
-    auto a_current = standard::phase_oad(0x2001, standard::Phase::a, layout);
-    auto total_energy = standard::tariff_oad(0x0010, 0, layout);
+    auto a_voltage = standard::phase_oad(standard::oi::voltage, standard::Phase::a, layout);
+    auto a_current = standard::phase_oad(standard::oi::current, standard::Phase::a, layout);
+    auto total_energy = standard::tariff_oad(standard::oi::forward_active_energy, 0, layout);
     if (!a_voltage || !a_current || !total_energy) return 3;
     std::optional<Result<protocol::apdu::GetResponse>> response;
     client.async_get_list({a_voltage.value(),
                            a_current.value(),
                            total_energy.value(),
-                           {0x4001, 2, 0},
-                           {0x200f, 2, 0}},
+                           {standard::oi::communication_address, 2, 0},
+                           {standard::oi::frequency, 2, 0}},
                           [&](auto r) { response = std::move(r); });
     executor->run_ready();
     if (!response || !*response) return 4;

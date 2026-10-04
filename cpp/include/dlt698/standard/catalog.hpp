@@ -4,6 +4,7 @@
  */
 #pragma once
 #include <dlt698/model/data.hpp>
+#include <dlt698/standard/oi.hpp>
 #include <optional>
 
 namespace dlt698::standard {

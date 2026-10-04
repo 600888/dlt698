@@ -47,7 +47,7 @@ ObjectDefinition variable(std::uint16_t oi, const char* name, std::uint8_t class
                             "附录 E.3 表 E.3",
                             {scalar(1, "逻辑名", DataType::octet_string, source), std::move(value),
                              scalar(3, "换算及单位", DataType::scaler_unit, source)}};
-    if (oi == 0x2001)
+    if (oi == standard::oi::current)
         object.attributes.push_back(
             scalar(4, "零线电流", DataType::int32, "附录 E.3 表 E.3", model::ScalerUnit{-3, 36}));
     return object;
@@ -88,28 +88,33 @@ ScaledNumber scaled(const model::Data& data, model::ScalerUnit scaling) {
 }  // namespace
 
 const std::vector<ObjectDefinition>& objects() {
-    // 唯一不可变数据源；构造函数局部静态表的初始化由 C++ 保证并发安全。
+    // 完整元数据集中在此处，OI 编号复用公开常量；局部静态表的初始化由 C++ 保证并发安全。
     static const auto catalog = [] {
         std::vector<ObjectDefinition> result{
-            energy(0x0000, "组合有功电能", true, 33),
-            energy(0x0010, "正向有功电能", false, 33),
-            energy(0x0020, "反向有功电能", false, 33),
-            energy(0x0030, "组合无功1电能", true, 35),
-            energy(0x0040, "组合无功2电能", true, 35),
-            variable(0x2000, "电压", 3, DataType::uint16, ArrayLayout::phases, {-1, 38}),
-            variable(0x2001, "电流", 3, DataType::int32, ArrayLayout::phases, {-3, 36}),
-            variable(0x2004, "有功功率", 4, DataType::int32, ArrayLayout::total_phases, {-1, 27}),
-            variable(0x2005, "无功功率", 4, DataType::int32, ArrayLayout::total_phases, {-1, 31}),
-            variable(0x2006, "视在功率", 4, DataType::int32, ArrayLayout::total_phases, {-1, 29}),
-            variable(0x200a, "功率因数", 4, DataType::int16, ArrayLayout::total_phases, {-3, 255}),
-            variable(0x200f, "电网频率", 6, DataType::uint16, ArrayLayout::none, {-2, 47})};
-        for (const auto oi : {std::uint16_t{0x4000}, std::uint16_t{0x4001}}) {
-            auto value = scalar(2, oi == 0x4000 ? "日期时间" : "通信地址",
-                                oi == 0x4000 ? DataType::date_time_s : DataType::octet_string,
-                                "附录 E.5 表 E.5");
+            energy(oi::combination_active_energy, "组合有功电能", true, 33),
+            energy(oi::forward_active_energy, "正向有功电能", false, 33),
+            energy(oi::reverse_active_energy, "反向有功电能", false, 33),
+            energy(oi::combination_reactive_energy_1, "组合无功1电能", true, 35),
+            energy(oi::combination_reactive_energy_2, "组合无功2电能", true, 35),
+            variable(oi::voltage, "电压", 3, DataType::uint16, ArrayLayout::phases, {-1, 38}),
+            variable(oi::current, "电流", 3, DataType::int32, ArrayLayout::phases, {-3, 36}),
+            variable(oi::active_power, "有功功率", 4, DataType::int32, ArrayLayout::total_phases,
+                     {-1, 27}),
+            variable(oi::reactive_power, "无功功率", 4, DataType::int32, ArrayLayout::total_phases,
+                     {-1, 31}),
+            variable(oi::apparent_power, "视在功率", 4, DataType::int32, ArrayLayout::total_phases,
+                     {-1, 29}),
+            variable(oi::power_factor, "功率因数", 4, DataType::int16, ArrayLayout::total_phases,
+                     {-3, 255}),
+            variable(oi::frequency, "电网频率", 6, DataType::uint16, ArrayLayout::none, {-2, 47})};
+        for (const auto identifier : {oi::date_time, oi::communication_address}) {
+            auto value =
+                scalar(2, identifier == oi::date_time ? "日期时间" : "通信地址",
+                       identifier == oi::date_time ? DataType::date_time_s : DataType::octet_string,
+                       "附录 E.5 表 E.5");
             value.writable = true;
             result.push_back(
-                {oi,
+                {identifier,
                  value.name,
                  8,
                  "DL/T 698.45-2017",

@@ -2,6 +2,7 @@
 #include <dlt698/service/service.hpp>
 #include <dlt698/service/standard_object.hpp>
 #include <dlt698/service/sync.hpp>
+#include <dlt698/standard/oi.hpp>
 #include <dlt698/transport/memory.hpp>
 #include <dlt698/transport/serial_link.hpp>
 #ifdef HAVE_TRANSPORT
@@ -10,20 +11,24 @@
 #endif
 int main() {
     // 新目录由 core 导出，绑定辅助由 service 导出；安装后的中文头文件需继承 /utf-8。
-    if (dlt698::standard::objects().size() != 14 || !dlt698::standard::find_object(0x0000))
+    namespace oi = dlt698::standard::oi;
+    // 安装后的轻量头文件可在编译期使用常量构造 OAD。
+    constexpr dlt698::model::Oad voltage_point{oi::voltage, 2, 1};
+    if (dlt698::standard::objects().size() != 14 ||
+        !dlt698::standard::find_object(oi::combination_active_energy))
         return 9;
-    const auto energy_point = dlt698::standard::tariff_oad(0x0010, 0);
+    const auto energy_point = dlt698::standard::tariff_oad(oi::forward_active_energy, 0);
     if (!energy_point || !(energy_point.value() == dlt698::model::Oad{0x0010, 2, 1})) return 10;
     const auto engineering =
-        dlt698::standard::engineering_values({0x2000, 2, 1}, dlt698::model::UInt16{2413});
+        dlt698::standard::engineering_values(voltage_point, dlt698::model::UInt16{2413});
     if (!engineering || dlt698::standard::decimal_text(engineering.value()[0]) != "241.3")
         return 11;
     dlt698::service::ObjectRegistry standard_objects;
     auto frequency = std::make_shared<dlt698::service::MemoryObject>();
     frequency->set(2, dlt698::model::UInt16{5000});
-    if (!dlt698::service::register_standard_object(standard_objects, 0x200f, {2}, frequency))
+    if (!dlt698::service::register_standard_object(standard_objects, oi::frequency, {2}, frequency))
         return 12;
-    if (std::get<dlt698::model::Data>(standard_objects.read({0x200f, 2, 0}))
+    if (std::get<dlt698::model::Data>(standard_objects.read({oi::frequency, 2, 0}))
             .as<dlt698::model::UInt16>()
             .value != 5000)
         return 13;
