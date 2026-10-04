@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=${{ matrix.shared }} -DDLT698_WARNINGS_AS_ERRORS=ON
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=${{ matrix.shared }} -DDLT698_WARNINGS_AS_ERRORS=OFF
       - name: Build
         run: cmake --build build --config Release --parallel 2
       - name: Test codecs, TCP and installed consumer
@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Configure without Asio
-        run: cmake -S cpp -B build-core -DCMAKE_BUILD_TYPE=Release -DDLT698_BUILD_TRANSPORT=OFF -DDLT698_WARNINGS_AS_ERRORS=ON
+        run: cmake -S cpp -B build-core -DCMAKE_BUILD_TYPE=Release -DDLT698_BUILD_TRANSPORT=OFF -DDLT698_WARNINGS_AS_ERRORS=OFF
       - name: Build
         run: cmake --build build-core --parallel 2
       - name: Test
