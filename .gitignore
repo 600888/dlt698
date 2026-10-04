@@ -1,6 +1,11 @@
 /build*/
 /out/
 /tmp/
+/website/node_modules/
+/website/doc_build/
+/website/.rspress/
+/website/.qa/
+/website/.npm/
 /.vs/
 /.cache/
 __pycache__/

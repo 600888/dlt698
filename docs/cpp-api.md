@@ -68,11 +68,11 @@ MemoryChannel 的两端共享执行器。单端只允许一个在途读取，每
 
 ## 基础 Session
 
-Session 绑定已连接的 IChannel、串行 IExecutor 和 SessionOptions。协议客户机/服务器角色由 Role 配置，与 TCP 拨号方向独立。地址只接受精确单地址，并验证 SA、CA、DIR、PRM 和功能码；不支持组、通配、广播会话或链路分帧。
+Session 绑定已连接的 IChannel、串行 IExecutor 和 SessionOptions。协议客户机/服务器角色由 Role 配置，与 TCP 拨号方向独立。地址只接受精确单地址，并验证 SA、CA、DIR、PRM 和功能码；不支持组、通配、广播会话。
 
-先注册服务器处理器并调用 `start()`，再由客户机 `async_connect()`。Session 只发起并接受公共 NullSecurity 连接；非公共认证请求被拒绝。仅声明应用连接、GET/SET/ACTION 普通及列表能力，默认协议位图前两字节 E1 8C；功能位图为零，窗口固定为 1。SessionOptions 可缩减能力，协商取交集。未注册 GET 处理器返回 DAR=4，未注册 SET/ACTION 处理器逐项返回拒绝 DAR=3。
+先注册服务器处理器并调用 `start()`，再由客户机 `async_connect()`。Session 只发起并接受公共 NullSecurity 连接；非公共认证请求被拒绝。声明应用连接、GET 普通/列表/记录/Next、SET/ACTION 普通及列表和链路分帧能力，默认协议位图前三字节 F3 8C 08；功能位图为零，窗口固定为 1。SessionOptions 可缩减能力，协商取交集。未注册 GET 处理器返回 DAR=4，未注册 SET/ACTION 处理器逐项返回拒绝 DAR=3。
 
-`require_login=true` 要求先由协议服务器调用 `async_link(login, ...)` 完成预连接；async_link 也支持单次心跳及退出，heartbeat_seconds 只是线上声明，当前不自动周期发送。`preset_association=true` 显式跳过 CONNECT，按本地配置进入应用连接，调用方负责两端一致性；它不表示远端经过认证。
+`require_login=true` 要求先由协议服务器调用 `async_link(login, ...)` 完成预连接；async_link 也支持单次心跳及退出，async_link 的 heartbeat_seconds 为单次线上声明；SessionOptions.heartbeat_seconds 非零时自动周期心跳，超时关闭通道。`preset_association=true` 显式跳过 CONNECT，按本地配置进入应用连接，调用方负责两端一致性；它不表示远端经过认证。
 
 | 操作/情况 | 当前行为 |
 | --- | --- |
@@ -89,7 +89,7 @@ Session 绑定已连接的 IChannel、串行 IExecutor 和 SessionOptions。协�
 
 默认 request_timeout 为 5 秒、id_reuse_delay 为 120 秒，后者须由应用配置为覆盖对端最大响应寿命且不短于请求超时；线上没有 generation 字段。state() 读取原子发布状态，刚投递的操作尚未立即生效。公共请求与完成回调都在会话执行器内处理，用户回调异常被隔离；服务器同步 GET 处理器和 provider 不得阻塞等待同一执行器。calendar_clock 默认空时使用 UTC；注入函数抛异常会以 invalid_value 关闭会话，不发送伪造时间。
 
-当前服务路径只处理无 TimeTag 的请求与响应。Session 对象需要由应用持有；排队任务不会永久保活它。正常退出时保留执行器并继续驱动直到挂起回调完成，然后结束运行线程及运行时。
+SessionOptions.request_time_tag 可为客户机请求自动添加时间标签；服务器验证具体日历与允许延时，过期请求不调用 provider，响应原样回传，客户机严格匹配回显。Release 通知的标签也执行有效性检查。Session 对象需要由应用持有；排队任务不会永久保活它。正常退出时保留执行器并继续驱动直到挂起回调完成，然后结束运行线程及运行时。
 
 ## 对象读写与方法服务
 
@@ -101,13 +101,13 @@ AttributeSchema 的 writable 默认 false，已有只读 schema 不会自动获�
 
 ObjectSchema.methods 用 MethodSchema 声明非零方法编号、可选参数/返回类型及执行权限。IObjectProvider::write/invoke 默认拒绝；目录在释放锁后调用 provider，并把异常转成 DAR=255。MemoryObject::bind_method 支持模式零的方法回调，复制回调后释放锁，允许重入本对象；应用回调须满足跨会话并发约定。
 
-ClientService 的 async_get/set/action 返回单项 ObjectValue、DAR、ActionValue；对应 list 方法返回逐项完整响应。ServerService 接入三类处理器，持有共享目录，不捕获自身地址。列表按顺序独立执行，部分成功不回滚；超时/取消只说明本地没有得到确定响应，不能证明远端没有执行 SET/ACTION，因此不会自动重试。
+ClientService 的 async_get/set/action 返回单项 ObjectValue、DAR、ActionValue；对应 list 方法返回逐项完整响应。ServerService 接入 GET、记录、SET、ACTION 四类处理器，持有共享目录，不捕获自身地址。列表按顺序独立执行，部分成功不回滚；超时/取消只说明本地没有得到确定响应，不能证明远端没有执行 SET/ACTION，因此不会自动重试。
 
 [memory_get.cpp](../cpp/examples/memory_get.cpp) 给出了完整的注册对象、启动两端、CONNECT、读取数据与未知对象、RELEASE 和关闭示例。构建后运行 `dlt698_memory_get` 即可观察精确 Data 字节和 DAR=4。
 
 ## 同步客户机
 
-`SyncClientService(session, drive = {})` 提供 connect、get/get_list、set/set_list、action/action_list、release，在异步核心上等待，不创建线程。应用先启动 Session；不传 drive 时必须由其他线程持续驱动 IoRuntime。传 drive 时调用线程反复调用驱动函数，例如 runtime->run_for(duration) 或 ManualExecutor::advance(duration)，让虚拟时钟也能产生超时。
+`SyncClientService(session, drive = {})` 提供 connect、get/get_list、get_record/get_record_list、set/set_list、action/action_list、release，在异步核心上等待，不创建线程。应用先启动 Session；不传 drive 时必须由其他线程持续驱动 IoRuntime。传 drive 时调用线程反复调用驱动函数，例如 runtime->run_for(duration) 或 ManualExecutor::advance(duration)，让虚拟时钟也能产生超时。
 
 同一适配器同时第二个调用、同一事件循环回调中的同步调用返回 busy；异步会话仍遵循单在途规则。drive 抛异常返回 io_error 并投递取消，后续完成状态由共享对象持有，不引用已经返回的栈。等待超时由 Session 管理，应用须保持运行时进展，销毁适配器前先结束同步调用。[memory_mutation.cpp](../cpp/examples/memory_mutation.cpp) 演示完整同步读写/方法与串行链路适配。
 
@@ -156,3 +156,13 @@ SerialLinkChannel 只接受恰好一个含校验的完整帧，添加四个 FE�
 手动 RS-485 切换配置幂等 set_transmit 和 async_drain；后者须由应用驱动确认最后停止位已经发出，可从其他线程完成。没有真实排空接口时禁止手动方向配置；仅用估算时不能保证 USB 缓冲、硬件流控或特定适配器时序。带流控或需严格排空的设备应接入 async_drain。关闭时取消队列并尽力恢复接收方向；驱动排空失败不重放数据。
 
 当前证据为虚拟时间/内存链路模拟及本机串口参数、打开失败路径，真实串口收发与 RS-485 硬件互操作未验证。
+
+## 记录与分段
+
+`ClientService::async_get_record/async_get_record_list` 和同步对应方法接收 GetRecord（OAD、RSD、RCSD），返回精确的 Data/DAR 表格。AttributeSchema.record 必须显式为 true，ObjectRegistry 检查读权限后在目录锁外调用 IObjectProvider::read_record；MemoryObject::bind_record 提供模拟回调。响应表头、列顺序与行宽必须一致，空请求 RCSD 表示全选，provider 返回实际表头。业务选择条件由 provider 解释，库不猜测表计档案或数据库的排序规则。
+
+全部 RSD 0–10、MS 0–7 和 CSD/ROAD 已建模。带标签 Data 使用 `Data{RecordData{Rsd{Selector9{1}}}}` 等形式；`data.as<RecordData>().as<Rsd>()` 取得常量内容。RecordData 复制共享不可变节点，构造时复制/移动完整值，之后修改原选择器不会改变快照；节点中的 Data 仍遵守全树节点和深度预算。
+
+Session 自动处理链路分帧及 GET Next，两类状态机也可独立使用。每个 GET 查询先生成拥有内存的快照，后续 GetRequestNext 不再次读取 provider；完整属性/记录结果为不可分割单元，超过单帧目标可继续链路分帧，超过 APDU 硬上限返回异常。单会话仅一份服务端快照、一个在途客户机事务、一个发送与一个接收重组过程；新 GET、释放、超时或关闭回收快照。跨记录/跨查询的一致性由应用后端保证。
+
+详见 [M4/M5 资源配置与示例](m4-m5.md)，其中列出分段序号、重复/乱序处理、生命周期及命令行用法。

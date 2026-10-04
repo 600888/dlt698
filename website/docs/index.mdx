@@ -1,0 +1,35 @@
+---
+title: dlt698 接口文档
+description: DL/T 698.45 协议库的对外 C++ 接口文档。
+comments: false
+---
+
+import { ModuleCards } from '../theme/ModuleCards';
+
+<p className="doc-eyebrow">DLT698 / C++ API REFERENCE</p>
+
+# 把协议细节交给库，把精力留给业务。
+
+<p className="doc-lead">这是 dlt698 的对外 C++ 接口文档。库从零实现 DL/T 698.45—2017 的编解码、会话与传输，<br />面向集中器、采集终端和电力网关等协议对接场景。</p>
+
+<div className="doc-meta"><span className="doc-dot" /> 版本 0.1.0 <span className="doc-meta-divider">/</span> C++17 <span className="doc-meta-divider">/</span> CMake 3.20+ <span className="doc-meta-divider">/</span> 持续更新中</div>
+
+## 接口模块
+
+按使用顺序阅读，或直接从你要接的那一层进入。
+
+<ModuleCards />
+
+## 从哪里开始
+
+1. **先把库装上。** 读[安装与构建](./getting-started/installation.md)，确认导出目标和编译选项。
+2. **跑通第一个程序。** [第一个程序](./getting-started/quick-start.md)用内存通道完成一次 CONNECT → GET → RELEASE，不需要网络和设备。
+3. **按需深入。** 只需要编解码就直接看[核心类型](./core/result.md)；要做完整通信再看[会话与服务](./session/session.md)和[传输层](./transport/tcp.md)。
+
+## 关于本文档
+
+<div className="reading-note"><strong>文档描述的是公开头文件，不是全部实现。</strong><p>所有公开接口都使用中文 Doxygen 注释，本文档与其保持一致。行为细节以 <code>cpp/include</code> 下的头文件为准；文档重点补充调用顺序、前置条件和容易踩到的边界。</p></div>
+
+当前版本尚未覆盖完整协议。已实现范围、限制和待办集中在[协议覆盖范围](./appendix/coverage.md)，跨设备联调前请先确认对应条目。发现文档与实现不一致，欢迎通过页面底部的编辑链接提交修正。
+
+<p className="doc-footer">接口会随 0.x 阶段调整。涉及行为的改动都会在源码和本文档中同步说明。</p>

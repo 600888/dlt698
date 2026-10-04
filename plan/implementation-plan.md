@@ -1,6 +1,6 @@
 # DL/T 698.45 C++17 分层实现与 Python 发布计划
 
-编制日期：2026-10-04。状态：第三批已加入普通/列表 SET/ACTION、同步客户机、串口通道和串行时序适配；M3/M4 仍需周期心跳、时间标签及真实设备验收。逐项进度及验证证据见 [支持矩阵](../docs/protocol-coverage.md)。基线：本目录的 `dlt69845-2017.pdf`，DL/T 698.45—2017。
+编制日期：2026-10-04。更新：2026-10-05。状态：M4 软件实现与 M5 两类分段/记录已完成；真实串口/RS-485 及独立设备互操作仍未验收。逐项证据见 [支持矩阵](../docs/protocol-coverage.md)。基线：本目录的 `dlt69845-2017.pdf`，DL/T 698.45—2017。
 
 目标是先建立可独立使用、可测试、可安装的 C++17 协议库，再通过 pybind11 提供 Python API，最终交付可直接从 PyPI 安装的二进制包。实现顺序为：协议基础 → 通信与会话 → 完整服务 → 对象与安全完善 → C++ 稳定 → Python 绑定 → 分发发布。
 
@@ -315,15 +315,15 @@ M0 先确定可获得的 ESAM/主站安全模块、SDK、算法/profile 和授�
 - [x] 实现普通/列表 SET/ACTION codec、会话、写入/方法 provider、权限/类型检查及部分成功。
 - [x] 接入原始 SerialChannel 和 SerialLinkChannel：FE 前导、33 位收发间隔、排空/方向驱动接口及虚拟时间测试。
 - [ ] 使用实际串口/RS-485 设备验证收发、USB 排空、方向切换及物理间隔。
-- [ ] 实现周期心跳与 TimeTag 有效性；远端错误原码已保留。
+- [x] 实现周期心跳与 TimeTag 有效性；远端错误原码已保留。
 - [x] 提供解帧工具及 memory_get 主站/终端内存示例，支持 CONNECT → 部分成功 GET → RELEASE。
 - [x] 提供 memory_mutation 同步示例，经过串行前导/间隔适配执行 SET → ACTION → GET。
-- [ ] 提供独立 TCP/串口主站与终端模拟命令行示例，完成 M3/M4 首个可用版本验收。
+- [x] 提供独立 TCP/串口主站与终端模拟命令行示例；TCP 双向拨号及四类命令已软件验收，真实串口验收另列。
 
 ### M5–M9：完善 C++ 并冻结绑定面
 
-- [ ] 独立实现 LinkFragmenter/Reassembler 与 GetBlockTransfer，覆盖序号循环及重组回收。
-- [ ] 完成所有 RSD、MS、CSD/RCSD 分支和记录数据结果；明确快照/分页的一致性。
+- [x] 独立实现 LinkFragmenter/Reassembler 与 GetBlockTransfer，覆盖序号循环及重组回收。
+- [x] 完成所有 RSD、MS、CSD/RCSD 分支和记录数据结果；明确快照/分页的一致性。
 - [ ] 完成 then-get、三类上报及确认、七类代理及响应、MD5、FollowReport、ACD。
 - [ ] 服务端实现记录、上报、代理 providers；能力协商与实际注册能力绑定。
 - [ ] 生成标准对象目录，补齐首批对象语义、完整字段 schema 和厂家扩展入口。
@@ -461,4 +461,4 @@ sdist 包含编译所需源码、CMake、schemas 生成结果、绑定、许可�
 
 当前已形成 **Data → 链路帧 → LINK/CONNECT → 普通/列表 GET/SET/ACTION → 对象 provider → RELEASE** 的内存和 TCP 路径。第三批加入同步等待、写入/方法 schema、原始串口及可单独测试的串行链路适配；真实串口和 RS-485 验收另列，不与软件模拟混为完成。
 
-下一批继续 M3/M4 的周期心跳、TimeTag 语义及独立 TCP/串口主站/终端示例；取得设备后完成真实串口互操作。之后推进 M5 的独立链路分帧、GET Next、记录及后续 then-get 组合服务。每次实现更新覆盖表和验收证据；README 按实际能力描述，不提前宣告未完成能力。
+第四批已完成自动心跳、TimeTag 判定/回传、独立主站/终端 CLI、LinkFragmenter/Reassembler、GetBlockTransfer、Record/RecordList 与全部选择器的线格式。M5 验证含序号回绕、重复/乱序/丢失确认、超时、快照回收、组合分段和精确记录类型；本地 MSVC 与 MinGW（关闭 Asio）构建、安装测试通过。具体采集与数据库过滤由记录 provider 解释；真实串口/RS-485、独立设备互操作仍保持未验收。下一批进入 M6 then-get、REPORT、PROXY、MD5、FollowReport/ACD，每次更新覆盖表与验收证据。

@@ -1,0 +1,23 @@
+{
+  "name": "dlt698-docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "rspress dev",
+    "build": "rspress build",
+    "preview": "rspress preview",
+    "typecheck": "tsc --noEmit",
+    "check:sidebar": "node scripts/check-sidebar.mjs",
+    "test:sidebar": "node --test scripts/check-sidebar.test.mjs"
+  },
+  "engines": { "node": ">=22.12.0" },
+  "devDependencies": {
+    "@rspress/core": "2.0.21",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.9.3"
+  }
+}
