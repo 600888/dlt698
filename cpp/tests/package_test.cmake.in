@@ -1,0 +1,26 @@
+set(stage "@CMAKE_CURRENT_BINARY_DIR@/stage")
+set(consumer_build "@CMAKE_CURRENT_BINARY_DIR@/consumer-build-${CONFIG}")
+set(consumer_rc "@CMAKE_RC_COMPILER@")
+if("@MSVC@" AND NOT "@CMAKE_GENERATOR@" MATCHES "Visual Studio")
+    get_filename_component(sdk_bin "@CMAKE_MT@" DIRECTORY)
+    find_program(consumer_rc_path NAMES rc.exe HINTS "${sdk_bin}" NO_DEFAULT_PATH REQUIRED)
+    set(consumer_rc "${consumer_rc_path}")
+endif()
+function(run)
+    execute_process(COMMAND ${ARGV} RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR "${ARGV}\n${output}\n${error}")
+    endif()
+endfunction()
+run("@CMAKE_COMMAND@" --install "@CMAKE_BINARY_DIR@" --config "${CONFIG}" --prefix "${stage}")
+run("@CMAKE_COMMAND@" -S "@CMAKE_CURRENT_SOURCE_DIR@/package_consumer" -B "${consumer_build}"
+    -G "@CMAKE_GENERATOR@" "-DCMAKE_PREFIX_PATH=${stage}" "-DCMAKE_CXX_COMPILER=@CMAKE_CXX_COMPILER@"
+    "-DCMAKE_MAKE_PROGRAM=@CMAKE_MAKE_PROGRAM@" "-DCMAKE_MT=@CMAKE_MT@"
+    "-DCMAKE_RC_COMPILER=${consumer_rc}" "-DCMAKE_RC_COMPILER_INIT=${consumer_rc}"
+    "-DCMAKE_BUILD_TYPE=@CMAKE_BUILD_TYPE@")
+run("@CMAKE_COMMAND@" --build "${consumer_build}" --config "${CONFIG}")
+if(EXISTS "${consumer_build}/${CONFIG}/consumer@CMAKE_EXECUTABLE_SUFFIX@")
+    run("${consumer_build}/${CONFIG}/consumer@CMAKE_EXECUTABLE_SUFFIX@")
+else()
+    run("${consumer_build}/consumer@CMAKE_EXECUTABLE_SUFFIX@")
+endif()

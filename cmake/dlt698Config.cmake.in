@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+if(@DLT698_BUILD_TRANSPORT@)
+    find_dependency(Threads)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/dlt698Targets.cmake")
+check_required_components(dlt698)

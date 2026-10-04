@@ -1,0 +1,31 @@
+name: C++17
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        shared: ["ON", "OFF"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=${{ matrix.shared }} -DDLT698_WARNINGS_AS_ERRORS=ON
+      - name: Build
+        run: cmake --build build --config Release --parallel 2
+      - name: Test codecs, TCP and installed consumer
+        run: ctest --test-dir build -C Release --output-on-failure
+  core-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure without Asio
+        run: cmake -S cpp -B build-core -DCMAKE_BUILD_TYPE=Release -DDLT698_BUILD_TRANSPORT=OFF -DDLT698_WARNINGS_AS_ERRORS=ON
+      - name: Build
+        run: cmake --build build-core --parallel 2
+      - name: Test
+        run: ctest --test-dir build-core --output-on-failure

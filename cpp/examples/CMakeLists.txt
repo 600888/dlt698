@@ -1,0 +1,3 @@
+add_executable(dlt698_decode decode.cpp)
+target_link_libraries(dlt698_decode PRIVATE dlt698_core)
+dlt698_target_setup(dlt698_decode)
