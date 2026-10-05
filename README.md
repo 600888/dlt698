@@ -89,6 +89,36 @@ cmake --install build --config Release --prefix ./build/stage
 
 也支持 `cmake -S cpp -B build-core` 只构建核心。需要 C++17、CMake 3.20+ 和匹配的 C++ 编译器，不依赖 Python。
 
+### 单元测试
+
+测试基于 Catch2（`third/Catch2`的 amalgamated 发行版），按被测层次分子目录，每个目录生成一个可执行文件：
+
+| 目录 | CTest 名称 | 覆盖内容 |
+| --- | --- | --- |
+| `cpp/tests/common` | `common` | Result/Error、字节视图与读写游标、ManualExecutor 虚拟时钟 |
+| `cpp/tests/codec` | `codec` | Data 编解码与资源限制、RSD/RCSD/MS 记录描述符 |
+| `cpp/tests/protocol/link` | `protocol_link` | 帧编解码、CRC、流式拆帧、分片与重组 |
+| `cpp/tests/protocol/apdu` | `protocol_apdu` | 统一 APDU 路由、连接服务、GET 家族、SET/ACTION、分块、时间标签 |
+| `cpp/tests/service` | `service` | 对象目录与 provider、标准对象与记录、客户端/服务器服务、同步封装 |
+| `cpp/tests/session` | `session` | 状态机、事务匹配、取消与超时、诊断回调 |
+| `cpp/tests/transport` | `transport` | 内存通道、串行链路适配 |
+| `cpp/tests/transport` | `transport_tcp` | TCP 通道与 IO 运行时（默认禁用，见下） |
+
+公用辅助在 `cpp/tests/catch/test_support.hpp`：`hex()`、`fixture()`、`require_ok()`、
+`require_error()`、`require_truncation_rejected()` 与 `CHECK_DECODE_ERROR` 宏。
+协议预期字节取自 `tests/vectors/` 的独立规范向量，不由被测编码器生成。
+
+筛选运行：
+
+```sh
+ctest --test-dir build -R codec --output-on-failure        # 按测试名
+./build/bin/dlt698_test_protocol_apdu "[apdu][get]"        # 按 Catch2 标签
+```
+
+`transport_tcp` 需要 Asio 与真实回环 socket。MinGW 下该组合在部分沙箱环境会出现
+链接布局异常（执行期段错误且崩溃点漂移，同一份代码手工链接则正常），因此默认以
+`DISABLED` 注册。需要时手动运行 `ctest -R transport_tcp` 或直接执行对应可执行文件。
+
 ## 集成
 
 ```cmake
