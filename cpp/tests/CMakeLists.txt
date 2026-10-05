@@ -1,6 +1,8 @@
 # Catch2 以 amalgamated 发行形式引入，只编译一次实现单元；main 位于 catch/catch_main.cpp。
 # 测试按被测层次分子目录，每个目录生成一个可执行文件，内部用 TEST_CASE 划分用例。
-add_library(dlt698_catch2 STATIC
+# 实现单元用 OBJECT 库而不是 STATIC 库：MinGW 下把 Catch2 静态库强制
+# whole-archive 链接进可执行文件会与 Asio 的静态初始化顺序冲突，导致段错误。
+add_library(dlt698_catch2 OBJECT
     "${CMAKE_CURRENT_SOURCE_DIR}/../../third/Catch2/catch_amalgamated.cpp"
     catch/catch_main.cpp)
 target_include_directories(dlt698_catch2 SYSTEM PUBLIC
@@ -15,6 +17,9 @@ if(MSVC)
 endif()
 
 set(DLT698_TEST_VECTOR_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../tests/vectors")
+# 在函数外先固定绝对路径：CMAKE_CURRENT_SOURCE_DIR 在函数内指向调用方子目录。
+set(DLT698_TEST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+set(DLT698_CATCH2_DIR "${DLT698_TEST_ROOT}/../../third/Catch2")
 
 # 声明一个分目录的测试可执行文件，须在对应的测试子目录中调用。
 # name: CTest 中的测试名，同时决定 dlt698_test_<name> 目标名。
@@ -38,7 +43,14 @@ function(dlt698_add_test name)
         list(APPEND dlt698_test_sources "${CMAKE_CURRENT_SOURCE_DIR}/${dlt698_test_source}")
     endforeach()
     add_executable(${dlt698_test_target} ${dlt698_test_sources})
-    target_link_libraries(${dlt698_test_target} PRIVATE dlt698_catch2 ${ARG_LIBS})
+    target_link_libraries(${dlt698_test_target} PRIVATE ${ARG_LIBS})
+    # Catch2 实现单元直接编入测试可执行文件，不经过库归档。
+    # MinGW下把Catch2 归档后再 whole-archive 链接进来，会与Asio 的静态初始化
+    # 顺序冲突，表现为执行期段错误且崩溃点漂移；直接编译可规避该问题。
+    target_sources(${dlt698_test_target} PRIVATE
+        $<TARGET_OBJECTS:dlt698_catch2>)
+    target_include_directories(${dlt698_test_target} SYSTEM PRIVATE "${DLT698_CATCH2_DIR}")
+    target_include_directories(${dlt698_test_target} PRIVATE "${DLT698_TEST_ROOT}")
     # DLT698_VECTOR_DIR 供 catch/test_support.hpp 的 fixture() 读取协议向量。
     target_compile_definitions(${dlt698_test_target} PRIVATE
         DLT698_VECTOR_DIR="${DLT698_TEST_VECTOR_DIR}")

@@ -2,8 +2,8 @@
  * @file bytes_test.cpp
  * @brief 字节视图、读写游标、十六进制转换与资源限制的单元测试。
  */
-#include <dlt698/common/bytes.hpp>
 #include <cstdint>
+#include <dlt698/common/bytes.hpp>
 #include <limits>
 #include <stdexcept>
 
@@ -190,7 +190,8 @@ TEST_CASE("Writer 大端输出并强制资源上限", "[common][bytes]") {
     SECTION("超限的批量追加也被拒绝") {
         Writer writer{2};
         const Bytes payload = hex("01 02 03");
-        CHECK_DECODE_ERROR(writer.bytes(ByteView{payload}), ErrorCode::resource_limit, "output limit");
+        CHECK_DECODE_ERROR(writer.bytes(ByteView{payload}), ErrorCode::resource_limit,
+                           "output limit");
     }
 }
 

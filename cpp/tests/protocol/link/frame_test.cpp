@@ -104,8 +104,7 @@ TEST_CASE("流式拆帧器对任意切分点都还原完整帧", "[link][frame]"
             INFO("切分位置=" << split);
             FrameStreamDecoder decoder;
             auto first = decoder.feed(ByteView{original}.subview(0, split));
-            auto second =
-                decoder.feed(ByteView{original}.subview(split, original.size() - split));
+            auto second = decoder.feed(ByteView{original}.subview(split, original.size() - split));
             CHECK(first.size() + second.size() == 1);
             const auto& event = first.empty() ? second.front() : first.front();
             REQUIRE(std::holds_alternative<Frame>(event));

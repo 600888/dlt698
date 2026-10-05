@@ -2,9 +2,9 @@
  * @file data_codec_test.cpp
  * @brief Data 编解码的单元测试：标签往返、边界检查与资源限制。
  */
+#include <cstdint>
 #include <dlt698/codec/data_codec.hpp>
 #include <dlt698/dlt698.hpp>
-#include <cstdint>
 #include <limits>
 
 #include "catch/test_support.hpp"
@@ -52,7 +52,8 @@ TEST_CASE("Data 基本类型按标签往返", "[codec][data]") {
     expect_encoding("11 FF", UInt8{255});
     expect_encoding("12 FF FF", UInt16{65535});
     expect_encoding("06 FF FF FF FF", UInt32{std::numeric_limits<std::uint32_t>::max()});
-    expect_encoding("15 FF FF FF FF FF FF FF FF", UInt64{std::numeric_limits<std::uint64_t>::max()});
+    expect_encoding("15 FF FF FF FF FF FF FF FF",
+                    UInt64{std::numeric_limits<std::uint64_t>::max()});
     expect_encoding("16 02", Enum{2});
     expect_encoding("17 3F 80 00 00", Float32{1.0f});
     expect_encoding("18 C0 04 00 00 00 00 00 00", Float64{-2.5});
@@ -206,12 +207,14 @@ TEST_CASE("Data 非法输入给出精确错误分类", "[codec][data]") {
     };
 
     SECTION("语义非法的取值报 invalid_value") {
-        require_decode_error("03 02", ErrorCode::invalid_value, decode);  // 布尔只允许 00/01。
+        require_decode_error("03 02", ErrorCode::invalid_value, decode);     // 布尔只允许 00/01。
         require_decode_error("04 01 81", ErrorCode::invalid_value, decode);  // 位串填充位非零。
-        require_decode_error("0A 01 00", ErrorCode::invalid_value, decode);  // 可见字符串含控制字符。
-        require_decode_error("0C 02 C0 80", ErrorCode::invalid_value, decode);  // UTF-8 非法首字节。
+        require_decode_error("0A 01 00", ErrorCode::invalid_value,
+                             decode);  // 可见字符串含控制字符。
+        require_decode_error("0C 02 C0 80", ErrorCode::invalid_value,
+                             decode);  // UTF-8 非法首字节。
         require_decode_error("0C 03 ED A0 80", ErrorCode::invalid_value, decode);  // UTF-8 代理区。
-        require_decode_error("55 01 00", ErrorCode::invalid_value, decode);  // TSA 长度为奇数。
+        require_decode_error("55 01 00", ErrorCode::invalid_value, decode);     // TSA 长度为奇数。
         require_decode_error("54 06 00 01", ErrorCode::invalid_value, decode);  // TI 单位编码越界。
     }
 
@@ -302,7 +305,7 @@ TEST_CASE("浮点位模式在往返后保持不变", "[codec][data]") {
 TEST_CASE("流式读写接口与完整接口一致", "[codec][data]") {
     // array 的元素本身是 Data，因此嵌套结构需要显式再包一层 Data。
     const Data value = Array{{Data{Structure{{Data{UInt16{1}}, Data{UInt16{2}}}}},
-                             Data{Structure{{Data{Boolean{true}}}}}}};
+                              Data{Structure{{Data{Boolean{true}}}}}}};
 
     SECTION("write_data 与 encode_data 产生相同字节") {
         Writer writer{64};

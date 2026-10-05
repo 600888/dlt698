@@ -113,7 +113,8 @@ void require_truncation_rejected(Decode decode, ByteView bytes) {
  * @note ByteView 禁止绑定临时容器，因此先解析成具名字节再建立视图。
  */
 template <class Decode>
-void require_decode_error(const char* text, ErrorCode code, Decode decode, const Limits& limits = {}) {
+void require_decode_error(const char* text, ErrorCode code, Decode decode,
+                          const Limits& limits = {}) {
     INFO("输入=" << text);
     const Bytes bytes = hex(text);
     const auto result = decode(ByteView{bytes}, limits);
@@ -130,6 +131,6 @@ void require_decode_error(const char* text, ErrorCode code, Decode decode, const
  * @param[in] ... 可选的上下文字段名称，默认不检查。
  * @note 封装成宏是因为 decode_error 调用含逗号，直接展开会被 Catch2 断言宏拆成多个参数。
  */
-#define CHECK_DECODE_ERROR(expr, code, ...)                                     \
-    CHECK_THROWS_MATCHES(expr, ::dlt698::DecodeFailure,                        \
+#define CHECK_DECODE_ERROR(expr, code, ...)             \
+    CHECK_THROWS_MATCHES(expr, ::dlt698::DecodeFailure, \
                          ::dlt698::test::decode_error((code), ##__VA_ARGS__))
