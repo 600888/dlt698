@@ -651,6 +651,45 @@ const std::vector<ObjectDefinition>& objects() {
             "附录 E.5 表 E.5");
         timing.writable = true;
         date.attributes.push_back(std::move(timing));
+        // 记录型属性只声明入口，不将动态关联列伪造为固定普通数组。
+        for (const auto identifier :
+             {oi::daily_freeze, oi::monthly_freeze, oi::meter_power_down_event,
+              oi::terminal_initialization_event}) {
+            const bool freeze = identifier == oi::daily_freeze || identifier == oi::monthly_freeze;
+            const char* name = identifier == oi::daily_freeze             ? "日冻结"
+                               : identifier == oi::monthly_freeze         ? "月冻结"
+                               : identifier == oi::meter_power_down_event ? "电能表掉电事件"
+                                                                          : "终端初始化事件";
+            const char* source = freeze ? "7.3.9 表 149；附录 E.6" : "7.3.7 表 143；附录 E.4";
+            auto record = scalar(2, freeze ? "冻结数据表" : "事件记录表", DataType::array, source);
+            record.record = true;
+            record.element_type = DataType::structure;
+            result.push_back(
+                {identifier,
+                 name,
+                 static_cast<std::uint8_t>(freeze ? 9 : 7),
+                 "DL/T 698.45-2017",
+                 source,
+                 {scalar(1, "逻辑名", DataType::octet_string, source), std::move(record)}});
+        }
+        for (const auto identifier : {oi::event_start_time, oi::event_end_time, oi::freeze_time,
+                                      oi::event_sequence, oi::freeze_sequence}) {
+            const char* name = identifier == oi::event_start_time ? "事件发生时间"
+                               : identifier == oi::event_end_time ? "事件结束时间"
+                               : identifier == oi::freeze_time    ? "数据冻结时间"
+                               : identifier == oi::event_sequence ? "事件记录序号"
+                                                                  : "冻结记录序号";
+            const auto type = identifier == oi::event_sequence || identifier == oi::freeze_sequence
+                                  ? DataType::uint32
+                                  : DataType::date_time_s;
+            result.push_back({identifier,
+                              name,
+                              8,
+                              "DL/T 698.45-2017",
+                              "附录 E.3 表 E.3",
+                              {scalar(1, "逻辑名", DataType::octet_string, "附录 E.3 表 E.3"),
+                               scalar(2, "数值", type, "附录 E.3 表 E.3")}});
+        }
         return result;
     }();
     return catalog;
@@ -781,6 +820,8 @@ Result<void> validate_value(const model::Oad& attribute, const model::Data& valu
     auto valid = validate_oad(attribute, layout);
     if (!valid) return valid;
     const auto definition = find_attribute(attribute);
+    if (definition->record)
+        return Error{ErrorCode::unsupported_service, 0, "record value requires record validation"};
     const ValueDefinition* detail =
         definition->value_definition ? &*definition->value_definition : nullptr;
     const auto field_index = attribute.index && definition->type == DataType::structure;

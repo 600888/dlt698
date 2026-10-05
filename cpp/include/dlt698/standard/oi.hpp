@@ -243,4 +243,24 @@ inline constexpr std::uint16_t active_accuracy_class = 0x4107;
 inline constexpr std::uint16_t reactive_accuracy_class = 0x4108;
 /// 电能表型号（附录 E.5）。
 inline constexpr std::uint16_t meter_model = 0x410b;
+/// 事件发生时间（附录 E.3）。
+inline constexpr std::uint16_t event_start_time = 0x201e;
+/// 事件结束时间（附录 E.3）。
+inline constexpr std::uint16_t event_end_time = 0x2020;
+/// 数据冻结时间（附录 E.3）。
+inline constexpr std::uint16_t freeze_time = 0x2021;
+/// 事件记录序号（附录 E.3）。
+inline constexpr std::uint16_t event_sequence = 0x2022;
+/// 冻结记录序号（附录 E.3）。
+inline constexpr std::uint16_t freeze_sequence = 0x2023;
+/// 事件发生源（附录 E.3）；类型由具体事件定义，不是通用 NULL 对象。
+inline constexpr std::uint16_t event_source = 0x2024;
+/// 电能表掉电事件（附录 E.4）。
+inline constexpr std::uint16_t meter_power_down_event = 0x3011;
+/// 终端初始化事件（附录 E.4）。
+inline constexpr std::uint16_t terminal_initialization_event = 0x3100;
+/// 日冻结（附录 E.6）。
+inline constexpr std::uint16_t daily_freeze = 0x5004;
+/// 月冻结（附录 E.6）。
+inline constexpr std::uint16_t monthly_freeze = 0x5006;
 }  // namespace dlt698::standard::oi

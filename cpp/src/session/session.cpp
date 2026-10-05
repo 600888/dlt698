@@ -756,9 +756,18 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         if (!pending || (pending->kind != Kind::get && pending->kind != Kind::record) ||
             !response_tag(response.time_tag) || !(agreement.protocol[0] & 0x02))
             return;
-        if (!collecting)
+        if (!collecting) {
+            bool merge_rows = true;
+            if (pending->kind == Kind::record) {
+                const auto& queries = std::get<apdu::GetRecordRequest>(pending->request).records;
+                // 相同 OAD 的多次查询在线上没有结束分隔符，只能维持整个记录结果边界。
+                for (std::size_t i = 0; i < queries.size(); ++i)
+                    for (std::size_t j = 0; j < i; ++j)
+                        merge_rows = merge_rows && !(queries[i].attribute == queries[j].attribute);
+            }
             collecting = std::make_unique<apdu::GetBlockTransfer>(
-                pending->id, pending->kind == Kind::record, options.limits);
+                pending->id, pending->kind == Kind::record, options.limits, merge_rows);
+        }
         auto accepted = collecting->accept(response);
         if (!accepted) {
             // 乱序/重复仅诊断，不推进，最终由总事务超时隔离迟到结果；远端 DAR 结束等待。
@@ -1209,7 +1218,8 @@ Session::Session(std::shared_ptr<transport::IChannel> channel, std::shared_ptr<I
         options.parameters.protocol[i] = 0;
     if (!(options.parameters.protocol[0] & 0x80))
         throw std::invalid_argument("application association capability required");
-    options.parameters.function.fill(0);
+    // 功能位属于应用实际提供的计量/事件业务，保留显式配置；默认全零仍表示未声明。
+    // CONNECT 已按双方位图交集协商，并在客户机验证响应是本地提议的子集。
     options.parameters.receive_window = 1;
     impl_ = std::make_shared<Impl>(std::move(channel), std::move(executor), std::move(options));
 }

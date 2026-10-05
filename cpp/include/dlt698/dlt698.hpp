@@ -11,4 +11,6 @@
 #include <dlt698/protocol/apdu/time_tag.hpp>
 #include <dlt698/protocol/link/fragment.hpp>
 #include <dlt698/protocol/link/frame.hpp>
+#include <dlt698/standard/capabilities.hpp>
 #include <dlt698/standard/catalog.hpp>
+#include <dlt698/standard/records.hpp>

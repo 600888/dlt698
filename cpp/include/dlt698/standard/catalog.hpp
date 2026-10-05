@@ -182,6 +182,7 @@ DLT698_API Result<std::vector<DemandValue>> demand_values(const model::Oad& attr
  * @param[in] layout 数组长度由本地设备配置确定。
  * @param[in] limits 编码深度、元素和总字节限制。
  * @return 成功或 OAD/类型/长度/资源错误；不将 Data 错误伪装为测点不存在。
+ * @note 记录型属性返回 unsupported_service，记录投影须用 validate_record_result 校验。
  */
 DLT698_API Result<void> validate_value(const model::Oad& attribute, const model::Data& value,
                                        const DeviceLayout& layout = {}, const Limits& limits = {});

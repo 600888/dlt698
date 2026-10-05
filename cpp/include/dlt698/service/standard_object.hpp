@@ -25,8 +25,9 @@ DLT698_SERVICE_API Result<ObjectSchema> make_object_schema(
  * @param[in] layout 本地数组配置，必须与 provider 的完整数组一致。
  * @param[in] limits 每次返回值校验的深度、元素和字节上限。
  * @return 成功或配置/定义/重复注册错误。
- * @note 目录通过适配器持有 provider；只转发 read，原始 OAD 不改写。provider 须满足原接口并发和执行器合约。
+ * @note 目录通过适配器持有 provider；转发只读 read/read_record，原始 OAD/RSD/RCSD 不改写。provider 须满足原接口并发和执行器合约。
  * @note 非零特征返回 DAR=3，非法索引为 8，Data 不符合标准或超限为 7；provider 的 DAR 原样返回，异常由目录隔离为 255。
+ * @note 记录请求超出编码资源预算返回 DAR=3；响应投影不符合表头/类型/资源约定返回 7。
  */
 DLT698_SERVICE_API Result<void> register_standard_object(
     ObjectRegistry& registry, std::uint16_t oi, const std::vector<std::uint8_t>& attributes,

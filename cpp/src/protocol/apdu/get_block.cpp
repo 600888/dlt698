@@ -1,9 +1,11 @@
+#include <algorithm>
 #include <dlt698/protocol/apdu/get_block.hpp>
 
 namespace dlt698::protocol::apdu {
 Result<std::vector<GetNextResponse>> GetBlockTransfer::split(GetSnapshot snapshot,
                                                              std::size_t target,
                                                              const Limits& limits) {
+    if (!target) return Error{ErrorCode::invalid_value, 0, "GET block target"};
     std::vector<GetNextResponse> blocks;
     auto result = std::visit(
         [&](auto& response) -> Result<void> {
@@ -18,24 +20,71 @@ Result<std::vector<GetNextResponse>> GetBlockTransfer::split(GetSnapshot snapsho
             if (units.empty() || units.size() > limits.max_elements)
                 return Error{ErrorCode::resource_limit, 0, "GET snapshot units"};
             GetNextResponse current{response.piid_acd, false, 0, Units{}, response.time_tag};
-            for (auto& unit : units) {
+            auto flush = [&]() -> Result<void> {
+                if (!encode_get(GetApdu{current}, limits))
+                    return Error{ErrorCode::resource_limit, 0, "GET indivisible unit"};
+                blocks.push_back(std::move(current));
+                if (blocks.size() >= 65536)
+                    return Error{ErrorCode::resource_limit, 0, "GET block sequence exhausted"};
+                current = GetNextResponse{response.piid_acd, false,
+                                          static_cast<std::uint16_t>(blocks.size()), Units{},
+                                          response.time_tag};
+                return {};
+            };
+            auto append_unit = [&](typename Units::value_type unit) -> Result<void> {
                 auto& group = std::get<Units>(current.result);
                 group.push_back(std::move(unit));
-                auto bytes = encode_get(GetApdu{current}, limits);
-                if ((!bytes || bytes.value().size() > target) && group.size() > 1) {
+                auto encoded = encode_get(GetApdu{current}, limits);
+                if ((!encoded || encoded.value().size() > target) && group.size() > 1) {
                     auto last = std::move(group.back());
                     group.pop_back();
-                    if (!encode_get(GetApdu{current}, limits))
-                        return Error{ErrorCode::resource_limit, 0, "GET indivisible unit"};
-                    blocks.push_back(std::move(current));
-                    if (blocks.size() >= 65536)
-                        return Error{ErrorCode::resource_limit, 0, "GET block sequence exhausted"};
-                    current = GetNextResponse{response.piid_acd, false,
-                                              static_cast<std::uint16_t>(blocks.size()),
-                                              Units{std::move(last)}, response.time_tag};
-                    bytes = encode_get(GetApdu{current}, limits);
+                    auto valid = flush();
+                    if (!valid) return valid;
+                    std::get<Units>(current.result).push_back(std::move(last));
+                    encoded = encode_get(GetApdu{current}, limits);
                 }
-                if (!bytes) return bytes.error();
+                if (!encoded) return encoded.error();
+                return {};
+            };
+            bool unique = true;
+            if constexpr (std::is_same_v<T, GetRecordResponse>) {
+                for (std::size_t i = 0; i < units.size(); ++i)
+                    for (std::size_t j = 0; j < i; ++j)
+                        unique = unique && !(units[i].attribute == units[j].attribute);
+            }
+            for (auto& unit : units) {
+                if constexpr (std::is_same_v<T, GetRecordResponse>) {
+                    auto rows = std::get_if<std::vector<RecordRow>>(&unit.result);
+                    if (unique && rows && !rows->empty()) {
+                        if (rows->size() > limits.max_elements)
+                            return Error{ErrorCode::resource_limit, 0, "GET snapshot rows"};
+                        // 同一表只在行边界拆分；每块重复精确 OAD/RCSD，单行绝不拆开。
+                        auto& group = std::get<Units>(current.result);
+                        group.push_back({unit.attribute, unit.columns, std::vector<RecordRow>{}});
+                        for (auto& row : *rows) {
+                            auto& partial = std::get<std::vector<RecordRow>>(group.back().result);
+                            partial.push_back(std::move(row));
+                            auto encoded = encode_get(GetApdu{current}, limits);
+                            if (!encoded || encoded.value().size() > target) {
+                                auto last = std::move(partial.back());
+                                partial.pop_back();
+                                if (partial.empty()) group.pop_back();
+                                if (!group.empty()) {
+                                    auto valid = flush();
+                                    if (!valid) return valid;
+                                }
+                                std::get<Units>(current.result)
+                                    .push_back({unit.attribute, unit.columns,
+                                                std::vector<RecordRow>{std::move(last)}});
+                                encoded = encode_get(GetApdu{current}, limits);
+                            }
+                            if (!encoded) return encoded.error();
+                        }
+                        continue;
+                    }
+                }
+                auto valid = append_unit(std::move(unit));
+                if (!valid) return valid;
             }
             current.last = true;
             blocks.push_back(std::move(current));
@@ -46,8 +95,9 @@ Result<std::vector<GetNextResponse>> GetBlockTransfer::split(GetSnapshot snapsho
     return blocks;
 }
 
-GetBlockTransfer::GetBlockTransfer(std::uint8_t piid, bool records, Limits limits)
-    : piid_(piid), records_(records), limits_(limits) {}
+GetBlockTransfer::GetBlockTransfer(std::uint8_t piid, bool records, Limits limits,
+                                   bool merge_record_rows)
+    : piid_(piid), records_(records), merge_record_rows_(merge_record_rows), limits_(limits) {}
 
 Result<std::optional<GetSnapshot>> GetBlockTransfer::accept(const GetNextResponse& block) {
     if (finished_ || (block.piid_acd & 0xbf) != piid_ || block.block != next_)
@@ -64,21 +114,41 @@ Result<std::optional<GetSnapshot>> GetBlockTransfer::accept(const GetNextRespons
         return Error{ErrorCode::resource_limit, 0, "GET aggregate bytes"};
     if (!block.last && next_ == 65535)
         return Error{ErrorCode::resource_limit, 0, "GET block sequence exhausted"};
-    const auto n = records_ ? std::get<std::vector<RecordResult>>(block.result).size()
-                            : std::get<std::vector<AttributeResult>>(block.result).size();
-    const auto have = records_ ? records_data_.size() : attributes_.size();
-    if (!n || n > limits_.max_elements - have)
-        return Error{ErrorCode::resource_limit, 0, "GET aggregate units"};
-    // 上限按实际传输字节累计（含每块表头），避免攻击者用小块绕过完整结果预算。
+    if (records_) {
+        const auto& incoming = std::get<std::vector<RecordResult>>(block.result);
+        if (incoming.empty()) return Error{ErrorCode::invalid_value, 0, "GET empty block"};
+        // 在临时结果上验证再提交，列头/类型/行数错误不会留下半个合并结果。
+        auto combined = records_data_;
+        for (const auto& record : incoming) {
+            if (merge_record_rows_ && !combined.empty() &&
+                combined.back().attribute == record.attribute) {
+                auto prior = std::get_if<std::vector<RecordRow>>(&combined.back().result);
+                const auto rows = std::get_if<std::vector<RecordRow>>(&record.result);
+                if (!prior || !rows || !(combined.back().columns == record.columns))
+                    return Error{ErrorCode::invalid_value, 0,
+                                 "GET record continuation header/result"};
+                const auto maximum = record.columns.empty()
+                                         ? limits_.max_elements
+                                         : limits_.max_elements / record.columns.size();
+                if (prior->size() > maximum || rows->size() > maximum - prior->size())
+                    return Error{ErrorCode::resource_limit, 0, "GET aggregate rows/cells"};
+                prior->insert(prior->end(), rows->begin(), rows->end());
+            } else {
+                if (combined.size() >= limits_.max_elements)
+                    return Error{ErrorCode::resource_limit, 0, "GET aggregate units"};
+                combined.push_back(record);
+            }
+        }
+        records_data_ = std::move(combined);
+    } else {
+        const auto& incoming = std::get<std::vector<AttributeResult>>(block.result);
+        if (incoming.empty() || incoming.size() > limits_.max_elements - attributes_.size())
+            return Error{ErrorCode::resource_limit, 0, "GET aggregate units"};
+        attributes_.insert(attributes_.end(), incoming.begin(), incoming.end());
+    }
+    // 累计实际传输字节（含重复表头），防止小块绕过总量限制。
     bytes_ += encoded.value().size();
     ++next_;
-    if (records_) {
-        const auto& v = std::get<std::vector<RecordResult>>(block.result);
-        records_data_.insert(records_data_.end(), v.begin(), v.end());
-    } else {
-        const auto& v = std::get<std::vector<AttributeResult>>(block.result);
-        attributes_.insert(attributes_.end(), v.begin(), v.end());
-    }
     if (!block.last) return std::optional<GetSnapshot>{};
     finished_ = true;
     if (records_)

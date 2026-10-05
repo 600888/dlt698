@@ -20,6 +20,7 @@ struct SessionOptions {
     Limits limits;
     protocol::apdu::AssociationParameters parameters{
         0x0010, {0xf3, 0x8c, 0x08}, {}, 1024, 1024, 1, 1024, 100};
+    // function 默认全零；应用须显式配置自身实际支持的 C.2 业务位，CONNECT 取双方交集。
     protocol::apdu::FactoryVersion factory;
     std::chrono::milliseconds request_timeout{5000};
     std::chrono::milliseconds id_reuse_delay{
