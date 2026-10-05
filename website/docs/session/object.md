@@ -209,8 +209,10 @@ if (!objects->register_object(
 ## 局限
 
 - 不隐含单位、倍率或真实计量能力——`ScalerUnit` 只保存倍率和单位，换算由调用方做。
-- 已提供 [14 个常用标准 OI](../protocol/standard-points.md) 的只读绑定辅助；应用按设备点表选择属性并提供实际数据，完整目录继续扩充。
+- 已提供 [118 个常用标准 OI](../protocol/standard-points.md) 的只读绑定辅助，涵盖电能、最大需量、状态字、谐波与参数；应用按设备点表选择属性并提供实际数据，完整目录继续扩充。
 - 记录查询的选择器业务语义由 provider 解释，库只校验声明和权限。
+
+第三阶段提供[日/月冻结和常用事件后端](../protocol/standard-records.md)，标准适配器会转发 `read_record` 并校验表头、列宽和单元类型；通用 provider 仍可实现其他选择器业务。
 
 ## 注册就是声明测点
 

@@ -109,7 +109,7 @@ struct AssociationParameters {
 };
 ```
 
-`protocol` 描述 Normal/List/Record 等服务能力；`function` 描述电能计量、复费率、事件等业务功能。二者均不是逐 OI 支持清单，不能直接证明某个点位存在。当前 Session 构造函数还会清零功能位，因此不能根据全零位图删除所有候选点。
+`protocol` 描述 Normal/List/Record 等服务能力；`function` 描述电能计量、复费率、事件等业务功能。二者均不是逐 OI 支持清单，不能直接证明某个点位存在。Session 保留应用显式配置的功能位并协商交集，默认全零按信息未知处理，不删除候选点。读取计划、可选提示和逐项验证见[标准记录与能力筛选](./standard-records.md)。
 
 注意本库现状：**`Session` 只接受 NullSecurity**，非公共认证机制虽然有线格式 codec，但真实认证尚未实现。详见[连接管理 APDU](./connection.md)。
 

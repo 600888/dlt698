@@ -113,14 +113,15 @@ class GetBlockTransfer {
                                                       std::size_t target_bytes,
                                                       const Limits& limits);
 
-    GetBlockTransfer(std::uint8_t piid, bool records, Limits limits);
+    GetBlockTransfer(std::uint8_t piid, bool records, Limits limits,
+                     bool merge_record_rows = true);
     Result<std::optional<GetSnapshot>> accept(const GetNextResponse& block);
 };
 ```
 
 `split` 的语义：
 
-- **完整属性/记录结果是最小单位。** 不会被切到块中间——一个单元要么整块发，要么触发链路分帧。
+- **完整属性或记录行是最小单位。** 记录表按行拆分，各块保留 OAD/RCSD；客户机合并相同表头的连续记录行。重复记录 OAD 的查询保持整个记录结果边界，Session 自动禁用合并；独立收集器须显式传 `merge_record_rows=false`。
 - `target_bytes` 是期望值而非硬约束。不可切分的单元超过 `target_bytes` 时仍由链路分帧传输，但必须满足 `limits`。
 - 最多 65536 块，16 位块号不循环。
 - `snapshot` 是首次查询结果，后续取块**不再次读取 provider**。快照总量、超时和会话数量由调用方另外限制。
@@ -163,7 +164,7 @@ Result<Bytes> encode_get(const GetApdu& apdu, const Limits& limits = {});
 
 | | GET Next 应用层分块 | 链路分帧 |
 | --- | --- | --- |
-| 拆分单位 | 完整属性/记录结果 | 任意字节片 |
+| 拆分单位 | 完整属性/记录行（重复 OAD 保留整个结果） | 任意字节片 |
 | 触发条件 | 结果超过 APDU 尺寸 | APDU 超过帧尺寸 |
 | 谁负责 | `GetBlockTransfer` | `LinkFragmenter`/`LinkReassembler` |
 | 是否自动 | `Session` 自动完成 | `Session` 自动完成 |

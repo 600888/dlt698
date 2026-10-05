@@ -27,7 +27,8 @@ comments: false
 | 页面 | 内容 |
 | --- | --- |
 | [对象模型与测点寻址](./point-model.md) | OI + 属性 + 索引的三层展开，记录型对象的间接寻址，点表来源 |
-| [标准固定点位](./standard-points.md) | 14 个常用 OI、OAD 构造、标准值校验、精确倍率与只读绑定 |
+| [标准固定点位](./standard-points.md) | 118 个普通 OI、OAD 构造、标准值校验、精确倍率与只读绑定 |
+| [标准记录与能力筛选](./standard-records.md) | 日/月冻结、常用事件、能力提示和显式逐项验证 |
 | [链路帧与流解析](./frame.md) | `Frame`、`crc16`、`encode_frame`/`decode_frame`、`FrameStreamDecoder` |
 | [链路分帧](./fragment.md) | `Fragment`、`LinkFragmenter`、`LinkReassembler` |
 | [APDU 编解码](./apdu.md) | 统一 `Apdu` 变体与 `encode_apdu`/`decode_apdu` |

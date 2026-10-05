@@ -1,6 +1,6 @@
 # 协议实现进度
 
-更新日期：2026-10-05。M4 软件功能与 M5 两类分段、记录已实现；真实串口/RS-485 和独立设备互操作仍未验收，尚非完整协议库。标准基线：DL/T 698.45—2017。阶段依据见 [实施计划](../plan/implementation-plan.md)。
+更新日期：2026-10-06。M4 软件功能与 M5 两类分段、记录已实现；真实串口/RS-485 和独立设备互操作仍未验收，尚非完整协议库。标准基线：DL/T 698.45—2017。阶段依据见 [实施计划](../plan/implementation-plan.md)。
 
 已建立根目录与 `cpp/` 独立 CMake 入口、安装导出、标准向量、CTest 和三平台 CI 配置。网络模块采用用户提供的 standalone Asio 1.38.2，入口 `third/asio/include/asio.hpp`；Asio 仅为传输模块的私有编译依赖。
 
@@ -33,8 +33,9 @@
 | 串行时序适配 | SerialLinkChannel 已实现 | 四 FE、收发 33 位间隔、投递前预算、方向与真实排空 hooks；无 hook 时只做时间估算 | serial_link，虚拟时间/重复排空/关闭/故障；memory_mutation 闭环 |
 | RS-485 物理验收 | 未验证 | 手动切换必须有真实排空驱动；USB/流控/适配器需硬件测量 | 待设备 |
 | 对象 schema/provider | 通用读写及方法 schema 已实现 | 显式 writable、方法权限/参数/返回类型、一级索引、异常映射 DAR | mutation、session，部分成功/类型/权限/重入/异常 |
-| 常用标准点位 | 14 个 OI 的属性元数据、OAD 辅助、精确倍率和只读绑定已实现 | 接线/费率数显式配置；类型/数组长度/资源校验；不自动提供数据或推断远端支持 | standard_points、installed_consumer、dlt698_standard_points；详细范围见 [固定点位](../website/docs/protocol/standard-points.md) |
+| 常用标准点位 | 118 个 OI（电能、最大需量、变量/状态/谐波、参数）的元数据、OAD、精确倍率与只读绑定已实现 | 接线/费率/最高谐波次数显式配置；字段顺序、数组/位串/字符串长度、资源校验；需量时间保留；不自动提供数据或推断远端支持 | standard_points、installed_consumer、dlt698_standard_points、dlt698_standard_points_extended；详细范围见 [固定点位](../website/docs/protocol/standard-points.md) |
 | 安全 | CONNECT 认证 CHOICE codec 已实现 | Session 仅接受 NullSecurity，拒绝其他机制；实际认证/SECURITY 封装未实现 | connection、session，非公共机制拒绝 |
+| 标准记录与能力筛选 | 4 个记录入口、5 个记录列，完整目录共 127 个 OI；模板及 MemoryRecords、读取计划和显式点位探测已实现 | 日/月冻结、掉电/初始化事件投影；RSD 0/1/2/9、平面 OAD、预算及原子快照；按行 GET Next；全零功能位按未知，不推断 OAD 存在 | standard_records_test、installed_consumer、dlt698_standard_records；范围见[标准记录](../website/docs/protocol/standard-records.md) |
 | 主站/终端 CLI | dlt698_master/terminal 已实现 | TCP 拨号方向独立、原始串口 + 串行时序；终端数据为模拟 | 独立进程 TCP 双向拨号 × get/set/action/record 共 8 次 |
 | Python 绑定和分发 | 未开始 | C++ 稳定阶段之后进行 | 待补 |
 
@@ -76,7 +77,7 @@
 | 86 | MAC | 未实现 |
 | 87 | RN | 未实现 |
 | 88 | Region | 已实现/已测（RecordData 不可变有类型节点） |
-| 89 | Scaler_Unit | 已实现/已测；standard::unit_symbol 收录首批使用的单位，完整枚举目录待补 |
+| 89 | Scaler_Unit | 已实现/已测；standard::unit_symbol 收录本批普通点位使用的单位，完整枚举目录待补 |
 | 90 | RSD | 已实现/已测（RecordData 不可变有类型节点） |
 | 91 | CSD | 已实现/已测（RecordData 不可变有类型节点） |
 | 92 | MS | 已实现/已测（RecordData 不可变有类型节点） |

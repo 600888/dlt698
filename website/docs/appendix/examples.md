@@ -16,6 +16,8 @@ description: 仓库附带示例的用途、构建与运行方式。
 | `dlt698_decode` | 解一帧给定十六进制数据 | 否 |
 | `dlt698_memory_get` | 内存通道上的 CONNECT → GET → RELEASE | 否 |
 | `dlt698_standard_points` | 标准点位绑定、OAD 构造、逐项 DAR 和精确工程值 | 否 |
+| `dlt698_standard_points_extended` | 分相电能、带时间的最大需量、谐波、状态字和参数的批量 GET | 否 |
+| `dlt698_standard_records` | 日冻结行列查询、GET Next 收齐、能力配置和显式点位探测 | 否 |
 | `dlt698_memory_mutation` | 内存链路上的同步 CONNECT → SET → ACTION → GET → RELEASE | 否 |
 | `dlt698_master` | 协议客户机：TCP/串口下的 get、set、action、record | 视模式而定 |
 | `dlt698_terminal` | 协议服务器：监听或拨号，接受主站请求 | 视模式而定 |
@@ -51,9 +53,24 @@ dlt698_memory_get
 - [对象目录与 Provider](../session/object.md)
 - [Client/ServerService](../session/service.md)
 
-## dlt698_memory_mutation
+## dlt698_standard_points 与 dlt698_standard_points_extended
 
-常用标准量的完整示例运行 `dlt698_standard_points`，见[标准固定点位](../protocol/standard-points.md)。
+基础示例读取电压、电流、电能和通信地址；扩充示例读取分相电能、最大需量及发生时间、B 相 2 次谐波、状态字、表号和需量周期。两者均通过内存链路完成 CONNECT → 批量 GET → RELEASE，见[标准固定点位](../protocol/standard-points.md)。
+
+```sh
+dlt698_standard_points
+dlt698_standard_points_extended
+```
+
+## dlt698_standard_records
+
+记录示例 `dlt698_standard_records` 使用 80 字节协商 APDU，输出 12 行冻结值，以及 `frequency=Data, voltage=DAR 4` 的逐项探测结果；详见[标准记录与能力筛选](../protocol/standard-records.md)。
+
+```sh
+dlt698_standard_records
+```
+
+## dlt698_memory_mutation
 
 同步客户机 + 串行链路适配的完整示例：内存链路两端都经过 FE 前导和 33 位间隔处理，然后完成同步 CONNECT → SET → ACTION → GET → RELEASE。
 
