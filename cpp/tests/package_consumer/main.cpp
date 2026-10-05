@@ -14,7 +14,7 @@ int main() {
     namespace oi = dlt698::standard::oi;
     // 安装后的轻量头文件可在编译期使用常量构造 OAD。
     constexpr dlt698::model::Oad voltage_point{oi::voltage, 2, 1};
-    if (dlt698::standard::objects().size() != 14 ||
+    if (dlt698::standard::objects().size() != 118 ||
         !dlt698::standard::find_object(oi::combination_active_energy))
         return 9;
     const auto energy_point = dlt698::standard::tariff_oad(oi::forward_active_energy, 0);
@@ -32,6 +32,22 @@ int main() {
             .as<dlt698::model::UInt16>()
             .value != 5000)
         return 13;
+    const auto phased_energy =
+        dlt698::standard::energy_oad(oi::forward_active_energy, dlt698::standard::Phase::b, 0);
+    const auto maximum = dlt698::standard::demand_oad(oi::forward_active_maximum_demand,
+                                                      dlt698::standard::Phase::total, 0);
+    const auto harmonic =
+        dlt698::standard::harmonic_oad(oi::voltage_harmonics, dlt698::standard::Phase::c, 2);
+    if (!phased_energy || !maximum || !harmonic ||
+        !(phased_energy.value() == dlt698::model::Oad{0x0012, 2, 1}) ||
+        !(harmonic.value() == dlt698::model::Oad{0x200d, 4, 2}))
+        return 14;
+    const dlt698::model::DateTimeS occurred{{0x07, 0xea, 10, 5, 12, 30, 0}};
+    const auto demand = dlt698::standard::demand_values(
+        maximum.value(), dlt698::model::Structure{{dlt698::model::UInt32{123456}, occurred}});
+    if (!demand || !(demand.value()[0].occurred_at == occurred) ||
+        dlt698::standard::decimal_text(demand.value()[0].number) != "12.3456")
+        return 15;
     // 仅通过安装后的公开头文件和库调用 API，验证导出目标不依赖源码目录。
     const auto data = dlt698::codec::encode_data(dlt698::model::UInt16{2413});
     if (!data || dlt698::to_hex(data.value()) != "12 09 6D") return 1;

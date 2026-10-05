@@ -36,7 +36,7 @@ void catalog_tests() {
                                  {0x200f, 6, DataType::uint16, {}, -2, 47},
                                  {0x4000, 8, DataType::date_time_s, {}, 0, 0},
                                  {0x4001, 8, DataType::octet_string, {}, 0, 0}};
-    CHECK(standard::objects().size() == std::size(expected));
+    CHECK(standard::objects().size() == 118);
     std::set<std::uint16_t> identifiers;
     for (const auto& entry : expected) {
         CHECK(identifiers.insert(entry.oi).second);
@@ -68,7 +68,7 @@ void catalog_tests() {
     CHECK(!standard::find_attribute({0x2000, 2, 0})->writable);
     CHECK(!standard::find_object(0x9999));
     CHECK(!standard::find_attribute({0x2000, 0, 0}));
-    CHECK(!standard::find_attribute({0x4000, 3, 0}));
+    CHECK(!standard::find_attribute({0x4000, 5, 0}));
     CHECK(standard::find_attribute({0x2000, 0x22, 255}) ==
           standard::find_attribute({0x2000, 2, 0}));
     CHECK(standard::unit_symbol(33) == "kWh" && standard::unit_symbol(27) == "W");
@@ -314,6 +314,254 @@ void wire_and_service_tests() {
     executor->run_ready();
 }
 
+void expanded_tests() {
+    // 附录 E.1/E.2 独立期望：前两组有功无符号，组合无功有符号，其余无符号。
+    const std::uint8_t energy_units[] = {33, 33, 35, 35, 35, 35, 35, 35, 34, 34};
+    const std::uint8_t demand_units[] = {28, 28, 32, 32, 32, 32, 32, 32, 30, 30};
+
+    struct VariableExpected {
+        std::uint16_t oi;
+        std::uint8_t class_id;
+        DataType type;
+        std::optional<DataType> element;
+        std::optional<ScalerUnit> scaling;
+    };
+
+    const VariableExpected variables[] = {
+        {0x200b, 3, DataType::array, DataType::int16, ScalerUnit{-2, 51}},
+        {0x200c, 3, DataType::array, DataType::int16, ScalerUnit{-2, 51}},
+        {0x200d, 5, DataType::array, DataType::int16, ScalerUnit{-2, 51}},
+        {0x200e, 5, DataType::array, DataType::int16, ScalerUnit{-2, 51}},
+        {0x2010, 6, DataType::int16, {}, ScalerUnit{-1, 9}},
+        {0x2014, 6, DataType::array, DataType::bit_string, {}},
+        {0x2015, 6, DataType::bit_string, {}, {}},
+        {0x2017, 6, DataType::int32, {}, ScalerUnit{-4, 28}},
+        {0x2018, 6, DataType::int32, {}, ScalerUnit{-4, 32}},
+        {0x2019, 6, DataType::int32, {}, ScalerUnit{-4, 30}}};
+    for (const auto& entry : variables) {
+        const auto object = standard::find_object(entry.oi);
+        const auto attribute = standard::find_attribute({entry.oi, 2, 0});
+        CHECK(object && object->class_id == entry.class_id);
+        CHECK(attribute && attribute->type == entry.type &&
+              attribute->element_type == entry.element);
+        CHECK(attribute->scaling == entry.scaling && !attribute->writable);
+    }
+
+    struct ParameterExpected {
+        std::uint16_t oi;
+        DataType type;
+        bool writable;
+        std::optional<std::size_t> size;
+    };
+
+    const ParameterExpected parameters[] = {{0x4000, DataType::date_time_s, true, {}},
+                                            {0x4001, DataType::octet_string, true, {}},
+                                            {0x4002, DataType::octet_string, true, {}},
+                                            {0x4003, DataType::octet_string, true, {}},
+                                            {0x4006, DataType::structure, false, {}},
+                                            {0x400c, DataType::structure, true, {}},
+                                            {0x400d, DataType::uint8, true, {}},
+                                            {0x400e, DataType::uint8, true, {}},
+                                            {0x4010, DataType::uint8, false, {}},
+                                            {0x4012, DataType::bit_string, true, 8},
+                                            {0x4030, DataType::structure, true, {}},
+                                            {0x4100, DataType::uint8, true, {}},
+                                            {0x4101, DataType::uint8, true, {}},
+                                            {0x4103, DataType::visible_string, true, 32},
+                                            {0x4104, DataType::visible_string, false, 6},
+                                            {0x4105, DataType::visible_string, false, 6},
+                                            {0x4106, DataType::visible_string, false, 6},
+                                            {0x4107, DataType::visible_string, false, 4},
+                                            {0x4108, DataType::visible_string, false, 4},
+                                            {0x410b, DataType::visible_string, false, 32}};
+    for (const auto& entry : parameters) {
+        CHECK(standard::find_object(entry.oi)->class_id == 8);
+        const auto attribute = standard::find_attribute({entry.oi, 2, 0});
+        CHECK(attribute && attribute->type == entry.type && attribute->writable == entry.writable);
+        CHECK((attribute->value_definition ? attribute->value_definition->size
+                                           : std::optional<std::size_t>{}) == entry.size);
+    }
+    for (std::uint16_t family = 1; family <= 10; ++family) {
+        for (unsigned phase = 0; phase <= 3; ++phase) {
+            const auto energy_id = static_cast<std::uint16_t>(family * 16 + phase);
+            const auto demand_id = static_cast<std::uint16_t>(0x1000 + energy_id);
+            const bool sign = family == 3 || family == 4;
+            const auto energy = standard::find_attribute({energy_id, 2, 0});
+            CHECK(energy && energy->element_type == (sign ? DataType::int32 : DataType::uint32));
+            CHECK(energy->scaling->scaler == -2 &&
+                  energy->scaling->unit == energy_units[family - 1]);
+            CHECK(standard::find_attribute({energy_id, 4, 0})->element_type ==
+                  (sign ? DataType::int64 : DataType::uint64));
+            const auto demand = standard::find_attribute({demand_id, 2, 0});
+            CHECK(demand && demand->element_type == DataType::structure &&
+                  demand->element_definition);
+            const auto& fields = demand->element_definition->fields;
+            CHECK(fields.size() == 2 &&
+                  fields[0].type == (sign ? DataType::int32 : DataType::uint32));
+            CHECK(fields[0].scaling->scaler == -4 &&
+                  fields[0].scaling->unit == demand_units[family - 1]);
+            CHECK(fields[1].type == DataType::date_time_s && !fields[1].scaling);
+        }
+    }
+    std::set<std::uint16_t> ids;
+    for (const auto& object : standard::objects()) {
+        CHECK(ids.insert(object.oi).second);
+        std::set<std::uint8_t> attributes;
+        for (const auto& attribute : object.attributes) {
+            CHECK(attributes.insert(attribute.number).second);
+            CHECK(attribute.number >= 1 && attribute.number <= 31 && attribute.readable &&
+                  !attribute.record);
+            CHECK(std::string(attribute.source).size());
+            if (attribute.element_definition)
+                CHECK(attribute.element_definition->type == attribute.element_type);
+            if (attribute.value_definition)
+                CHECK(attribute.value_definition->type == attribute.type);
+        }
+    }
+    const standard::DeviceLayout layout{standard::Wiring::three_phase, 1, 3};
+    const standard::DeviceLayout single{standard::Wiring::single_phase, 1, 3};
+    CHECK(standard::energy_oad(0x0010, standard::Phase::b, 1, layout).value() == Oad{0x0012, 2, 2});
+    CHECK(standard::energy_oad(0x0090, standard::Phase::c, 0, layout, true).value() ==
+          Oad{0x0093, 4, 1});
+    CHECK(!standard::energy_oad(0x0000, standard::Phase::a, 0));
+    CHECK(!standard::energy_oad(0x0011, standard::Phase::a, 0));
+    CHECK(!standard::energy_oad(0x1010, standard::Phase::a, 0));
+    CHECK(!standard::energy_oad(0x0010, standard::Phase::b, 0, single));
+    CHECK(!standard::energy_oad(0x0010, static_cast<standard::Phase>(256), 0));
+    CHECK(!standard::validate_oad({0x1013, 2, 1}, single));
+    CHECK(standard::demand_oad(0x1030, standard::Phase::a, 0, layout).value() == Oad{0x1031, 2, 1});
+    CHECK(!standard::tariff_oad(0x1010, 0, layout, true));
+    CHECK(!standard::demand_oad(0x0010, standard::Phase::total, 0));
+    CHECK(!standard::demand_oad(0x1010, standard::Phase::total, 2, layout));
+    CHECK(!standard::validate_layout({standard::Wiring::three_phase, 1, 1}));
+    CHECK(!standard::validate_layout({standard::Wiring::three_phase, 1, 256}));
+
+    const DateTimeS time{{0x07, 0xea, 10, 5, 12, 30, 0}};
+    const Data item = Structure{{UInt32{123456}, time}};
+    const Data signed_item = Structure{{Int32{-123456}, time}};
+    const Data demand_array = Array{{item, item}};
+    CHECK(standard::validate_value({0x1010, 2, 0}, demand_array, layout));
+    CHECK(standard::validate_value({0x1031, 2, 1}, signed_item, layout));
+    CHECK(!standard::validate_value({0x1010, 2, 1}, signed_item, layout));
+    CHECK(!standard::validate_value({0x1030, 2, 1}, item, layout));
+    CHECK(!standard::validate_value({0x1010, 2, 1}, Structure{{time, UInt32{1}}}, layout));
+    CHECK(!standard::validate_value({0x1010, 2, 1}, Structure{{UInt32{1}}}, layout));
+    CHECK(
+        !standard::validate_value({0x1010, 2, 1}, Structure{{UInt32{1}, time, UInt8{1}}}, layout));
+    CHECK(!standard::validate_value({0x1010, 2, 1}, Array{{UInt32{1}, time}}, layout));
+    CHECK(!standard::validate_value({0x1010, 2, 0}, Array{{item}}, layout));
+    auto readings = standard::demand_values({0x1010, 2, 0}, demand_array, layout);
+    CHECK(readings && readings.value().size() == 2);
+    CHECK(standard::decimal_text(readings.value()[0].number) == "12.3456");
+    CHECK(readings.value()[0].occurred_at == time);
+    CHECK(standard::validate_value({0x1010, 2, 1}, Structure{{UInt32{0xffffffff}, time}}, layout));
+    CHECK(!standard::validate_value({0x1010, 2, 1}, Structure{{UInt32{1}, Structure{{time}}}},
+                                    layout));
+    CHECK(standard::decimal_text(
+              standard::demand_values({0x1031, 2, 1}, signed_item, layout).value()[0].number) ==
+          "-12.3456");
+    CHECK(!standard::demand_values({0x1010, 3, 0}, ScalerUnit{-4, 28}, layout));
+    CHECK(standard::engineering_values({0x1010, 2, 0}, demand_array, layout).value().size() == 2);
+    const auto item_bytes = codec::encode_data(item);
+    CHECK(item_bytes &&
+          to_hex(item_bytes.value()) == "02 02 06 00 01 E2 40 1C 07 EA 0A 05 0C 1E 00");
+    Limits limits;
+    limits.max_depth = 1;
+    CHECK(!standard::validate_value({0x1010, 2, 0}, demand_array, layout, limits));
+    limits = {};
+    limits.max_elements = 6;  // 根数组、两个结构和四个字段共 7 个节点。
+    CHECK(!standard::demand_values({0x1010, 2, 0}, demand_array, layout, limits));
+    limits.max_elements = 7;
+    CHECK(standard::demand_values({0x1010, 2, 0}, demand_array, layout, limits));
+
+    const Data harmonics = Array{{Int16{345}, Int16{125}, Int16{-5}}};
+    CHECK(standard::find_attribute({0x200d, 3, 0})->type == DataType::array);
+    CHECK(standard::find_attribute({0x200d, 6, 0})->type == DataType::scaler_unit);
+    CHECK(standard::harmonic_oad(0x200d, standard::Phase::b, 0, layout).value() ==
+          Oad{0x200d, 3, 1});
+    CHECK(standard::harmonic_oad(0x200e, standard::Phase::c, 3, layout).value() ==
+          Oad{0x200e, 4, 3});
+    CHECK(!standard::harmonic_oad(0x200d, standard::Phase::a, 1, layout));
+    CHECK(!standard::harmonic_oad(0x200d, standard::Phase::a, 4, layout));
+    CHECK(!standard::harmonic_oad(0x200d, standard::Phase::total, 0, layout));
+    CHECK(!standard::harmonic_oad(0x200d, standard::Phase::b, 2, single));
+    CHECK(!standard::harmonic_oad(0x2000, standard::Phase::a, 2, layout));
+    CHECK(standard::validate_value({0x200d, 3, 0}, harmonics, layout));
+    CHECK(!standard::validate_value({0x200d, 3, 0}, harmonics, single));
+    CHECK(!standard::validate_value({0x200d, 2, 0}, Array{{Int16{1}, Int16{2}}}, layout));
+    CHECK(!standard::validate_value({0x200d, 2, 2}, UInt16{125}, layout));
+    CHECK(standard::decimal_text(
+              standard::engineering_values({0x200e, 4, 3}, Int16{-5}, layout).value()[0]) ==
+          "-0.05");
+    CHECK(standard::make_oad(0x200d, 2, 255, {standard::Wiring::three_phase, 0, 255}));
+
+    const Data statuses =
+        Array{{BitString{16, {0x80, 0x04}}, BitString{16, {0, 0}}, BitString{16, {0, 0}},
+               BitString{16, {0, 0}}, BitString{16, {0, 0}}, BitString{16, {0, 0}},
+               BitString{16, {0, 0}}}};
+    CHECK(standard::validate_value({0x2014, 2, 0}, statuses, single));
+    CHECK(standard::validate_value({0x2014, 2, 7}, BitString{16, {0, 1}}));
+    CHECK(!standard::make_oad(0x2014, 2, 8));
+    CHECK(!standard::validate_value({0x2014, 2, 1}, BitString{8, {1}}));
+    CHECK(!standard::validate_value({0x2014, 2, 1}, UInt16{1}));
+    CHECK(!standard::validate_value({0x2014, 2, 0}, Array{{BitString{16, {0, 0}}}}));
+    CHECK(!standard::engineering_values({0x2014, 2, 0}, statuses));
+    CHECK(standard::validate_value({0x2015, 4, 0}, BitString{32, {0, 0, 0, 1}}));
+    CHECK(!standard::validate_value({0x2015, 2, 0}, BitString{16, {0, 1}}));
+
+    CHECK(standard::validate_value({0x4002, 2, 0}, OctetString{{1, 2, 3}}));
+    CHECK(!standard::validate_value({0x4003, 2, 0}, VisibleString{"123"}));
+    CHECK(standard::validate_value({0x4103, 2, 0}, VisibleString{std::string(32, 'A')}));
+    CHECK(!standard::validate_value({0x4103, 2, 0}, VisibleString{std::string(31, 'A')}));
+    CHECK(standard::validate_value({0x4104, 2, 0}, VisibleString{"220.0V"}));
+    CHECK(!standard::find_attribute({0x4104, 2, 0})->writable);
+    CHECK(standard::find_attribute({0x4100, 2, 0})->writable);
+    CHECK(standard::validate_value({0x4006, 2, 0}, Structure{{Enum{3}, Enum{0}}}));
+    CHECK(!standard::validate_value({0x4006, 2, 0}, Structure{{Enum{5}, Enum{0}}}));
+    CHECK(!standard::validate_value({0x4006, 2, 1}, Enum{5}));
+    CHECK(standard::validate_value({0x4000, 3, 0}, Enum{255}));
+    CHECK(!standard::validate_value({0x4000, 3, 0}, Enum{3}));
+    const Data timing = Structure{{UInt8{5}, UInt8{1}, UInt8{1}, UInt8{2}, UInt8{3}}};
+    CHECK(standard::validate_value({0x4000, 4, 0}, timing));
+    CHECK(standard::engineering_values({0x4000, 4, 0}, timing).value().size() == 1);
+    CHECK(standard::unit_symbol(
+              standard::engineering_values({0x4000, 4, 4}, UInt8{2}).value()[0].scaling.unit) ==
+          "s");
+    CHECK(!standard::validate_value({0x4010, 2, 0}, UInt8{4}));
+    CHECK(standard::validate_value(
+        {0x400c, 2, 0}, Structure{{UInt8{14}, UInt8{8}, UInt8{14}, UInt8{63}, UInt8{254}}}));
+    CHECK(!standard::validate_value({0x400c, 2, 4}, UInt8{64}));
+    CHECK(!standard::make_oad(0x400c, 2, 6));
+    const Data voltage_limits = Structure{{UInt16{2500}, UInt16{1800}, UInt16{2400}, UInt16{1900}}};
+    CHECK(standard::validate_value({0x4030, 2, 0}, voltage_limits));
+    CHECK(standard::engineering_values({0x4030, 2, 0}, voltage_limits).value().size() == 4);
+    CHECK(standard::decimal_text(
+              standard::engineering_values({0x4030, 2, 3}, UInt16{2400}).value()[0]) == "240.0");
+    CHECK(standard::decimal_text(
+              standard::engineering_values({0x4100, 2, 0}, UInt8{15}).value()[0]) == "15");
+    CHECK(standard::unit_symbol(34) == "kVAh" && standard::unit_symbol(28) == "kW" &&
+          standard::unit_symbol(51) == "%");
+
+    service::ObjectRegistry registry;
+    auto provider = std::make_shared<service::MemoryObject>();
+    provider->set(2, demand_array);
+    CHECK(service::register_standard_object(registry, 0x1010, {2}, provider, layout));
+    CHECK(std::get<Data>(registry.read({0x1010, 2, 1})) == item);
+    CHECK(registry.write({0x1010, 2, 1}, item) == 3);
+    provider->set(2, Array{{signed_item, signed_item}});
+    CHECK(std::get<std::uint8_t>(registry.read({0x1010, 2, 1})) == 7);
+    auto harmonic_provider = std::make_shared<service::MemoryObject>();
+    harmonic_provider->set(3, harmonics);
+    CHECK(service::register_standard_object(registry, 0x200d, {3}, harmonic_provider, layout));
+    CHECK(std::get<Data>(registry.read({0x200d, 3, 2})) == Data{Int16{125}});
+    CHECK(std::get<std::uint8_t>(registry.read({0x200d, 3, 4})) == 8);
+    auto limits_provider = std::make_shared<service::MemoryObject>();
+    limits_provider->set(2, voltage_limits);
+    CHECK(service::register_standard_object(registry, 0x4030, {2}, limits_provider));
+    CHECK(std::get<Data>(registry.read({0x4030, 2, 3})) == Data{UInt16{2400}});
+    CHECK(registry.write({0x4030, 2, 3}, UInt16{2400}) == 3);
+}
+
 int main() {
     return tests([] {
         catalog_tests();
@@ -321,5 +569,6 @@ int main() {
         value_tests();
         binding_tests();
         wire_and_service_tests();
+        expanded_tests();
     });
 }
