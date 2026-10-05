@@ -1,4 +1,7 @@
 add_executable(dlt698_decode decode.cpp)
+add_executable(dlt698_standard_records standard_records.cpp)
+target_link_libraries(dlt698_standard_records PRIVATE dlt698_service)
+dlt698_target_setup(dlt698_standard_records)
 add_executable(dlt698_standard_points standard_points.cpp)
 target_link_libraries(dlt698_standard_points PRIVATE dlt698_service)
 dlt698_target_setup(dlt698_standard_points)

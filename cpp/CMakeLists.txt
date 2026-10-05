@@ -36,6 +36,8 @@ endfunction()
 
 add_library(dlt698_core
     src/standard/catalog.cpp
+    src/standard/records.cpp
+    src/standard/capabilities.cpp
     src/common/bytes.cpp
     src/common/executor.cpp
     src/transport/memory.cpp
@@ -80,7 +82,7 @@ endif()
 target_link_libraries(dlt698_session PUBLIC dlt698_core)
 dlt698_target_setup(dlt698_session)
 
-add_library(dlt698_service src/service/object.cpp src/service/standard_object.cpp src/service/service.cpp src/service/sync.cpp)
+add_library(dlt698_service src/service/object.cpp src/service/standard_object.cpp src/service/memory_records.cpp src/service/point_probe.cpp src/service/service.cpp src/service/sync.cpp)
 add_library(dlt698::service ALIAS dlt698_service)
 set_target_properties(dlt698_service PROPERTIES EXPORT_NAME service VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR} CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)

@@ -1,4 +1,6 @@
 #include <dlt698/dlt698.hpp>
+#include <dlt698/service/memory_records.hpp>
+#include <dlt698/service/point_probe.hpp>
 #include <dlt698/service/service.hpp>
 #include <dlt698/service/standard_object.hpp>
 #include <dlt698/service/sync.hpp>
@@ -14,7 +16,7 @@ int main() {
     namespace oi = dlt698::standard::oi;
     // 安装后的轻量头文件可在编译期使用常量构造 OAD。
     constexpr dlt698::model::Oad voltage_point{oi::voltage, 2, 1};
-    if (dlt698::standard::objects().size() != 118 ||
+    if (dlt698::standard::objects().size() != 127 ||
         !dlt698::standard::find_object(oi::combination_active_energy))
         return 9;
     const auto energy_point = dlt698::standard::tariff_oad(oi::forward_active_energy, 0);
@@ -48,6 +50,19 @@ int main() {
     if (!demand || !(demand.value()[0].occurred_at == occurred) ||
         dlt698::standard::decimal_text(demand.value()[0].number) != "12.3456")
         return 15;
+    // 新增记录和能力接口只依赖安装包的导出符号。
+    auto daily = dlt698::service::MemoryRecords::create(oi::daily_freeze);
+    auto daily_query = dlt698::standard::record_sequences(oi::daily_freeze, 1, 2);
+    if (!daily || !daily_query ||
+        !daily.value()->replace_rows({{dlt698::model::UInt32{1}, occurred}}))
+        return 16;
+    if (std::get<std::vector<dlt698::protocol::apdu::RecordRow>>(
+            daily.value()->read_record(daily_query.value()).result)
+            .size() != 1)
+        return 17;
+    if (!dlt698::standard::plan_reads({}, {voltage_point}) ||
+        !dlt698::standard::require_record_service({}))
+        return 18;
     // 仅通过安装后的公开头文件和库调用 API，验证导出目标不依赖源码目录。
     const auto data = dlt698::codec::encode_data(dlt698::model::UInt16{2413});
     if (!data || dlt698::to_hex(data.value()) != "12 09 6D") return 1;
@@ -88,6 +103,13 @@ int main() {
     dlt698::service::ClientService client_api(client);
     client->start();
     server->start();
+    bool probe_ok = false;
+    dlt698::service::async_probe_points(client, {}, {{0x2000, 2, 0}}, {}, [&](auto result) {
+        probe_ok = result && result.value().size() == 1 &&
+                   std::holds_alternative<dlt698::model::Data>(result.value()[0].outcome);
+    });
+    executor->run_ready();
+    if (!probe_ok) return 19;
     bool read_ok = false;
     client_api.async_get({0x2000, 2, 0}, [&](auto result) {
         read_ok = result && std::holds_alternative<dlt698::model::Data>(result.value()) &&
