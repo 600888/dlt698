@@ -5,25 +5,34 @@ on:
   workflow_dispatch:
 jobs:
   build:
+    name: build (${{ matrix.os }}, ${{ matrix.linkage }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        shared: ["ON", "OFF"]
+        # linkage is display-only and names the artifact type; shared carries
+        # the raw ON/OFF value that CMake expects. Check names must stay
+        # readable to people who have never seen BUILD_SHARED_LIBS.
+        include:
+          - linkage: static library
+            shared: "OFF"
+          - linkage: shared library
+            shared: "ON"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Configure
+      - name: Configure CMake (${{ matrix.linkage }})
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=${{ matrix.shared }} -DDLT698_WARNINGS_AS_ERRORS=OFF
       - name: Build
         run: cmake --build build --config Release --parallel 2
       - name: Test codecs, TCP and installed consumer
         run: ctest --test-dir build -C Release --output-on-failure
   core-only:
+    name: core-only (no Asio transport)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Configure without Asio
+      - name: Configure CMake (transport OFF)
         run: cmake -S cpp -B build-core -DCMAKE_BUILD_TYPE=Release -DDLT698_BUILD_TRANSPORT=OFF -DDLT698_WARNINGS_AS_ERRORS=OFF
       - name: Build
         run: cmake --build build-core --parallel 2
