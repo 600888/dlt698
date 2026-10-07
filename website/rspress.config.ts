@@ -54,6 +54,7 @@ const sections = [
       ['executor', '执行器'],
       ['channel', '通道与内存通道'],
       ['tcp', 'TCP 通道'],
+      ['tcp-debug', 'TCP 手动报文调试'],
       ['serial', '串口与串行链路'],
     ],
   },

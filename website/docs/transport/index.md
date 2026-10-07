@@ -15,6 +15,7 @@ comments: false
 | [执行器](./executor.md) | `IExecutor`、`ITimer`、`ManualExecutor` 虚拟时钟 |
 | [通道与内存通道](./channel.md) | `IChannel` 接口、`ChannelOptions`、`MemoryChannel` |
 | [TCP 通道](./tcp.md) | `IoRuntime`、`TcpChannel`、`TcpListener` |
+| [TCP 手动报文调试](./tcp-debug.md) | LINK 登录、5 秒断开、连接模式与可直接发送的 GET |
 | [串口与串行链路](./serial.md) | `SerialChannel`、`SerialLinkChannel`、RS-485 方向控制 |
 
 ## 组成部分

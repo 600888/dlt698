@@ -31,7 +31,8 @@ auto connected = client.connect_tcp("127.0.0.1", 6980);
 auto value = client.get({0x200F, 2, 0});
 ```
 
-运行 `dlt698_server` 后在另一终端运行 `dlt698_client`，读取标准频率后断开。串口使用
+运行 `dlt698_server` 后在另一终端运行 `dlt698_client`，批量读取频率、三相电压/电流、
+有功/无功功率、功率因数、分费率电能和通信地址，并演示单独读取 A 相电压及费率 1 电能后断开。串口使用
 `client.open_serial("COM4", 9600)`。CONNECT、运行线程和分块读取由库管理，支持直接
 `get/set/action` 及列表/记录；完整返回结果、超时和退出约定见[托管客户端](website/docs/session/client.md)。
 
@@ -176,8 +177,13 @@ target_link_libraries(your_app PRIVATE dlt698::dlt698)
 
 | 普通程序 | 用途 |
 | --- | --- |
-| `dlt698_server` | 设置标准频率后启动 TCP/串口，按 Enter 停止 |
-| `dlt698_client` | 与新服务器配对，连接后读取频率并断开 |
+| `dlt698_server` | 发布 8 组模拟电表属性后启动 TCP/串口，按 Enter 停止 |
+| `dlt698_client` | 批量读取模拟属性及单相/费率元素，显示实际值和单位后断开 |
+
+`app/` 和 `transport/` 示例在源码中显式配置电表地址，默认 `000000000000`
+（六个 `0x00` 字节），逻辑地址和客户端地址 CA 均为 0。修改时两端配置须一致；
+地址按线序填写，低有效字节在前，例如 `123456789012` 对应 `{0x12, 0x90, 0x78, 0x56, 0x34, 0x12}`。
+托管服务端的通信地址属性 `4001/2/0` 复用同一配置发布。
 
 ### 编解码层
 

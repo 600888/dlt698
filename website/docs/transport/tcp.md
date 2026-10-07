@@ -7,6 +7,10 @@ description: IoRuntime、TcpChannel 与 TcpListener。
 
 头文件：`<dlt698/transport/tcp.hpp>`，命名空间 `dlt698::transport`。仅在 `DLT698_BUILD_TRANSPORT=ON` 时提供。
 
+:::tip 使用网络或串口调试助手连接 TCP
+默认示例会主动发送 LINK 登录，未收到合法应答约 5 秒后关闭该连接。TCP 已连接不代表应用关联完成；手动直接 GET 应显式配置 `local_preset`。完整报文、可编译程序及排错步骤见 [TCP 手动报文调试](./tcp-debug.md)。
+:::
+
 ## IoRuntime
 
 ```cpp

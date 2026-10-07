@@ -36,6 +36,10 @@ dlt698_client
 
 两端必须配置相同场景，SA/CA 也必须匹配。默认 SA 字节 `{0}`、逻辑地址零和 CA 零，可通过 `ClientOptions::protocol` 指定实际地址、能力、TimeTag 与预算；客户端不猜测现场表计地址。
 
+:::tip 连接真实电表或使用调试助手
+默认 TCP 客户端会等待服务器 LINK，若实际对端采用本地公共或预设关联，应显式选择对应 profile；默认等待可能返回 `LINK login timeout`。反过来，调试助手连接默认远程服务器后不回复 LINK，会使服务器约 5 秒后关闭连接。场景选择、完整报文与直接 GET 示例见 [TCP 手动报文调试](../transport/tcp-debug.md)。
+:::
+
 ## 读取、写入与错误
 
 | 方法 | 结果 |

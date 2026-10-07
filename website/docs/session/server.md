@@ -39,11 +39,15 @@ int main() {
 
 ## TCP 和串口场景
 
+:::tip 调试助手连接后 5 秒断开
+默认 TCP 模式主动发送 LINK 登录并等待应答，普通调试助手通常不会自动确认；默认 5000 毫秒事务超时后服务器关闭该连接。手动直接 GET 请显式选择 `local_preset`，仅关闭心跳不能取消初始登录。报文解析、完整地址配置、可编译程序和排错说明见 [TCP 手动报文调试](../transport/tcp-debug.md)。
+:::
+
 | 场景 | 启动方式 | 协议流程 |
 | --- | --- | --- |
-| 远程 TCP（默认） | `start_tcp(address, port)` | 每个接入连接自动发起 LINK 登录，默认 5 秒心跳，随后应答公共 CONNECT |
+| 远程 TCP（默认） | `start_tcp(address, port)` | 每个接入连接自动发起 LINK 登录，等待应答默认 5 秒；登录完成后默认 5 秒心跳，随后应答公共 CONNECT |
 | 本地 TCP | `start_tcp(address, port, ConnectionProfile::local_public)` | 不做远程登录，仍需 CONNECT |
-| 显式本地预设 | `start_tcp(address, port, ConnectionProfile::local_preset)` | 跳过 CONNECT，调用方负责两端配置一致 |
+| 显式本地预设 | `start_tcp(address, port, ConnectionProfile::local_preset)` | 跳过 LINK 与 CONNECT，调用方负责两端配置一致 |
 | 本地串口（默认） | `start_serial("COM3", 9600)` | 9600/8E1，自动套串行链路，无远程登录和心跳，仍需 CONNECT |
 
 这些是入口的默认场景策略，实际部署可选其他场景。TCP 接入方向和协议角色独立；本批高层入口提供协议服务器监听，其他拨号方向仍可使用[分层接口](session.md)。

@@ -37,6 +37,10 @@ target_link_libraries(your_app PRIVATE dlt698::app)
 
 构建后运行 `dlt698_server`，或 `dlt698_server COM3`。默认 TCP 会自动 LINK 登录并等待客户端 CONNECT；本地和预设关联、共享设备、布局/预算及退出约定见[托管服务器与设备数据](../session/server.md)。
 
+:::tip 手动发送 GET 前先选择关联模式
+使用网络/串口调试助手的 TCP 模式连接默认示例，会收到 LINK 登录请求；未回复时约 5 秒后断开。直接手动 GET 请按 [TCP 手动报文调试](../transport/tcp-debug.md)配置 `local_preset` 和匹配的 SA/CA；只建立 TCP 或只关闭心跳都不能完成协议关联。
+:::
+
 ## 客户端：连接后直接读取
 
 ```cpp
