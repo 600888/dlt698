@@ -10,9 +10,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        # linkage is display-only and names the artifact type; shared carries
-        # the raw ON/OFF value that CMake expects. Check names must stay
-        # readable to people who have never seen BUILD_SHARED_LIBS.
+        # 两种库类型必须作为矩阵维度，与三个平台组合生成六个构建任务。
+        linkage: [static library, shared library]
+        # include 按库类型补充 CMake 的 ON/OFF 参数，不负责展开库类型。
         include:
           - linkage: static library
             shared: "OFF"
