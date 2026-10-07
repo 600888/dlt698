@@ -26,6 +26,11 @@ void usage() {
 void serve(std::shared_ptr<IoRuntime> runtime, std::shared_ptr<IExecutor> executor,
            std::shared_ptr<TcpChannel> channel, std::chrono::seconds lifetime) {
     SessionOptions options;
+    // 电表地址（SA）默认 000000000000，六字节按线序填写，低有效字节在前。
+    // 修改地址时须同步修改 tcp_client；例如 123456789012 对应 12 90 78 56 34 12。
+    options.server.bytes = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    options.server.logical = 0;  // 逻辑地址，范围 0～3。
+    options.client_address = 0;  // 客户端地址（CA），两端必须一致。
     // 协议角色由 role 决定，与谁拨号无关；服务端监听时也是 server 角色。
     options.role = Role::server;
     // 远程连接要求先由协议服务器发起 LINK 登录，并开启自动心跳。

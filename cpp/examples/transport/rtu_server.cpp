@@ -49,6 +49,11 @@ int main(int argc, char** argv) {
         timing.bits_per_character = 11;
         auto channel = SerialLinkChannel::wrap(std::move(opened).value(), executor, timing);
         SessionOptions options;
+        // 电表地址（SA）默认 000000000000，六字节按线序填写，低有效字节在前。
+        // 修改地址时须同步修改 rtu_client；例如 123456789012 对应 12 90 78 56 34 12。
+        options.server.bytes = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        options.server.logical = 0;  // 逻辑地址，范围 0～3。
+        options.client_address = 0;  // 客户端地址（CA），两端必须一致。
         options.role = Role::server;
         // 串口是本地直连，没有远程登录概念，因此不要求 LINK 登录，也不启用心跳。
         options.heartbeat_seconds = 0;

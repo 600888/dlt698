@@ -62,6 +62,11 @@ int main(int argc, char** argv) {
             throw std::runtime_error(failure ? failure->context : "connect timeout/interrupted");
         }
         SessionOptions options;
+        // 目标电表地址（SA）默认 000000000000，须与 tcp_server 一致。
+        // 六字节按线序填写，低有效字节在前；例如 123456789012 对应 12 90 78 56 34 12。
+        options.server.bytes = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        options.server.logical = 0;  // 逻辑地址，范围 0～3。
+        options.client_address = 0;  // 客户端地址（CA），两端必须一致。
         // 协议角色与拨号方向独立：这里是主动拨号方，但角色仍是协议客户机。
         options.role = Role::client;
         options.request_time_tag = model::Ti{0, 10};
