@@ -138,6 +138,8 @@ std::size_t element_count(ArrayLayout array_layout, const DeviceLayout& layout) 
             return layout.harmonic_order;
         case ArrayLayout::status_words:
             return 7;
+        case ArrayLayout::variable:
+            return 255;
         case ArrayLayout::none:
             return 0;
     }
@@ -690,6 +692,89 @@ const std::vector<ObjectDefinition>& objects() {
                               {scalar(1, "逻辑名", DataType::octet_string, "附录 E.3 表 E.3"),
                                scalar(2, "数值", type, "附录 E.3 表 E.3")}});
         }
+        // 表 184/185 与附录 E.12/E.13：安全对象与端口的值定义独立于 ESAM 密码后端。
+        auto dynamic_array = [](std::uint8_t number, const char* name, DataType element,
+                                const char* source) {
+            auto attribute = scalar(number, name, DataType::array, source);
+            attribute.element_type = element;
+            attribute.layout = ArrayLayout::variable;
+            return attribute;
+        };
+        std::vector<AttributeDefinition> esam_attributes;
+        for (const auto& item :
+             std::vector<std::pair<std::uint8_t, const char*>>{{std::uint8_t{1}, "逻辑名"},
+                                                               {std::uint8_t{2}, "ESAM序列号"},
+                                                               {std::uint8_t{3}, "ESAM版本号"},
+                                                               {std::uint8_t{4}, "对称密钥版本"},
+                                                               {std::uint8_t{9}, "终端证书序列号"},
+                                                               {std::uint8_t{10}, "终端证书"},
+                                                               {std::uint8_t{11}, "主站证书序列号"},
+                                                               {std::uint8_t{12}, "主站证书"}})
+            esam_attributes.push_back(
+                scalar(item.first, item.second, DataType::octet_string, "7.3.21 表185"));
+        for (const auto& item : std::vector<std::pair<std::uint8_t, const char*>>{
+                 {std::uint8_t{5}, "会话时效门限"},
+                 {std::uint8_t{6}, "会话时效剩余时间"},
+                 {std::uint8_t{14}, "红外认证时效门限"},
+                 {std::uint8_t{15}, "红外认证剩余时间"}})
+            esam_attributes.push_back(scalar(item.first, item.second, DataType::uint32,
+                                             "7.3.21 表185",
+                                             model::ScalerUnit{std::uint8_t{0}, 6}));
+        esam_attributes.push_back(structured(7, "当前计数器",
+                                             {field("单地址应用协商计数器", DataType::uint32),
+                                              field("主动上报计数器", DataType::uint32),
+                                              field("应用广播通信序列号", DataType::uint32)},
+                                             "7.3.21 表185"));
+        esam_attributes.push_back(structured(8, "证书版本",
+                                             {field("终端证书版本", DataType::octet_string),
+                                              field("主站证书版本", DataType::octet_string)},
+                                             "7.3.21 表185"));
+        esam_attributes.push_back(
+            dynamic_array(13, "ESAM安全存储对象列表", DataType::oad, "7.3.21 表185"));
+        result.push_back(
+            {oi::esam, "ESAM", 21, "DL/T 698.45-2017", "附录 E.12", std::move(esam_attributes)});
+        auto enabled = scalar(2, "安全模式选择", DataType::enumeration, "附录 E.12");
+        enabled.value_definition = field(enabled.name, DataType::enumeration, {}, 1);
+        auto sal = enabled;
+        sal.number = 4;
+        sal.name = "SAL安全应用数据链路层参数";
+        auto modes = dynamic_array(3, "显式安全模式参数", DataType::structure, "附录 E.12");
+        modes.element_definition =
+            ValueDefinition{modes.name,
+                            DataType::structure,
+                            {},
+                            {},
+                            {field("对象标识", DataType::oi), field("安全模式", DataType::uint16)},
+                            {},
+                            {}};
+        result.push_back(
+            {oi::security_mode,
+             "安全模式参数",
+             8,
+             "DL/T 698.45-2017",
+             "附录 E.12",
+             {scalar(1, "逻辑名", DataType::octet_string, "附录 E.12"), enabled, modes, sal}});
+        for (const auto& port : std::vector<std::pair<std::uint16_t, const char*>>{
+                 {oi::rs232, "RS-232"}, {oi::rs485, "RS-485"}}) {
+            auto ports = dynamic_array(2, "设备对象列表", DataType::structure, "附录 E.13");
+            auto function = field("端口功能", DataType::enumeration);
+            function.allowed_values = {0, 1, 3};
+            ports.element_definition =
+                ValueDefinition{ports.name,
+                                DataType::structure,
+                                {},
+                                {},
+                                {field("端口描述符", DataType::visible_string),
+                                 field("端口参数", DataType::comdcb), function},
+                                {},
+                                {}};
+            result.push_back({port.first,
+                              port.second,
+                              22,
+                              "DL/T 698.45-2017",
+                              "附录 E.13",
+                              {scalar(1, "逻辑名", DataType::octet_string, "附录 E.13"), ports}});
+        }
         return result;
     }();
     return catalog;
@@ -839,7 +924,8 @@ Result<void> validate_value(const model::Oad& attribute, const model::Data& valu
         const auto& elements = value.as<model::Array>().value;
         if (elements.size() > limits.max_elements)
             return Error{ErrorCode::resource_limit, 0, "standard array elements"};
-        if (elements.size() != element_count(definition->layout, layout))
+        if (definition->layout != ArrayLayout::variable &&
+            elements.size() != element_count(definition->layout, layout))
             return Error{ErrorCode::invalid_length, 0, "standard array layout"};
         for (std::size_t i = 0; i < elements.size(); ++i) {
             if (elements[i].type() != *definition->element_type)

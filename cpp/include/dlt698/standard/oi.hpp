@@ -263,4 +263,12 @@ inline constexpr std::uint16_t terminal_initialization_event = 0x3100;
 inline constexpr std::uint16_t daily_freeze = 0x5004;
 /// 月冻结（附录 E.6）。
 inline constexpr std::uint16_t monthly_freeze = 0x5006;
+/// ESAM 接口类；属性和操作需绑定真实提供者，目录不保存密钥。
+inline constexpr std::uint16_t esam = 0xf100;
+/// 显式安全模式参数；仅描述对象值，不自动更改安全后端策略。
+inline constexpr std::uint16_t security_mode = 0xf101;
+/// RS-232 端口列表与透明代理的端口 OAD。
+inline constexpr std::uint16_t rs232 = 0xf200;
+/// RS-485 端口列表与透明代理的端口 OAD。
+inline constexpr std::uint16_t rs485 = 0xf201;
 }  // namespace dlt698::standard::oi

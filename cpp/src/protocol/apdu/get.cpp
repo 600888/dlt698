@@ -1,15 +1,15 @@
 #include "detail.hpp"
 
 namespace dlt698::protocol::apdu {
-namespace {
-std::size_t count(Reader& r, const Limits& l, bool list = true) {
+namespace detail {
+std::size_t count(Reader& r, const Limits& l, bool list) {
     const auto n = list ? codec::read_length(r, l.max_elements) : 1;
     if (!n) throw DecodeFailure({ErrorCode::invalid_length, r.position(), "GET count"});
     r.require(n, "GET items");
     return n;
 }
 
-void count(Writer& w, const Limits& l, std::size_t n, bool list = true) {
+void count(Writer& w, const Limits& l, std::size_t n, bool list) {
     if (!n || n > l.max_elements || (!list && n != 1))
         throw DecodeFailure({ErrorCode::invalid_length, w.size(), "GET count"});
     if (list) codec::write_length(w, n);
@@ -79,7 +79,47 @@ void record(Writer& w, const RecordResult& v, const Limits& l) {
         }
     }
 }
-}  // namespace
+
+std::optional<FollowReport> read_follow(Reader& r, const Limits& l) {
+    if (!present(r, "FollowReport presence")) return {};
+    const auto c = r.u8("FollowReport choice");
+    if (c != 1 && c != 2) invalid(r.position() - 1, "FollowReport choice");
+    const auto n = count(r, l);
+    if (c == 1) {
+        std::vector<AttributeResult> values;
+        for (std::size_t i = 0; i < n; ++i) values.push_back(attribute(r, l));
+        return FollowReport{std::move(values)};
+    }
+    if (c == 2) {
+        std::vector<RecordResult> values;
+        for (std::size_t i = 0; i < n; ++i) values.push_back(record(r, l));
+        return FollowReport{std::move(values)};
+    }
+    invalid(r.position(), "FollowReport choice");
+    return {};
+}
+
+void write_follow(Writer& w, const std::optional<FollowReport>& v, const Limits& l) {
+    w.u8(v ? 1 : 0);
+    if (!v) return;
+    w.u8(static_cast<std::uint8_t>(v->index() + 1));
+    std::visit(
+        [&](const auto& values) {
+            count(w, l, values.size());
+            for (const auto& item : values) {
+                if constexpr (std::is_same_v<std::decay_t<decltype(item)>, AttributeResult>)
+                    attribute(w, item, l);
+                else
+                    record(w, item, l);
+            }
+        },
+        *v);
+}
+}  // namespace detail
+
+using detail::attribute;
+using detail::count;
+using detail::record;
 
 Result<GetApdu> decode_get(ByteView bytes, const Limits& l) {
     if (bytes.size() > l.max_data_bytes)
@@ -144,9 +184,40 @@ Result<GetApdu> decode_get(ByteView bytes, const Limits& l) {
                     detail::invalid(r.position() - 1, "Next result choice");
                 result = std::move(v);
             }
+        } else if (choice == 6) {
+            const auto oad = codec::read_oad(r);
+            if (!response)
+                result = GetMd5Request{piid, oad, {}};
+            else {
+                GetMd5Response v;
+                v.piid_acd = piid;
+                v.attribute = oad;
+                const auto c = r.u8("MD5 result choice");
+                if (c == 0)
+                    v.result = r.u8("DAR");
+                else if (c == 1) {
+                    if (codec::read_length(r, 16) != 16)
+                        detail::invalid(r.position(), "MD5 length");
+                    std::array<std::uint8_t, 16> digest{};
+                    for (auto& b : digest) b = r.u8("MD5");
+                    v.result = digest;
+                } else
+                    detail::invalid(r.position() - 1, "MD5 result choice");
+                result = std::move(v);
+            }
         } else
             return Error{ErrorCode::unsupported_service, 1, "GET variant"};
-        if (response) detail::no_follow(r);
+        if (response)
+            std::visit(
+                [&](auto& v) {
+                    using T = std::decay_t<decltype(v)>;
+                    if constexpr (std::is_same_v<T, GetResponse> ||
+                                  std::is_same_v<T, GetRecordResponse> ||
+                                  std::is_same_v<T, GetNextResponse> ||
+                                  std::is_same_v<T, GetMd5Response>)
+                        v.follow_report = detail::read_follow(r, l);
+                },
+                result);
         std::visit([&](auto& v) { v.time_tag = detail::read_time_tag(r); }, result);
         r.finish();
         return result;
@@ -161,15 +232,18 @@ Result<Bytes> encode_get(const GetApdu& message, const Limits& l) {
         std::visit(
             [&](const auto& v) {
                 using T = std::decay_t<decltype(v)>;
-                constexpr bool response = std::is_same_v<T, GetResponse> ||
-                                          std::is_same_v<T, GetRecordResponse> ||
-                                          std::is_same_v<T, GetNextResponse>;
+                constexpr bool response =
+                    std::is_same_v<T, GetResponse> || std::is_same_v<T, GetRecordResponse> ||
+                    std::is_same_v<T, GetNextResponse> || std::is_same_v<T, GetMd5Response>;
                 w.u8(response ? 0x85 : 5);
                 if constexpr (std::is_same_v<T, GetRequest> || std::is_same_v<T, GetResponse>)
                     w.u8(v.list ? 2 : 1);
                 else if constexpr (std::is_same_v<T, GetRecordRequest> ||
                                    std::is_same_v<T, GetRecordResponse>)
                     w.u8(v.list ? 4 : 3);
+                else if constexpr (std::is_same_v<T, GetMd5Request> ||
+                                   std::is_same_v<T, GetMd5Response>)
+                    w.u8(6);
                 else
                     w.u8(5);
                 if constexpr (response)
@@ -196,7 +270,20 @@ Result<Bytes> encode_get(const GetApdu& message, const Limits& l) {
                     for (const auto& a : v.records) record(w, a, l);
                 } else if constexpr (std::is_same_v<T, GetNextRequest>)
                     w.be(v.block, 2);
-                else {
+                else if constexpr (std::is_same_v<T, GetMd5Request> ||
+                                   std::is_same_v<T, GetMd5Response>) {
+                    codec::write_oad(w, v.attribute);
+                    if constexpr (response) {
+                        w.u8(static_cast<std::uint8_t>(v.result.index()));
+                        if (const auto dar = std::get_if<std::uint8_t>(&v.result))
+                            w.u8(*dar);
+                        else {
+                            const auto& digest = std::get<std::array<std::uint8_t, 16>>(v.result);
+                            codec::write_length(w, digest.size());
+                            w.bytes({digest.data(), digest.size()});
+                        }
+                    }
+                } else {
                     w.u8(v.last ? 1 : 0);
                     w.be(v.block, 2);
                     w.u8(static_cast<std::uint8_t>(v.result.index()));
@@ -213,7 +300,7 @@ Result<Bytes> encode_get(const GetApdu& message, const Limits& l) {
                         for (const auto& a : records) record(w, a, l);
                     }
                 }
-                if constexpr (response) w.u8(0);
+                if constexpr (response) detail::write_follow(w, v.follow_report, l);
                 detail::write_time_tag(w, v.time_tag);
             },
             message);

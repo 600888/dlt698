@@ -27,6 +27,7 @@ struct SetResponse {
     bool list = false;
     std::vector<SetResult> attributes;
     std::optional<TimeTag> time_tag;
+    std::optional<FollowReport> follow_report{};
 };
 
 struct ActionMethod {
@@ -52,19 +53,20 @@ struct ActionResponse {
     bool list = false;
     std::vector<ActionResult> methods;
     std::optional<TimeTag> time_tag;
+    std::optional<FollowReport> follow_report{};
 };
 
 using MutationApdu = std::variant<SetRequest, SetResponse, ActionRequest, ActionResponse>;
 /** @brief 解码一个完整 SET/ACTION APDU。
  * @param[in] bytes 不含链路封装的完整消息。
  * @param[in] limits 字节、列表项数及单个 Data 树预算。
- * @return 拥有内存的精确消息或错误；then-get 与非空 FollowReport 返回 unsupported_service。
+ * @return 拥有内存的精确消息或错误。
  */
 DLT698_API Result<MutationApdu> decode_mutation(ByteView bytes, const Limits& limits = {});
 /** @brief 编码 SET/ACTION 普通或列表消息。
  * @param[in] message 普通形式须恰好一项，列表形式须非空。
  * @param[in] limits 输出字节、列表项数及单个 Data 树预算。
- * @return APDU 字节或非法字段、资源超限错误；响应始终不附加 FollowReport。
+ * @return APDU 字节或非法字段、资源超限错误。
  */
 DLT698_API Result<Bytes> encode_mutation(const MutationApdu& message, const Limits& limits = {});
 }  // namespace dlt698::protocol::apdu

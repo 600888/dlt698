@@ -6,6 +6,7 @@
 #include <dlt698/protocol/apdu/apdu.hpp>
 #include <dlt698/protocol/link/fragment.hpp>
 #include <dlt698/protocol/link/frame.hpp>
+#include <dlt698/security/backend.hpp>
 #include <dlt698/session_export.hpp>
 #include <dlt698/transport/channel.hpp>
 
@@ -19,9 +20,12 @@ struct SessionOptions {
     std::uint8_t client_address = 0;
     Limits limits;
     protocol::apdu::AssociationParameters parameters{
-        0x0010, {0xf3, 0x8c, 0x08}, {}, 1024, 1024, 1, 1024, 100};
+        0x0010, {0xff, 0xff, 0xf8}, {}, 1024, 1024, 1, 1024, 100};
     // function 默认全零；应用须显式配置自身实际支持的 C.2 业务位，CONNECT 取双方交集。
     protocol::apdu::FactoryVersion factory;
+    std::shared_ptr<security::IBackend>
+        security_backend;             ///< 会话独占实例，生命周期覆盖所有安全调用。
+    bool protect_application = true;  ///< 有后端时，关联后的业务必须使用 SECURITY，拒绝明文降级。
     std::chrono::milliseconds request_timeout{5000};
     std::chrono::milliseconds id_reuse_delay{
         120000};                      ///< 成功事务的序号隔离期，须覆盖对端最大响应寿命。
@@ -34,6 +38,7 @@ struct SessionOptions {
     std::chrono::milliseconds fragment_timeout{1000};    ///< 单片确认的单调超时。
     std::chrono::milliseconds reassembly_timeout{5000};  ///< 重组没有进展时的单调超时。
     unsigned fragment_retries = 2;  ///< 0 至 16 次，仅重发未获确认的相同片段，不重放应用请求。
+    unsigned report_retries = 2;    ///< 上报未确认时重发次数，0 至 16；超时最终关闭通道。
     bool prefer_get_blocks = true;  ///< 超长 GET 优先按完整属性/记录行应用分块，其块仍可链路分帧。
     std::function<model::DateTime()>
         calendar_clock;  ///< 空时使用 UTC；注入时钟在执行器中调用，抛异常会关闭会话并返回 invalid_value。
@@ -65,6 +70,43 @@ class Session {
     using DiagnosticHandler = std::function<void(const Error&)>;
     using CloseHandler = std::function<void(const Error&)>;
     using StateHandler = std::function<void(State)>;
+    using ExchangeHandler = std::function<void(Result<protocol::apdu::Apdu>)>;
+    using BackendCancel = std::function<void()>;
+    using AdvancedRequestHandler =
+        std::function<BackendCancel(protocol::apdu::Apdu, ExchangeHandler)>;
+    using ReportHandler = std::function<bool(const protocol::apdu::ReportNotification&)>;
+    using FollowHandler = std::function<void(const protocol::apdu::FollowReport&)>;
+    /** @brief 提交 MD5、ThenGet、PROXY 请求或服务器 REPORT 通知。
+     * @param[in] request 拥有内存的消息；PIID 与请求时间标签由会话分配。
+     * @param[in] handler 在串行执行器内恰好完成一次，返回精确响应或本地错误。
+     * @note 每个发起方最多一个在途事务；请求不重试，REPORT 按 report_retries 重发。
+     * 超时或取消关闭通道；ThenGet/PROXY 超时不表示远端未执行。
+     */
+    DLT698_SESSION_API void async_exchange(protocol::apdu::Apdu request, ExchangeHandler handler);
+    /** @brief 注册高级请求的异步服务器后端。
+     * @param[in] handler 接收拥有型请求及完成回调，不得阻塞同一执行器；空值移除。
+     * @note 完成回调可从任意线程调用，但只接受首次结果；释放/关闭后结果被丢弃。
+     * 处理器返回非阻塞取消函数，释放/关闭时调用；应弱引用会话并自行管理资源和超时。
+     */
+    DLT698_SESSION_API void set_advanced_handler(AdvancedRequestHandler handler);
+    /** @brief 注册客户机主动上报接收器。
+     * @param[in] handler 执行器内调用，成功接收返回 true 才发送确认；false/异常不确认。
+     * @note 没有处理器时不确认；确认过的完全相同重发在隔离期内重发确认，不重复交付。
+     */
+    DLT698_SESSION_API void set_report_handler(ReportHandler handler);
+    /** @brief 注册已匹配响应与合法通知的跟随上报观察器。
+     * @param[in] handler 执行器内借用数据，需跨回调使用时复制；异常被隔离。
+     */
+    DLT698_SESSION_API void set_follow_handler(FollowHandler handler);
+    /** @brief 注册 ACD 请求访问通知；应用根据业务选择事件读取 OAD。
+     * @param[in] handler 在合法响应/通知带 ACD 且已协商时调用；不得阻塞，异常被隔离。
+     * @note ACD 不指定事件 OAD，因此不会隐式发起 GET；可投递后续业务读取。
+     */
+    DLT698_SESSION_API void set_acd_handler(std::function<void()> handler);
+    /** @brief 设置服务器待访问状态，后续服务器 APDU 按协商结果携带 ACD。
+     * @param[in] pending true 有待处理事件，false 清除；仅影响服务器发送。
+     */
+    DLT698_SESSION_API void set_access_demand(bool pending);
     /** @brief 创建尚未启动的会话。
      * @param[in] channel 已连接的字节通道。
      * @param[in] executor 所有会话操作及定时器共用的串行执行器。

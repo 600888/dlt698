@@ -287,8 +287,8 @@ TEST_CASE("未分配的服务标签报不支持", "[apdu][routing]") {
     }
 
     SECTION("GET 与 SET 家族的未分配变体") {
-        // GET 变体 0 与 6 及以上未分配。
-        for (int choice : {0, 6, 7, 8, 9}) {
+        // GET 变体 0 与 7 及以上未分配。
+        for (int choice : {0, 7, 8, 9}) {
             INFO("GET 变体=" << choice);
             Bytes bytes{0x05, static_cast<std::uint8_t>(choice), 0x01};
             bytes.insert(bytes.end(), {0x40, 0x01, 0x02, 0x00, 0x00, 0x00});
@@ -296,9 +296,9 @@ TEST_CASE("未分配的服务标签报不支持", "[apdu][routing]") {
             REQUIRE_FALSE(static_cast<bool>(result));
             CHECK(result.error().code == ErrorCode::unsupported_service);
         }
-        // SET 与 ACTION 变体 0 与 3 及以上未分配，3 是 then-get。
+        // SET 与 ACTION 变体 0 与 4 及以上未分配。
         for (std::uint8_t service : {0x06, 0x07, 0x86, 0x87}) {
-            for (int choice : {0, 3, 4}) {
+            for (int choice : {0, 4}) {
                 INFO("服务=" << std::hex << +service << std::dec << " 变体=" << choice);
                 Bytes bytes{service, static_cast<std::uint8_t>(choice), 0x01};
                 bytes.insert(bytes.end(), {0x40, 0x01, 0x02, 0x00, 0x00, 0x00});

@@ -51,19 +51,17 @@ bool valid_parameters(const apdu::AssociationParameters& p) {
            p.receive_frame_bytes <= 16383 && p.receive_window && p.apdu_bytes && p.timeout_seconds;
 }
 
+// 线上含 PIID-ACD 的模型统一处理服务序号与请求访问位，避免新增响应遗漏分支。
+template <class T, class = void>
+struct HasAcd : std::false_type {};
+
+template <class T>
+struct HasAcd<T, std::void_t<decltype(std::declval<T>().piid_acd)>> : std::true_type {};
+
 std::uint8_t id_of(const apdu::Apdu& message) {
     return std::visit(
         [](const auto& v) -> std::uint8_t {
-            using T = std::decay_t<decltype(v)>;
-            if constexpr (std::is_same_v<T, apdu::LinkRequest> ||
-                          std::is_same_v<T, apdu::ConnectResponse> ||
-                          std::is_same_v<T, apdu::ReleaseResponse> ||
-                          std::is_same_v<T, apdu::ReleaseNotification> ||
-                          std::is_same_v<T, apdu::GetResponse> ||
-                          std::is_same_v<T, apdu::GetRecordResponse> ||
-                          std::is_same_v<T, apdu::GetNextResponse> ||
-                          std::is_same_v<T, apdu::SetResponse> ||
-                          std::is_same_v<T, apdu::ActionResponse>)
+            if constexpr (HasAcd<std::decay_t<decltype(v)>>::value)
                 return v.piid_acd & 0xbf;
             else
                 return v.piid;
@@ -79,7 +77,7 @@ Result<T> typed(Result<apdu::Apdu> result) {
 }  // namespace
 
 struct Session::Impl : std::enable_shared_from_this<Impl> {
-    enum class Kind { link, connect, get, record, set, action, release };
+    enum class Kind { link, connect, get, record, set, action, release, advanced };
 
     struct Pending {
         Kind kind;
@@ -87,6 +85,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         std::function<void(Result<apdu::Apdu>)> handler;
         std::shared_ptr<ITimer> timer;
         apdu::Apdu request;
+        std::vector<apdu::FollowReport> follow_blocks{};
     };
 
     std::shared_ptr<transport::IChannel> channel;
@@ -98,6 +97,23 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
     std::optional<Pending> pending;
     std::array<Clock::time_point, 64> reusable{};
     unsigned next_id = 0;
+    AdvancedRequestHandler advanced_handler;
+    ReportHandler report_handler;
+    FollowHandler follow_handler;
+    std::function<void()> acd_handler;
+    bool access_demand = false;
+    BackendCancel advanced_cancel;
+    bool advanced_serving = false;
+    std::uint64_t serving_generation = 0;
+    unsigned report_attempts = 0;
+
+    struct ReportReceipt {
+        Bytes bytes;
+        apdu::ReportResponse ack;
+        Clock::time_point expires;
+    };
+
+    std::array<std::optional<ReportReceipt>, 64> receipts;
     RequestHandler request_handler;
     RecordRequestHandler record_handler;
     std::unique_ptr<apdu::GetBlockTransfer> collecting;
@@ -123,6 +139,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
     StateHandler state_handler;
     std::optional<Error> close_error;
     apdu::AssociationParameters agreement;
+    std::shared_ptr<ITimer> advanced_timer;
     std::shared_ptr<ITimer> idle_timer;
     model::DateTimeS established_at;
 
@@ -135,8 +152,15 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
           agreement(options.parameters) {}
 
     ~Impl() {
+        if (advanced_cancel) {
+            try {
+                advanced_cancel();
+            } catch (...) {
+            }
+        }
+        if (options.security_backend) options.security_backend->reset();
         if (idle_timer) idle_timer->cancel();
-        for (auto& timer : {block_timer, heartbeat_timer, tx_timer, rx_timer})
+        for (auto& timer : {block_timer, heartbeat_timer, tx_timer, rx_timer, advanced_timer})
             if (timer) timer->cancel();
         channel->close();
         if (pending) {
@@ -189,6 +213,12 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             std::chrono::duration_cast<std::chrono::milliseconds>(Clock::time_point::max() - now);
         reusable[item.id] = options.id_reuse_delay < remaining ? now + options.id_reuse_delay
                                                                : Clock::time_point::max();
+        if (result) {
+            // 前续块的跟随数据在完整事务描述符匹配后交付，不能将中途错配的块作为事件。
+            if (negotiated(18))
+                for (const auto& follow : item.follow_blocks) deliver(follow_handler, follow);
+            observe(result.value());
+        }
         deliver(std::move(item.handler), std::move(result));
     }
 
@@ -196,16 +226,27 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         if (state == State::closed) return;
         change_state(State::closed);
         close_error = error;
+        if (advanced_timer) advanced_timer->cancel();
+        auto cancel_backend = std::move(advanced_cancel);
+        advanced_cancel = {};
+        try {
+            if (cancel_backend) cancel_backend();
+        } catch (...) {
+        }
+        advanced_serving = false;
+        ++serving_generation;
+        for (auto& receipt : receipts) receipt.reset();
         decoder.reset();
         reassembler.reset();
         outgoing.clear();
         transmitting.reset();
         fragmenter.reset();
         serving_blocks.clear();
-        for (auto& timer : {block_timer, heartbeat_timer, tx_timer, rx_timer})
+        for (auto& timer : {block_timer, heartbeat_timer, tx_timer, rx_timer, advanced_timer})
             if (timer) timer->cancel();
         if (idle_timer) idle_timer->cancel();
         channel->close();
+        if (options.security_backend) options.security_backend->reset();
         complete(std::move(error));
         // 先终结事务再通知连接所有者；移出回调避免重入关闭造成重复通知。
         auto handler = std::move(close_handler);
@@ -218,6 +259,17 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
     void leave_association(Error error, State target = State::preconnected) {
         // 发送释放通知/应答可能已关闭物理通道，失败终态不能被后续迁移覆盖。
         if (state == State::closed) return;
+        if (advanced_timer) advanced_timer->cancel();
+        auto cancel_backend = std::move(advanced_cancel);
+        advanced_cancel = {};
+        try {
+            if (cancel_backend) cancel_backend();
+        } catch (...) {
+        }
+        advanced_serving = false;
+        ++serving_generation;
+        for (auto& receipt : receipts) receipt.reset();
+        if (options.security_backend) options.security_backend->reset();
         change_state(target);
         serving_blocks.clear();
         if (block_timer) block_timer->cancel();
@@ -276,12 +328,42 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         const bool link_message = std::holds_alternative<apdu::LinkRequest>(message) ||
                                   std::holds_alternative<apdu::LinkResponse>(message);
         const bool server = options.role == Role::server;
-        bool client_initiated =
-            !link_message && !std::holds_alternative<apdu::ReleaseNotification>(message);
+        bool client_initiated = !link_message &&
+                                !std::holds_alternative<apdu::ReleaseNotification>(message) &&
+                                !std::holds_alternative<apdu::ReportNotification>(message) &&
+                                !std::holds_alternative<apdu::ReportResponse>(message);
         if (std::holds_alternative<apdu::ErrorResponse>(message)) client_initiated = server;
+        auto prepared = message;
+        if (server && access_demand && negotiated(19))
+            std::visit(
+                [](auto& v) {
+                    if constexpr (HasAcd<std::decay_t<decltype(v)>>::value) v.piid_acd |= 0x40;
+                },
+                prepared);
         auto encoded = apdu::encode_apdu(
-            message, codec_limits(state == State::associated || state == State::releasing));
+            prepared, codec_limits(state == State::associated || state == State::releasing));
         if (!encoded) return encoded.error();
+        const bool connect_message = std::holds_alternative<apdu::ConnectRequest>(message) ||
+                                     std::holds_alternative<apdu::ConnectResponse>(message);
+        if (options.security_backend && options.protect_application && !link_message &&
+            !connect_message && (state == State::associated || state == State::releasing)) {
+            if (!negotiated(31))
+                return Error{ErrorCode::unsupported_service, 0, "SECURITY not negotiated"};
+            try {
+                if (server) {
+                    auto envelope = options.security_backend->protect_response(encoded.value());
+                    if (!envelope) return envelope.error();
+                    encoded = apdu::encode_security(envelope.value(), codec_limits(true));
+                } else {
+                    auto envelope = options.security_backend->protect_request(encoded.value());
+                    if (!envelope) return envelope.error();
+                    encoded = apdu::encode_security(envelope.value(), codec_limits(true));
+                }
+            } catch (...) {
+                return Error{ErrorCode::association_failed, 0, "security backend exception"};
+            }
+            if (!encoded) return encoded.error();
+        }
         link::Frame frame;
         frame.server = options.server;
         frame.client = options.client_address;
@@ -515,14 +597,19 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         std::visit(
             [&](auto& v) {
                 using T = std::decay_t<decltype(v)>;
-                if constexpr (std::is_same_v<T, apdu::LinkRequest>)
+                if constexpr (std::is_same_v<T, apdu::LinkRequest> ||
+                              std::is_same_v<T, apdu::ReportNotification>)
                     v.piid_acd = static_cast<std::uint8_t>(id);
                 else if constexpr (std::is_same_v<T, apdu::ConnectRequest> ||
                                    std::is_same_v<T, apdu::GetRequest> ||
                                    std::is_same_v<T, apdu::GetRecordRequest> ||
                                    std::is_same_v<T, apdu::ReleaseRequest> ||
                                    std::is_same_v<T, apdu::SetRequest> ||
-                                   std::is_same_v<T, apdu::ActionRequest>)
+                                   std::is_same_v<T, apdu::ActionRequest> ||
+                                   std::is_same_v<T, apdu::GetMd5Request> ||
+                                   std::is_same_v<T, apdu::SetThenGetRequest> ||
+                                   std::is_same_v<T, apdu::ActionThenGetRequest> ||
+                                   std::is_same_v<T, apdu::ProxyRequest>)
                     v.piid = static_cast<std::uint8_t>(id);
             },
             message);
@@ -549,8 +636,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         std::shared_ptr<ITimer> timer;
         try {
             timer = executor->schedule(options.request_timeout, [weak] {
-                if (const auto self = weak.lock())
-                    self->shutdown({ErrorCode::timeout, 0, "session transaction timeout"});
+                if (const auto self = weak.lock()) self->transaction_timeout();
             });
         } catch (...) {
             if (kind == Kind::connect) change_state(State::preconnected);
@@ -562,6 +648,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                                                                  "transaction timer range"}});
             return;
         }
+        report_attempts = 0;
         pending.emplace(Pending{kind, static_cast<std::uint8_t>(id), std::move(handler),
                                 std::move(timer), std::move(message)});
         enqueue(std::move(bytes).value());
@@ -650,6 +737,171 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         }
         touch();
         complete(std::move(message));
+    }
+
+    bool negotiated(unsigned bit) const {
+        return bit == 64 || (bit < 64 && (agreement.protocol[bit / 8] & (0x80 >> (bit % 8))));
+    }
+
+    void observe(const apdu::Apdu& message) {
+        if (options.role != Role::client) return;
+        bool demand = false;
+        std::visit(
+            [&](const auto& v) {
+                using T = std::decay_t<decltype(v)>;
+                if constexpr (std::is_same_v<T, apdu::LinkRequest>)
+                    demand = (v.piid_acd & 0x40) != 0;
+                else if constexpr (std::is_same_v<T, apdu::ConnectResponse> ||
+                                   std::is_same_v<T, apdu::ReleaseResponse> ||
+                                   std::is_same_v<T, apdu::ReleaseNotification> ||
+                                   std::is_same_v<T, apdu::GetResponse> ||
+                                   std::is_same_v<T, apdu::GetRecordResponse> ||
+                                   std::is_same_v<T, apdu::GetNextResponse> ||
+                                   std::is_same_v<T, apdu::GetMd5Response> ||
+                                   std::is_same_v<T, apdu::SetResponse> ||
+                                   std::is_same_v<T, apdu::ActionResponse> ||
+                                   std::is_same_v<T, apdu::SetThenGetResponse> ||
+                                   std::is_same_v<T, apdu::ActionThenGetResponse> ||
+                                   std::is_same_v<T, apdu::ReportNotification> ||
+                                   std::is_same_v<T, apdu::ProxyResponse>) {
+                    demand = (v.piid_acd & 0x40) != 0;
+                    if (v.follow_report && negotiated(18))
+                        deliver(follow_handler, *v.follow_report);
+                } else if constexpr (std::is_same_v<T, apdu::ErrorResponse>) {
+                    if (v.follow_report && negotiated(18))
+                        deliver(follow_handler, *v.follow_report);
+                }
+            },
+            message);
+        if (demand && negotiated(19)) {
+            try {
+                if (acd_handler) acd_handler();
+            } catch (...) {
+            }
+        }
+    }
+
+    void transaction_timeout() {
+        if (pending && std::holds_alternative<apdu::ReportNotification>(pending->request) &&
+            report_attempts < options.report_retries) {
+            ++report_attempts;
+            const std::weak_ptr<Impl> weak = shared_from_this();
+            try {
+                pending->timer = executor->schedule(options.request_timeout, [weak] {
+                    if (const auto self = weak.lock()) self->transaction_timeout();
+                });
+                send(pending->request);
+            } catch (...) {
+                shutdown({ErrorCode::invalid_value, 0, "report retry timer"});
+            }
+            return;
+        }
+        shutdown({ErrorCode::timeout, 0, "session transaction timeout"});
+    }
+
+    void serve_advanced(apdu::Apdu request) {
+        const auto bit = apdu::advanced_capability(request);
+        if (options.role != Role::server || bit == 65) return;
+        const auto id = id_of(request);
+        const auto tag = tag_of(request);
+        if (state != State::associated || !negotiated(bit) || !advanced_handler) {
+            send(apdu::ErrorResponse{true, id, 2, tag});
+            return;
+        }
+        if (!accept_tag(tag)) return;
+        if (advanced_serving) {
+            report({ErrorCode::busy, 0, "advanced backend busy"});
+            return;
+        }
+        touch();
+        if (state == State::closed) return;
+        advanced_serving = true;
+        const auto generation = ++serving_generation;
+        const std::weak_ptr<Impl> weak = shared_from_this();
+        auto complete = [weak, request, generation](Result<apdu::Apdu> result) mutable {
+            if (const auto self = weak.lock())
+                self->executor->post(
+                    [weak, request, generation, result = std::move(result)]() mutable {
+                        const auto self = weak.lock();
+                        if (!self || self->state != State::associated || !self->advanced_serving ||
+                            generation != self->serving_generation)
+                            return;
+                        self->advanced_serving = false;
+                        self->advanced_cancel = {};
+                        if (self->advanced_timer) self->advanced_timer->cancel();
+                        const auto id = id_of(request);
+                        const auto tag = self->tag_of(request);
+                        if (!result || !apdu::advanced_matches(request, result.value())) {
+                            self->send(apdu::ErrorResponse{true, id, 255, tag});
+                            return;
+                        }
+                        auto message = std::move(result).value();
+                        std::visit(
+                            [&](auto& v) {
+                                using T = std::decay_t<decltype(v)>;
+                                if constexpr (std::is_same_v<T, apdu::GetMd5Response> ||
+                                              std::is_same_v<T, apdu::SetThenGetResponse> ||
+                                              std::is_same_v<T, apdu::ActionThenGetResponse> ||
+                                              std::is_same_v<T, apdu::ProxyResponse>) {
+                                    v.piid_acd = id;
+                                    v.time_tag = tag;
+                                }
+                            },
+                            message);
+                        self->send(message);
+                    });
+        };
+        try {
+            advanced_timer = executor->schedule(options.request_timeout, [weak, generation] {
+                const auto self = weak.lock();
+                if (!self || !self->advanced_serving || self->serving_generation != generation)
+                    return;
+                self->shutdown({ErrorCode::timeout, 0, "advanced backend timeout"});
+            });
+            advanced_cancel = advanced_handler(std::move(request), complete);
+        } catch (...) {
+            complete(Error{ErrorCode::invalid_value, 0, "advanced backend exception"});
+        }
+    }
+
+    void receive_report(const apdu::ReportNotification& report_message) {
+        if (options.role != Role::client || state != State::associated || !negotiated(17) ||
+            !accept_tag(report_message.time_tag))
+            return;
+        auto stable = report_message;
+        stable.piid_acd &= 0xbf;
+        const auto bytes = apdu::encode_apdu(stable, options.limits);
+        if (!bytes) return;
+        auto& old = receipts[report_message.piid_acd & 63];
+        if (old && old->expires > executor->now() && old->bytes == bytes.value()) {
+            send(old->ack);
+            return;
+        }
+        bool accepted = false;
+        try {
+            if (report_handler) accepted = report_handler(report_message);
+        } catch (...) {
+        }
+        if (!accepted || state != State::associated) return;
+        apdu::ReportResponse ack;
+        ack.piid = report_message.piid_acd & 0xbf;
+        ack.choice = static_cast<std::uint8_t>(report_message.payload.index() + 1);
+        ack.time_tag = report_message.time_tag;
+        std::visit(
+            [&](const auto& v) {
+                if constexpr (!std::is_same_v<std::decay_t<decltype(v)>, apdu::TransData>)
+                    for (const auto& item : v) ack.attributes.push_back(item.attribute);
+            },
+            report_message.payload);
+        const auto now = executor->now();
+        const auto remaining =
+            std::chrono::duration_cast<std::chrono::milliseconds>(Clock::time_point::max() - now);
+        old = ReportReceipt{bytes.value(), ack,
+                            options.id_reuse_delay < remaining ? now + options.id_reuse_delay
+                                                               : Clock::time_point::max()};
+        observe(report_message);
+        touch();
+        send(ack);
     }
 
     void read() {
@@ -800,6 +1052,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         touch();
         if (state == State::closed) return;
         if (!accepted.value()) {
+            if (response.follow_report) pending->follow_blocks.push_back(*response.follow_report);
             send(apdu::GetNextRequest{pending->id, response.block, tag_of(pending->request)});
             return;
         }
@@ -909,14 +1162,66 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             }
             return;
         }
-        auto decoded = apdu::decode_apdu(frame.payload, codec_limits(state == State::associated));
+        Bytes application = frame.payload;
+        const bool envelope =
+            !application.empty() && (application[0] == 0x10 || application[0] == 0x90);
+        if (envelope) {
+            if (!options.security_backend || !negotiated(31) ||
+                (state != State::associated && state != State::releasing)) {
+                report({ErrorCode::unsupported_service, 0, "unexpected SECURITY"});
+                return;
+            }
+            auto security = apdu::decode_security(application, codec_limits(true));
+            if (!security) {
+                shutdown(security.error());
+                return;
+            }
+            Result<Bytes> opened =
+                Error{ErrorCode::association_failed, 0, "SECURITY role mismatch"};
+            try {
+                if (options.role == Role::server &&
+                    std::holds_alternative<apdu::SecurityRequest>(security.value()))
+                    opened = options.security_backend->open_request(
+                        std::get<apdu::SecurityRequest>(security.value()));
+                else if (options.role == Role::client &&
+                         std::holds_alternative<apdu::SecurityResponse>(security.value())) {
+                    const auto& response = std::get<apdu::SecurityResponse>(security.value());
+                    if (const auto dar = std::get_if<std::uint8_t>(&response.application)) {
+                        shutdown({ErrorCode::remote_error, 0, "SECURITY DAR", *dar});
+                        return;
+                    }
+                    opened = options.security_backend->open_response(response);
+                }
+            } catch (...) {
+                opened = Error{ErrorCode::association_failed, 0, "security backend exception"};
+            }
+            if (!opened) {
+                shutdown(opened.error());
+                return;
+            }
+            application = std::move(opened).value();
+            // 禁止嵌套安全封装和 LINK/CONNECT 伪装成业务明文，防止递归及认证状态绕行。
+            if (application.empty() || application[0] == 0x10 || application[0] == 0x90 ||
+                application[0] == 1 || application[0] == 0x81 || application[0] == 2 ||
+                application[0] == 0x82) {
+                shutdown({ErrorCode::invalid_value, 0, "invalid SECURITY inner APDU"});
+                return;
+            }
+        } else if (options.security_backend && options.protect_application &&
+                   (state == State::associated || state == State::releasing) &&
+                   !application.empty() && application[0] != 1 && application[0] != 0x81 &&
+                   application[0] != 2 && application[0] != 0x82) {
+            shutdown({ErrorCode::association_failed, 0, "unprotected application rejected"});
+            return;
+        }
+        auto decoded = apdu::decode_apdu(application, codec_limits(state == State::associated));
         if (!decoded) {
             report(decoded.error());
             // 仅对客户机发起的完整用户数据请求返回异常，不对异常响应反复应答。
             if (options.role == Role::server && frame.control == 0x43 && !frame.payload.empty() &&
-                frame.payload[0] != 0x6e && frame.payload.size() >= 3) {
-                const auto service = frame.payload[0];
-                const auto piid = frame.payload[service >= 5 && service <= 9 ? 2 : 1];
+                application[0] != 0x6e && application.size() >= 3) {
+                const auto service = application[0];
+                const auto piid = application[service >= 5 && service <= 9 ? 2 : 1];
                 if (!(piid & 0x40))
                     send(apdu::ErrorResponse{
                         true,
@@ -930,13 +1235,24 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         auto message = std::move(decoded).value();
         const bool link_message = std::holds_alternative<apdu::LinkRequest>(message) ||
                                   std::holds_alternative<apdu::LinkResponse>(message);
-        bool client_started =
-            !link_message && !std::holds_alternative<apdu::ReleaseNotification>(message);
+        bool client_started = !link_message &&
+                              !std::holds_alternative<apdu::ReleaseNotification>(message) &&
+                              !std::holds_alternative<apdu::ReportNotification>(message) &&
+                              !std::holds_alternative<apdu::ReportResponse>(message);
         if (const auto error = std::get_if<apdu::ErrorResponse>(&message))
             client_started = error->server;
         if ((frame.control & 7) != (link_message ? 1 : 3) ||
             static_cast<bool>(frame.control & 0x40) != client_started) {
             report({ErrorCode::direction_mismatch, 3, "session PRM/function"});
+            return;
+        }
+        if (const auto notification = std::get_if<apdu::ReportNotification>(&message)) {
+            receive_report(*notification);
+            return;
+        }
+        if (apdu::advanced_capability(message) < 65 &&
+            !std::holds_alternative<apdu::ReportNotification>(message)) {
+            serve_advanced(std::move(message));
             return;
         }
         if (auto request = std::get_if<apdu::LinkRequest>(&message)) {
@@ -951,6 +1267,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             if (!responded_at) return;
             response.received_at = *received_at;
             response.responded_at = *responded_at;
+            observe(message);
             send(response);
             if (request->type == apdu::LinkRequestType::logout)
                 leave_association({ErrorCode::not_associated, 0, "peer logout"},
@@ -969,7 +1286,8 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             response.parameters = options.parameters;
             if (request->parameters.version != options.parameters.version)
                 response.result = 5;
-            else if (!std::holds_alternative<apdu::NullSecurity>(request->mechanism) ||
+            else if ((!options.security_backend &&
+                      !std::holds_alternative<apdu::NullSecurity>(request->mechanism)) ||
                      !valid_parameters(request->parameters) || state == State::disconnected ||
                      state == State::associated)
                 response.result = 255;
@@ -989,6 +1307,25 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                     std::min(p.timeout_seconds, request->parameters.timeout_seconds);
                 if (!(p.protocol[0] & 0x80)) response.result = 255;
             }
+            if (!response.result && options.security_backend) {
+                try {
+                    // 每次新关联从干净的模块会话状态开始，拒绝后的临时材料不能复用。
+                    options.security_backend->reset();
+                    auto authentication = options.security_backend->accept_connect(*request);
+                    if (!authentication) {
+                        shutdown(authentication.error());
+                        return;
+                    }
+                    response.result = authentication.value().result;
+                    response.security = authentication.value().security;
+                    if (!response.result && options.protect_application &&
+                        !(response.parameters.protocol[3] & 1))
+                        response.result = 255;
+                } catch (...) {
+                    shutdown({ErrorCode::association_failed, 0, "ESAM authentication exception"});
+                    return;
+                }
+            }
             if (!response.result) {
                 const auto now = calendar();
                 if (!now) return;
@@ -1000,7 +1337,8 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                 agreement = response.parameters;
                 change_state(State::associated);
                 touch();
-            }
+            } else if (options.security_backend && state != State::associated)
+                options.security_backend->reset();
             return;
         }
         if (auto request = std::get_if<apdu::ReleaseRequest>(&message)) {
@@ -1091,6 +1429,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                 return;
             }
             if (!accept_tag(notification->time_tag)) return;
+            observe(message);
             leave_association({ErrorCode::not_associated, 0, "peer release notification"});
             return;
         }
@@ -1106,6 +1445,16 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             const auto kind = pending->kind;
             if (kind == Kind::connect || kind == Kind::release) change_state(State::preconnected);
             complete(Error{ErrorCode::remote_error, 0, "remote ERROR-Response", error->type});
+            return;
+        }
+        if (pending->kind == Kind::advanced) {
+            if (!response_tag(tag_of(message)) ||
+                !apdu::advanced_matches(pending->request, message)) {
+                report({ErrorCode::invalid_value, 0, "advanced response mismatch"});
+                return;
+            }
+            touch();
+            complete(std::move(message));
             return;
         }
         if (const auto next = std::get_if<apdu::GetNextResponse>(&message)) {
@@ -1151,7 +1500,8 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             if (!response.result) {
                 const auto& p = response.parameters;
                 bool valid = valid_parameters(p) && p.version == options.parameters.version &&
-                             !response.security && response_tag(response.time_tag);
+                             (options.security_backend || !response.security) &&
+                             response_tag(response.time_tag);
                 for (std::size_t i = 0; i < p.protocol.size(); ++i)
                     if (p.protocol[i] & ~options.parameters.protocol[i]) valid = false;
                 for (std::size_t i = 0; i < p.function.size(); ++i)
@@ -1166,6 +1516,24 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                     shutdown({ErrorCode::association_failed, 0, "invalid CONNECT agreement"});
                     return;
                 }
+                if (options.security_backend) {
+                    try {
+                        auto verified = options.security_backend->verify_connect(
+                            std::get<apdu::ConnectRequest>(pending->request), response);
+                        if (!verified) {
+                            shutdown(verified.error());
+                            return;
+                        }
+                    } catch (...) {
+                        shutdown(
+                            {ErrorCode::association_failed, 0, "ESAM authentication exception"});
+                        return;
+                    }
+                    if (options.protect_application && !(p.protocol[3] & 1)) {
+                        shutdown({ErrorCode::association_failed, 0, "SECURITY not negotiated"});
+                        return;
+                    }
+                }
                 const auto now = calendar();
                 if (!now) return;
                 established_at = seconds_calendar(*now);
@@ -1177,8 +1545,10 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                 agreement.apdu_bytes = std::min(options.parameters.apdu_bytes, p.apdu_bytes);
                 change_state(State::associated);
                 touch();
-            } else
+            } else {
+                if (options.security_backend) options.security_backend->reset();
                 change_state(State::preconnected);
+            }
             complete(std::move(message));
         } else if (pending->kind == Kind::link &&
                    std::holds_alternative<apdu::LinkResponse>(message)) {
@@ -1202,6 +1572,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                 report({ErrorCode::unsupported_service, 0, "release response TimeTag"});
                 return;
             }
+            if (options.security_backend) options.security_backend->reset();
             change_state(State::preconnected);
             complete(std::move(message));
         } else
@@ -1214,8 +1585,10 @@ Session::Session(std::shared_ptr<transport::IChannel> channel, std::shared_ptr<I
     if (!channel || !executor || options.server.type != link::AddressType::single ||
         options.server.bytes.empty() || options.server.bytes.size() > 16 ||
         options.server.logical > 3 || !valid_parameters(options.parameters) ||
+        (options.security_backend && options.preset_association) ||
         options.request_timeout.count() <= 0 || options.fragment_timeout.count() <= 0 ||
         options.reassembly_timeout.count() <= 0 || options.fragment_retries > 16 ||
+        options.report_retries > 16 ||
         options.reassembly_timeout >
             std::chrono::duration_cast<std::chrono::milliseconds>(Clock::duration::max()) ||
         options.fragment_timeout >
@@ -1229,11 +1602,13 @@ Session::Session(std::shared_ptr<transport::IChannel> channel, std::shared_ptr<I
         options.parameters.receive_frame_bytes + 2u > options.limits.max_frame_bytes ||
         options.parameters.apdu_bytes > options.limits.max_data_bytes)
         throw std::invalid_argument("session options");
-    // 仅声明已实现的 GET 普通/列表、记录、Next、SET/ACTION 及链路分帧，其他能力关闭。
-    options.parameters.protocol[0] &= 0xf3;
-    options.parameters.protocol[1] &= 0x8c;
-    options.parameters.protocol[2] &= 0x08;
-    for (std::size_t i = 3; i < options.parameters.protocol.size(); ++i)
+    // 保留已实现服务；标准中未分配的位不能对外声明。
+    options.parameters.protocol[0] &= 0xff;
+    options.parameters.protocol[1] &= 0xff;
+    options.parameters.protocol[2] &= 0xf8;
+    // 安全能力只在明确安装 ESAM 后端时声明，不能将 codec 覆盖当作真实认证能力。
+    options.parameters.protocol[3] = options.security_backend ? 1 : 0;
+    for (std::size_t i = 4; i < options.parameters.protocol.size(); ++i)
         options.parameters.protocol[i] = 0;
     if (!(options.parameters.protocol[0] & 0x80))
         throw std::invalid_argument("application association capability required");
@@ -1244,6 +1619,68 @@ Session::Session(std::shared_ptr<transport::IChannel> channel, std::shared_ptr<I
 }
 
 Session::~Session() = default;
+
+void Session::async_exchange(apdu::Apdu request, ExchangeHandler handler) {
+    const std::weak_ptr<Impl> weak = impl_;
+    impl_->executor->post([weak, request = std::move(request),
+                           handler = std::move(handler)]() mutable {
+        const auto self = weak.lock();
+        if (!self || self->state == State::closed) {
+            deliver(std::move(handler),
+                    Result<apdu::Apdu>{Error{ErrorCode::closed, 0, "exchange closed"}});
+            return;
+        }
+        const auto bit = apdu::advanced_capability(request);
+        const auto role =
+            std::holds_alternative<apdu::ReportNotification>(request) ? Role::server : Role::client;
+        if (bit == 65 || self->options.role != role) {
+            deliver(std::move(handler), Result<apdu::Apdu>{Error{ErrorCode::invalid_value, 0,
+                                                                 "exchange service/role"}});
+            return;
+        }
+        if (self->state != State::associated || !self->negotiated(bit)) {
+            deliver(std::move(handler), Result<apdu::Apdu>{Error{ErrorCode::not_associated, 0,
+                                                                 "exchange state/capability"}});
+            return;
+        }
+        self->submit(Impl::Kind::advanced, std::move(request), std::move(handler));
+    });
+}
+
+void Session::set_advanced_handler(AdvancedRequestHandler handler) {
+    const std::weak_ptr<Impl> weak = impl_;
+    impl_->executor->post([weak, handler = std::move(handler)]() mutable {
+        if (const auto self = weak.lock()) self->advanced_handler = std::move(handler);
+    });
+}
+
+void Session::set_report_handler(ReportHandler handler) {
+    const std::weak_ptr<Impl> weak = impl_;
+    impl_->executor->post([weak, handler = std::move(handler)]() mutable {
+        if (const auto self = weak.lock()) self->report_handler = std::move(handler);
+    });
+}
+
+void Session::set_follow_handler(FollowHandler handler) {
+    const std::weak_ptr<Impl> weak = impl_;
+    impl_->executor->post([weak, handler = std::move(handler)]() mutable {
+        if (const auto self = weak.lock()) self->follow_handler = std::move(handler);
+    });
+}
+
+void Session::set_acd_handler(std::function<void()> handler) {
+    const std::weak_ptr<Impl> weak = impl_;
+    impl_->executor->post([weak, handler = std::move(handler)]() mutable {
+        if (const auto self = weak.lock()) self->acd_handler = std::move(handler);
+    });
+}
+
+void Session::set_access_demand(bool pending) {
+    const std::weak_ptr<Impl> weak = impl_;
+    impl_->executor->post([weak, pending] {
+        if (const auto self = weak.lock()) self->access_demand = pending;
+    });
+}
 
 void Session::start() {
     const std::weak_ptr<Impl> weak = impl_;
@@ -1351,6 +1788,24 @@ void Session::async_connect(ConnectHandler handler) {
         }
         apdu::ConnectRequest request;
         request.parameters = self->options.parameters;
+        if (self->options.security_backend) {
+            try {
+                self->options.security_backend->reset();
+                auto mechanism = self->options.security_backend->begin_connect();
+                if (!mechanism) {
+                    self->options.security_backend->reset();
+                    deliver(std::move(handler), Result<apdu::ConnectResponse>{mechanism.error()});
+                    return;
+                }
+                request.mechanism = std::move(mechanism).value();
+            } catch (...) {
+                self->options.security_backend->reset();
+                deliver(std::move(handler),
+                        Result<apdu::ConnectResponse>{Error{ErrorCode::association_failed, 0,
+                                                            "ESAM authentication exception"}});
+                return;
+            }
+        }
         self->submit(Impl::Kind::connect, request,
                      [handler = std::move(handler)](Result<apdu::Apdu> r) mutable {
                          deliver(std::move(handler), typed<apdu::ConnectResponse>(std::move(r)));

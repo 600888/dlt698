@@ -87,6 +87,10 @@ Result<std::vector<GetNextResponse>> GetBlockTransfer::split(GetSnapshot snapsho
                 if (!valid) return valid;
             }
             current.last = true;
+            // 跟随上报只附在末块，不能在分块时丢弃或在每个块重复交付。
+            current.follow_report = std::move(response.follow_report);
+            const auto encoded = encode_get(GetApdu{current}, limits);
+            if (!encoded) return encoded.error();
             blocks.push_back(std::move(current));
             return {};
         },
@@ -152,9 +156,9 @@ Result<std::optional<GetSnapshot>> GetBlockTransfer::accept(const GetNextRespons
     if (!block.last) return std::optional<GetSnapshot>{};
     finished_ = true;
     if (records_)
-        return std::optional<GetSnapshot>{
-            GetRecordResponse{block.piid_acd, false, std::move(records_data_), block.time_tag}};
-    return std::optional<GetSnapshot>{
-        GetResponse{block.piid_acd, false, std::move(attributes_), block.time_tag}};
+        return std::optional<GetSnapshot>{GetRecordResponse{
+            block.piid_acd, false, std::move(records_data_), block.time_tag, block.follow_report}};
+    return std::optional<GetSnapshot>{GetResponse{block.piid_acd, false, std::move(attributes_),
+                                                  block.time_tag, block.follow_report}};
 }
 }  // namespace dlt698::protocol::apdu

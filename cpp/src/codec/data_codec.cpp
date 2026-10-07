@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "record_detail.hpp"
+#include "security_detail.hpp"
 
 namespace dlt698::codec {
 static_assert(sizeof(float) == 4 && sizeof(double) == 8, "Protocol requires binary32 and binary64");
@@ -222,6 +223,16 @@ model::Data read_impl(Reader& r, const Limits& limits, std::size_t depth, std::s
         case DataType::ms:
         case DataType::rcsd:
             return detail::read_descriptor(r, tag, limits, depth, nodes);
+        case DataType::mac:
+            return Mac{fields::octets(r, limits)};
+        case DataType::rn:
+            return Rn{fields::octets(r, limits)};
+        case DataType::sid:
+            return fields::sid(r, limits);
+        case DataType::sid_mac:
+            return fields::sid_mac(r, limits);
+        case DataType::comdcb:
+            return fields::comdcb(r);
         case DataType::scaler_unit:
             return ScalerUnit{number<std::int8_t>(r), r.u8("physical unit")};
         default:
@@ -254,6 +265,14 @@ void write_impl(Writer& w, const model::Data& data, const Limits& limits, std::s
                 w.bytes(value.value);
             } else if constexpr (std::is_same_v<T, RecordData>)
                 detail::write_descriptor(w, value, limits, depth, nodes);
+            else if constexpr (std::is_same_v<T, Sid>)
+                fields::sid(w, value);
+            else if constexpr (std::is_same_v<T, SidMac>)
+                fields::sid_mac(w, value);
+            else if constexpr (std::is_same_v<T, Comdcb>)
+                fields::comdcb(w, value);
+            else if constexpr (std::is_same_v<T, Mac> || std::is_same_v<T, Rn>)
+                fields::octets(w, value.value);
             else if constexpr (std::is_same_v<T, Oad>)
                 write_oad(w, value);
             else if constexpr (std::is_same_v<T, Omd>) {

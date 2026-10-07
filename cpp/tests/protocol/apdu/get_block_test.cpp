@@ -621,3 +621,26 @@ TEST_CASE("merge_record_rows 决定相邻同表记录行的合并", "[apdu][get]
         CHECK(std::get<GetResponse>(*finished).attributes.size() == 3);
     }
 }
+
+TEST_CASE("GET 分块的最终跟随上报随完整快照保留", "[apdu][get][block][follow]") {
+    auto snapshot = attribute_snapshot(5);
+    snapshot.follow_report =
+        FollowReport{std::vector<AttributeResult>{{{0x3000, 2, 0}, std::uint8_t{4}}}};
+    const auto blocks = GetBlockTransfer::split(snapshot, 24, Limits{});
+    REQUIRE(blocks);
+    REQUIRE(blocks.value().size() > 1);
+    GetBlockTransfer collector(snapshot.piid_acd, false, Limits{});
+    for (std::size_t i = 0; i < blocks.value().size(); ++i) {
+        const auto& block = blocks.value()[i];
+        CHECK(block.follow_report.has_value() == block.last);
+        auto result = collector.accept(block);
+        REQUIRE(result);
+        if (!block.last)
+            CHECK_FALSE(result.value());
+        else {
+            REQUIRE(result.value());
+            REQUIRE(std::get<GetResponse>(*result.value()).follow_report);
+            CHECK(std::get<GetResponse>(*result.value()).attributes.size() == 5);
+        }
+    }
+}

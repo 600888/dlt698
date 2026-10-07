@@ -64,13 +64,15 @@ TEST_CASE("托管客户端默认远程连接后直接读取并重新连接", "[a
     REQUIRE(server.start_tcp("127.0.0.1", 0));
     Client client;
     CHECK(client.get({0x200F, 2, 0}).error().code == ErrorCode::not_associated);
-    REQUIRE(client.connect_tcp("localhost", server.local_port()));
+    auto connected = client.connect_tcp("localhost", server.local_port());
+    INFO((connected ? "connected" : connected.error().context));
+    REQUIRE(connected);
     CHECK(client.state() == ClientState::connected);
     CHECK(frequency(client) == 5000);
     CHECK(client.connect_tcp("127.0.0.1", server.local_port()).error().code == ErrorCode::busy);
     REQUIRE(server.set({0x200F, 2, 0}, model::UInt16{4999}));
     CHECK(frequency(client) == 4999);
-    auto list = client.get_list({{0x200F, 2, 0}, {0xf100, 2, 0}});
+    auto list = client.get_list({{0x200F, 2, 0}, {0xf900, 2, 0}});
     REQUIRE(list);
     CHECK(std::get<std::uint8_t>(list.value().attributes[1].result) == 4);
     CHECK(client.set({0x200F, 2, 0}, model::UInt16{1}).value() == 3);
@@ -119,11 +121,11 @@ TEST_CASE("客户端直接 SET ACTION 及记录列表保留原始结果", "[app]
     });
     memory->bind_record(3, [](const protocol::apdu::GetRecord& query) {
         return protocol::apdu::RecordResult{
-            query.attribute, model::Rcsd{model::Oad{0xf100, 2, 0}},
+            query.attribute, model::Rcsd{model::Oad{0xf900, 2, 0}},
             std::vector<protocol::apdu::RecordRow>(400, {model::UInt16{42}})};
     });
     REQUIRE(objects->register_object(
-        {0xf100,
+        {0xf900,
          "可写测试",
          {{2, model::DataType::uint16, true, true}, {3, model::DataType::null, true, false, true}},
          {{1, model::DataType::uint16, model::DataType::uint16}}},
@@ -131,20 +133,20 @@ TEST_CASE("客户端直接 SET ACTION 及记录列表保留原始结果", "[app]
     Endpoint server([objects](auto session) { service::ServerService service(session, objects); });
     Client client;
     REQUIRE(client.connect_tcp("127.0.0.1", server.port(), ConnectionProfile::local_public));
-    CHECK(client.set({0xf100, 2, 0}, model::UInt16{24}).value() == 0);
+    CHECK(client.set({0xf900, 2, 0}, model::UInt16{24}).value() == 0);
     auto set_list =
-        client.set_list({{{0xf100, 2, 0}, model::UInt16{25}}, {{0xf100, 7, 0}, model::UInt16{1}}});
+        client.set_list({{{0xf900, 2, 0}, model::UInt16{25}}, {{0xf900, 7, 0}, model::UInt16{1}}});
     REQUIRE(set_list);
     CHECK(set_list.value().attributes[0].dar == 0);
     CHECK(set_list.value().attributes[1].dar == 4);
-    auto action = client.action({0xf100, 1, 0}, model::UInt16{31});
+    auto action = client.action({0xf900, 1, 0}, model::UInt16{31});
     REQUIRE(action);
     CHECK(action.value().dar == 0);
     CHECK(action.value().data->as<model::UInt16>().value == 31);
-    auto actions = client.action_list({{{0xf100, 1, 0}, model::UInt16{32}}});
+    auto actions = client.action_list({{{0xf900, 1, 0}, model::UInt16{32}}});
     REQUIRE(actions);
     CHECK(actions.value().methods[0].data->as<model::UInt16>().value == 32);
-    protocol::apdu::GetRecord query{{0xf100, 3, 0}, model::SelectAll{}, {}};
+    protocol::apdu::GetRecord query{{0xf900, 3, 0}, model::SelectAll{}, {}};
     auto record = client.get_record(query);
     REQUIRE(record);
     CHECK(std::get<std::vector<protocol::apdu::RecordRow>>(record.value().result).size() == 400);
@@ -191,14 +193,14 @@ TEST_CASE("客户端在途请求冲突返回 busy 且断开唤醒等待", "[app]
             seen->set_value();
             // 错误 OAD 不匹配请求，验证客户端不能把迟到/不相关响应当作完成。
             return protocol::apdu::GetResponse{
-                request.piid, false, {{{0xf101, 2, 0}, std::uint8_t{4}}}, {}};
+                request.piid, false, {{{0xf901, 2, 0}, std::uint8_t{4}}}, {}};
         });
     });
     Client client;
     REQUIRE(client.connect_tcp("127.0.0.1", server.port(), ConnectionProfile::local_public));
-    auto reading = std::async(std::launch::async, [&] { return client.get({0xf100, 2, 0}); });
+    auto reading = std::async(std::launch::async, [&] { return client.get({0xf900, 2, 0}); });
     REQUIRE(future.wait_for(3s) == std::future_status::ready);
-    CHECK(client.get({0xf100, 2, 0}).error().code == ErrorCode::busy);
+    CHECK(client.get({0xf900, 2, 0}).error().code == ErrorCode::busy);
     REQUIRE(client.disconnect());
     REQUIRE(reading.wait_for(3s) == std::future_status::ready);
     CHECK_FALSE(reading.get());
@@ -213,7 +215,7 @@ TEST_CASE("回调同步 busy 与最后句柄释放", "[app][client][lifetime]") 
     options.protocol.request_timeout = 60ms;
     options.diagnostic = [&](const Error&) {
         if (!client) return;
-        const auto code = client->get({0xf100, 2, 0}).error().code;
+        const auto code = client->get({0xf900, 2, 0}).error().code;
         CHECK(client->disconnect().error().code == ErrorCode::busy);
         client.reset();
         busy->set_value(code);
@@ -221,12 +223,12 @@ TEST_CASE("回调同步 busy 与最后句柄释放", "[app][client][lifetime]") 
     Endpoint server([](auto session) {
         session->set_request_handler([](const auto& request) {
             return protocol::apdu::GetResponse{
-                request.piid, false, {{{0xf101, 2, 0}, std::uint8_t{4}}}, {}};
+                request.piid, false, {{{0xf901, 2, 0}, std::uint8_t{4}}}, {}};
         });
     });
     client = std::make_shared<Client>(options);
     REQUIRE(client->connect_tcp("127.0.0.1", server.port(), ConnectionProfile::local_public));
-    auto result = client->get({0xf100, 2, 0});
+    auto result = client->get({0xf900, 2, 0});
     REQUIRE_FALSE(result);
     REQUIRE(busy_result.wait_for(3s) == std::future_status::ready);
     CHECK(busy_result.get() == ErrorCode::busy);
@@ -247,11 +249,11 @@ TEST_CASE("CONNECT 及业务请求超时完整关闭，远端 ERROR 保留原码
     Endpoint mismatched([](auto session) {
         session->set_request_handler([](const auto& request) {
             return protocol::apdu::GetResponse{
-                request.piid, false, {{{0xf101, 2, 0}, std::uint8_t{4}}}, {}};
+                request.piid, false, {{{0xf901, 2, 0}, std::uint8_t{4}}}, {}};
         });
     });
     REQUIRE(client.connect_tcp("127.0.0.1", mismatched.port(), ConnectionProfile::local_public));
-    auto read = client.get({0xf100, 2, 0});
+    auto read = client.get({0xf900, 2, 0});
     REQUIRE_FALSE(read);
     CHECK(read.error().code == ErrorCode::timeout);
     REQUIRE(client.disconnect());
@@ -261,7 +263,7 @@ TEST_CASE("CONNECT 及业务请求超时完整关闭，远端 ERROR 保留原码
         });
     });
     REQUIRE(client.connect_tcp("127.0.0.1", error.port(), ConnectionProfile::local_public));
-    auto rejected = client.get({0xf100, 2, 0});
+    auto rejected = client.get({0xf900, 2, 0});
     REQUIRE_FALSE(rejected);
     CHECK(rejected.error().code == ErrorCode::remote_error);
     CHECK(rejected.error().remote_code == 255);

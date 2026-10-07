@@ -164,7 +164,7 @@ Result<ConnectionApdu> decode_connection(ByteView bytes, const Limits& limits) {
                 auto signature = read_string(r, limits);
                 v.security = SecurityData{std::move(random), std::move(signature)};
             }
-            detail::no_follow(r);
+            v.follow_report = detail::read_follow(r, limits);
             v.time_tag = detail::read_time_tag(r);
             result = std::move(v);
         } else if (service == 3) {
@@ -173,22 +173,24 @@ Result<ConnectionApdu> decode_connection(ByteView bytes, const Limits& limits) {
         } else if (service == 0x83) {
             const auto code = r.u8("RELEASE result");
             if (code) invalid(2, "RELEASE result");
-            detail::no_follow(r);
-            result = ReleaseResponse{id, code, detail::read_time_tag(r)};
+            auto follow = detail::read_follow(r, limits);
+            result = ReleaseResponse{id, code, detail::read_time_tag(r), std::move(follow)};
         } else if (service == 0x84) {
             ReleaseNotification v;
             v.piid_acd = id;
             v.established_at = detail::calendar<model::DateTimeS>(r);
             v.current_time = detail::calendar<model::DateTimeS>(r);
-            detail::no_follow(r);
+            v.follow_report = detail::read_follow(r, limits);
             v.time_tag = detail::read_time_tag(r);
             result = v;
         } else if (service == 0x6e || service == 0xee) {
             detail::piid(id, 1);
             const auto type = r.u8("ERROR type");
             check_error_type(type, 2);
-            if (service == 0xee) detail::no_follow(r);
-            result = ErrorResponse{service == 0xee, id, type, detail::read_time_tag(r)};
+            auto follow =
+                service == 0xee ? detail::read_follow(r, limits) : std::optional<FollowReport>{};
+            result = ErrorResponse{service == 0xee, id, type, detail::read_time_tag(r),
+                                   std::move(follow)};
         } else
             return Error{ErrorCode::unsupported_service, 0, "connection service"};
         // LINK 不属于 Client/Server-APDU，不存在 FollowReport 或 TimeTag 尾部。
@@ -270,7 +272,15 @@ Result<Bytes> encode_connection(const ConnectionApdu& message, const Limits& lim
                         w.u8(v.piid);
                         w.u8(v.type);
                     }
-                    if (server) w.u8(0);  // 暂不生成 FollowReport。
+                    if constexpr (std::is_same_v<T, ConnectResponse> ||
+                                  std::is_same_v<T, ReleaseResponse> ||
+                                  std::is_same_v<T, ReleaseNotification> ||
+                                  std::is_same_v<T, ErrorResponse>) {
+                        if (server)
+                            detail::write_follow(w, v.follow_report, limits);
+                        else if (v.follow_report)
+                            invalid(w.size(), "client FollowReport");
+                    }
                     detail::write_time_tag(w, v.time_tag);
                 }
             },

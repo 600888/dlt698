@@ -1,4 +1,5 @@
 #include <dlt698/dlt698.hpp>
+#include <dlt698/service/advanced.hpp>
 #include <dlt698/service/device.hpp>
 #include <dlt698/service/memory_records.hpp>
 #include <dlt698/service/point_probe.hpp>
@@ -23,7 +24,7 @@ int main() {
     namespace oi = dlt698::standard::oi;
     // 安装后的轻量头文件可在编译期使用常量构造 OAD。
     constexpr dlt698::model::Oad voltage_point{oi::voltage, 2, 1};
-    if (dlt698::standard::objects().size() != 127 ||
+    if (dlt698::standard::objects().size() != 131 ||
         !dlt698::standard::find_object(oi::combination_active_energy))
         return 9;
     const auto energy_point = dlt698::standard::tariff_oad(oi::forward_active_energy, 0);
@@ -107,6 +108,9 @@ int main() {
                                   provider))
         return 2;
     dlt698::service::ServerService server_api(server, objects);
+    dlt698::service::AdvancedService advanced_api(server, objects, executor);
+    dlt698::service::ProxyRouter proxy_router;
+    if (!proxy_router.bind({{0, 1}}, client)) return 21;
     dlt698::service::ClientService client_api(client);
     client->start();
     server->start();
@@ -117,6 +121,21 @@ int main() {
     });
     executor->run_ready();
     if (!probe_ok) return 19;
+    bool md5_ok = false;
+    client->async_exchange(
+        dlt698::protocol::apdu::GetMd5Request{0, {0x2000, 2, 0}, {}}, [&](auto result) {
+            if (!result) return;
+            const auto& digest =
+                std::get<dlt698::protocol::apdu::GetMd5Response>(result.value()).result;
+            const auto data = dlt698::codec::encode_data(dlt698::model::UInt16{2413});
+            md5_ok = data && std::holds_alternative<std::array<std::uint8_t, 16>>(digest) &&
+                     std::get<std::array<std::uint8_t, 16>>(digest) == dlt698::md5(data.value());
+        });
+    executor->run_ready();
+    if (!md5_ok) return 22;
+    const auto envelope = dlt698::protocol::apdu::encode_security(
+        dlt698::protocol::apdu::SecurityResponse{false, dlt698::Bytes{1, 2}, {}});
+    if (!envelope || !dlt698::protocol::apdu::decode_security(envelope.value())) return 23;
     bool read_ok = false;
     client_api.async_get({0x2000, 2, 0}, [&](auto result) {
         read_ok = result && std::holds_alternative<dlt698::model::Data>(result.value()) &&

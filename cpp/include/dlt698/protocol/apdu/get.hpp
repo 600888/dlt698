@@ -36,15 +36,6 @@ struct AttributeResult {
     std::variant<std::uint8_t, model::Data> result;  ///< uint8_t 为 DAR，Data 为属性值。
 };
 
-/// GET 响应，仅支持无 FollowReport 的 Normal/NormalList 形式。
-struct GetResponse {
-    std::uint8_t piid_acd = 0;
-    bool list = false;
-    std::vector<AttributeResult> attributes;
-    // 当前未实现 FollowReport；解码带该字段的响应返回 unsupported_service。
-    std::optional<TimeTag> time_tag;
-};
-
 /** @brief 完整记录查询；行条件由 provider 解释，空 columns 表示全选。 */
 struct GetRecord {
     model::Oad attribute;
@@ -68,11 +59,23 @@ struct RecordResult {
     std::variant<std::uint8_t, std::vector<RecordRow>> result;
 };
 
+/// 跟随上报拥有独立数据，普通结果与记录结果对应 CHOICE 1/2。
+using FollowReport = std::variant<std::vector<AttributeResult>, std::vector<RecordResult>>;
+
+struct GetResponse {
+    std::uint8_t piid_acd = 0;
+    bool list = false;
+    std::vector<AttributeResult> attributes;
+    std::optional<TimeTag> time_tag;
+    std::optional<FollowReport> follow_report{};
+};
+
 struct GetRecordResponse {
     std::uint8_t piid_acd = 0;
     bool list = false;
     std::vector<RecordResult> records;
     std::optional<TimeTag> time_tag;
+    std::optional<FollowReport> follow_report{};
 };
 
 struct GetNextRequest {
@@ -87,24 +90,39 @@ struct GetNextResponse {
     std::uint16_t block = 0;
     std::variant<std::uint8_t, std::vector<AttributeResult>, std::vector<RecordResult>> result;
     std::optional<TimeTag> time_tag;
+    std::optional<FollowReport> follow_report{};
+};
+
+struct GetMd5Request {
+    std::uint8_t piid = 0;
+    model::Oad attribute;
+    std::optional<TimeTag> time_tag;
+};
+
+struct GetMd5Response {
+    std::uint8_t piid_acd = 0;
+    model::Oad attribute;
+    std::variant<std::uint8_t, std::array<std::uint8_t, 16>> result;
+    std::optional<TimeTag> time_tag;
+    std::optional<FollowReport> follow_report{};
 };
 
 using GetApdu = std::variant<GetRequest, GetResponse, GetRecordRequest, GetRecordResponse,
-                             GetNextRequest, GetNextResponse>;
+                             GetNextRequest, GetNextResponse, GetMd5Request, GetMd5Response>;
 /**
  * @brief 解码完整的 GET 请求或响应 APDU。
  * @param[in] bytes 恰好一个 APDU，不包含链路帧封装或尾随字节。
  * @param[in] limits APDU 字节数、属性数及每个 Data 树的资源上限。
- * @return GET 请求或响应；其他服务、变体或 FollowReport 返回 unsupported_service。
+ * @return GET 请求或响应；未知服务或变体返回 unsupported_service。
  * @note 也检查 PIID 保留位、属性结果选择符和可选时间标签的合法性。
  */
 DLT698_API Result<GetApdu> decode_get(ByteView bytes, const Limits& limits = {});
 /**
- * @brief 编码 GET 普通、列表、记录或 Next 请求/响应。
+ * @brief 编码 GET 普通、列表、记录、Next 或 MD5 请求/响应。
  * @param[in] apdu 普通/记录非列表恰含一项，列表非空；Next 错误块必须为末块。
  * @param[in] limits 输出字节数、属性数及每个 Data 树的资源上限。
  * @return APDU 字节序列，或属性数、字段值非法及资源超限等错误。
- * @note 响应始终写入 FollowReport 不存在的标记。
+ * @note MD5 对编码后的属性 Data 计算，摘要固定为 16 字节。
  */
 DLT698_API Result<Bytes> encode_get(const GetApdu& apdu, const Limits& limits = {});
 }  // namespace dlt698::protocol::apdu

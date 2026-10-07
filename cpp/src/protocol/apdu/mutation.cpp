@@ -45,7 +45,7 @@ T read_message(Reader& r, std::uint8_t piid, bool list, std::size_t count, const
         }
     }
     if constexpr (std::is_same_v<T, SetResponse> || std::is_same_v<T, ActionResponse>)
-        detail::no_follow(r);
+        message.follow_report = detail::read_follow(r, limits);
     message.time_tag = detail::read_time_tag(r);
     r.finish();
     return message;
@@ -125,7 +125,7 @@ Result<Bytes> encode_mutation(const MutationApdu& message, const Limits& limits)
                         }
                     }
                 }
-                if constexpr (!request) w.u8(0);
+                if constexpr (!request) detail::write_follow(w, v.follow_report, limits);
                 detail::write_time_tag(w, v.time_tag);
             },
             message);

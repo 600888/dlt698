@@ -9,7 +9,15 @@
 
 namespace dlt698::standard {
 /// 数组语义；非数组使用 none，数组顺序由接口类定义。
-enum class ArrayLayout { none, phases, total_phases, total_tariffs, harmonics, status_words };
+enum class ArrayLayout {
+    none,
+    phases,
+    total_phases,
+    total_tariffs,
+    harmonics,
+    status_words,
+    variable
+};
 enum class Wiring { single_phase, three_phase };
 enum class Phase { total, a, b, c };
 

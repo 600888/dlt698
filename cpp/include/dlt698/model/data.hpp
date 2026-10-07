@@ -40,11 +40,16 @@ enum class DataType : std::uint8_t {
     omd = 83,
     ti = 84,
     tsa = 85,
+    mac = 86,
+    rn = 87,
     region = 88,
     scaler_unit = 89,
     rsd = 90,
     csd = 91,
     ms = 92,
+    sid = 93,
+    sid_mac = 94,
+    comdcb = 95,
     rcsd = 96
 };
 
@@ -195,6 +200,57 @@ struct Ti {
 
 /// 终端地址，内容包含地址描述字节和地址字节，不包含 A-XDR 外层长度。
 using Tsa = Value<DataType::tsa, Bytes>;
+using Mac = Value<DataType::mac, Bytes>;
+using Rn = Value<DataType::rn, Bytes>;
+
+struct Sid {
+    static constexpr DataType type = DataType::sid;
+    std::uint32_t identifier = 0;
+    Bytes additional;
+
+    /** @brief 比较安全标识及附加数据。
+     * @param[in] a 左侧标识。
+     * @param[in] b 右侧标识。
+     * @return 字段全部相等时为 true。
+     */
+    friend bool operator==(const Sid& a, const Sid& b) {
+        return a.identifier == b.identifier && a.additional == b.additional;
+    }
+};
+
+struct SidMac {
+    static constexpr DataType type = DataType::sid_mac;
+    Sid sid;
+    Mac mac;
+
+    /** @brief 比较安全标识和消息鉴别码。
+     * @param[in] a 左侧验证码。
+     * @param[in] b 右侧验证码。
+     * @return 字段全部相等时为 true。
+     */
+    friend bool operator==(const SidMac& a, const SidMac& b) {
+        return a.sid == b.sid && a.mac == b.mac;
+    }
+};
+
+struct Comdcb {
+    static constexpr DataType type = DataType::comdcb;
+    std::uint8_t baud = 6;  ///< 0 至 10，或 255 自适应。
+    std::uint8_t parity = 0;
+    std::uint8_t data_bits = 8;
+    std::uint8_t stop_bits = 1;
+    std::uint8_t flow_control = 0;
+
+    /** @brief 比较端口通信控制块的全部字段。
+     * @param[in] a 左侧配置。
+     * @param[in] b 右侧配置。
+     * @return 字段全部相等时为 true。
+     */
+    friend bool operator==(const Comdcb& a, const Comdcb& b) {
+        return a.baud == b.baud && a.parity == b.parity && a.data_bits == b.data_bits &&
+               a.stop_bits == b.stop_bits && a.flow_control == b.flow_control;
+    }
+};
 
 /// 十进制倍率及物理单位，工程值换算由调用方完成。
 struct ScalerUnit {
@@ -249,10 +305,11 @@ class RecordData {
 };
 
 struct Data {
-    using Payload = std::variant<Null, Array, Structure, Boolean, BitString, Int8, Int16, Int32,
-                                 Int64, UInt8, UInt16, UInt32, UInt64, Enum, Float32, Float64,
-                                 OctetString, VisibleString, Utf8String, DateTime, Date, Time,
-                                 DateTimeS, Oi, Oad, Omd, Ti, Tsa, ScalerUnit, RecordData>;
+    using Payload =
+        std::variant<Null, Array, Structure, Boolean, BitString, Int8, Int16, Int32, Int64, UInt8,
+                     UInt16, UInt32, UInt64, Enum, Float32, Float64, OctetString, VisibleString,
+                     Utf8String, DateTime, Date, Time, DateTimeS, Oi, Oad, Omd, Ti, Tsa, ScalerUnit,
+                     RecordData, Mac, Rn, Sid, SidMac, Comdcb>;
     Payload payload = Null{};
     /** @brief 创建协议 null 值。 */
     Data() = default;

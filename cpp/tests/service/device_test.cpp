@@ -42,17 +42,17 @@ TEST_CASE("Device 拒绝错误结构和索引且保留旧值", "[service][device
 
 TEST_CASE("Device 自定义定义不覆盖标准且声明不生成数据", "[service][device]") {
     Device device;
-    CHECK_FALSE(device.set({0xf100, 2, 0}, UInt16{1}));
+    CHECK_FALSE(device.set({0xf900, 2, 0}, UInt16{1}));
     CHECK_FALSE(device.define({0x200F, "标准冲突", {{2, DataType::uint16}}}));
-    REQUIRE(device.define({0xf100, "自定义", {{2, DataType::uint16}, {3, DataType::array}}}));
-    CHECK_FALSE(device.define({0xf100, "重复", {{2, DataType::uint16}}}));
-    CHECK(std::get<std::uint8_t>(device.get({0xf100, 2, 0})) == 4);
-    REQUIRE(device.set({0xf100, 2, 0}, UInt16{10}));
-    REQUIRE(device.set({0xf100, 3, 0}, Array{{UInt16{20}, UInt16{30}}}));
-    CHECK_FALSE(device.set({0xf100, 4, 0}, UInt16{40}));
-    CHECK_FALSE(device.set({0xf100, 2, 0}, UInt32{40}));
-    CHECK_FALSE(device.define({0xf101, "远程可写", {{2, DataType::uint16, true, true}}}));
-    CHECK(std::get<Data>(device.get({0xf100, 3, 2})).as<UInt16>().value == 30);
+    REQUIRE(device.define({0xf900, "自定义", {{2, DataType::uint16}, {3, DataType::array}}}));
+    CHECK_FALSE(device.define({0xf900, "重复", {{2, DataType::uint16}}}));
+    CHECK(std::get<std::uint8_t>(device.get({0xf900, 2, 0})) == 4);
+    REQUIRE(device.set({0xf900, 2, 0}, UInt16{10}));
+    REQUIRE(device.set({0xf900, 3, 0}, Array{{UInt16{20}, UInt16{30}}}));
+    CHECK_FALSE(device.set({0xf900, 4, 0}, UInt16{40}));
+    CHECK_FALSE(device.set({0xf900, 2, 0}, UInt32{40}));
+    CHECK_FALSE(device.define({0xf901, "远程可写", {{2, DataType::uint16, true, true}}}));
+    CHECK(std::get<Data>(device.get({0xf900, 3, 2})).as<UInt16>().value == 30);
 }
 
 TEST_CASE("Device 替换按净字节数计算且失败不占用名额", "[service][device]") {
@@ -61,24 +61,24 @@ TEST_CASE("Device 替换按净字节数计算且失败不占用名额", "[servic
     options.max_attributes = 2;
     options.max_value_bytes = 6;
     Device device(options);
-    REQUIRE(device.define({0xf100, "自定义", {{2, DataType::uint16}}}));
-    REQUIRE(device.set({0xf100, 2, 0}, UInt16{1}));
+    REQUIRE(device.define({0xf900, "自定义", {{2, DataType::uint16}}}));
+    REQUIRE(device.set({0xf900, 2, 0}, UInt16{1}));
     // 已声明且已发布的自定义 OI 只占一个对象名额。
     REQUIRE(device.set({0x200F, 2, 0}, UInt16{5000}));
     REQUIRE(device.set({0x200F, 2, 0}, UInt16{4999}));
     CHECK_FALSE(device.set({0x200F, 3, 0}, ScalerUnit{-2, 44}));
-    CHECK_FALSE(device.define({0xf101, "超限", {{2, DataType::uint16}}}));
+    CHECK_FALSE(device.define({0xf901, "超限", {{2, DataType::uint16}}}));
     CHECK(std::get<Data>(device.get({0x200F, 2, 0})).as<UInt16>().value == 4999);
 
     options.max_objects = 1;
     options.max_attributes = 2;
     options.max_value_bytes = 8;
     Device strings(options);
-    REQUIRE(strings.define({0xf100, "字节预算", {{2, DataType::octet_string}}}));
-    REQUIRE(strings.set({0xf100, 2, 0}, OctetString{{1, 2}}));
-    CHECK_FALSE(strings.set({0xf100, 2, 0}, OctetString{Bytes(20, 0)}));
-    REQUIRE(strings.set({0xf100, 2, 0}, OctetString{{3, 4, 5}}));
-    CHECK(std::get<Data>(strings.get({0xf100, 2, 0})).as<OctetString>().value == Bytes{3, 4, 5});
+    REQUIRE(strings.define({0xf900, "字节预算", {{2, DataType::octet_string}}}));
+    REQUIRE(strings.set({0xf900, 2, 0}, OctetString{{1, 2}}));
+    CHECK_FALSE(strings.set({0xf900, 2, 0}, OctetString{Bytes(20, 0)}));
+    REQUIRE(strings.set({0xf900, 2, 0}, OctetString{{3, 4, 5}}));
+    CHECK(std::get<Data>(strings.get({0xf900, 2, 0})).as<OctetString>().value == Bytes{3, 4, 5});
 }
 
 TEST_CASE("Device 多线程首次发布和完整快照不会丢失属性或撕裂数组", "[service][device]") {

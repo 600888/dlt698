@@ -196,14 +196,14 @@ TEST_CASE("GET 普通响应按附录 D.3.1 向量往返", "[apdu][get]") {
                           "GetResult choice");
     }
 
-    SECTION("非空 FollowReport 暂不支持") {
+    SECTION("不完整 FollowReport 选择符被拒绝") {
         const Bytes bytes = fixture("get-normal-response.hex");
         Bytes with_follow = bytes;
         with_follow[with_follow.size() - 2] = 1;  // FollowReport 存在标记
         auto decoded = decode_get(ByteView{with_follow});
         REQUIRE_FALSE(static_cast<bool>(decoded));
-        CHECK(decoded.error().code == ErrorCode::unsupported_service);
-        CHECK(decoded.error().context == "FollowReport");
+        CHECK(decoded.error().code == ErrorCode::invalid_value);
+        CHECK(decoded.error().context == "FollowReport choice");
     }
 }
 
@@ -823,9 +823,9 @@ TEST_CASE("GET 未分配的服务与变体被拒绝", "[apdu][get]") {
         }
     }
 
-    SECTION("变体 0 与 6 及以上未分配") {
-        // 变体 1 至 5 分别是普通、列表、记录、记录列表与 Next。
-        for (int choice : {0, 6, 7, 8, 9, 0x0f}) {
+    SECTION("变体 0 与 7 及以上未分配") {
+        // 变体 1 至 6 是普通、列表、记录、记录列表、Next 与 MD5。
+        for (int choice : {0, 7, 8, 9, 0x0f}) {
             INFO("变体=" << choice);
             Bytes bytes{0x05, static_cast<std::uint8_t>(choice), 0x01};
             bytes.insert(bytes.end(), {0x40, 0x01, 0x02, 0x00, 0x00, 0x00});

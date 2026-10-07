@@ -38,7 +38,7 @@ function(dlt698_target_setup target)
         endif()
     else()
         target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic)
-        # Data::Payload 是 30 路 std::variant，Debug 的 -O0 会让 libstdc++ 为每个
+        # Data::Payload 是 35 路 std::variant，Debug 的 -O0 会让 libstdc++ 为每个
         # 下标 × 每个 base class 生成独立 COMDAT 段，单个测试单元的段数会撞上
         # GNU as 的 COFF 上限（报 too many sections / file too big）。这里只对
         # Debug 追加 -O1，Release 的 -O3 与 MinSizeRel 的 -Os 不受影响。
@@ -57,6 +57,8 @@ add_library(dlt698_core
     src/standard/catalog.cpp
     src/standard/records.cpp
     src/standard/capabilities.cpp
+    src/common/md5.cpp
+    src/security/backend.cpp
     src/common/bytes.cpp
     src/common/executor.cpp
     src/transport/memory.cpp
@@ -70,6 +72,9 @@ add_library(dlt698_core
     src/protocol/apdu/time_tag.cpp
     src/protocol/apdu/mutation.cpp
     src/protocol/apdu/connection.cpp
+    src/protocol/apdu/security.cpp
+    src/protocol/apdu/exchange.cpp
+    src/protocol/apdu/advanced.cpp
     src/protocol/apdu/apdu.cpp)
 add_library(dlt698::core ALIAS dlt698_core)
 set_target_properties(dlt698_core PROPERTIES EXPORT_NAME core VERSION ${PROJECT_VERSION}
@@ -101,7 +106,7 @@ endif()
 target_link_libraries(dlt698_session PUBLIC dlt698_core)
 dlt698_target_setup(dlt698_session)
 
-add_library(dlt698_service src/service/object.cpp src/service/device.cpp src/service/standard_object.cpp src/service/memory_records.cpp src/service/point_probe.cpp src/service/service.cpp src/service/sync.cpp)
+add_library(dlt698_service src/service/advanced.cpp src/service/object.cpp src/service/device.cpp src/service/standard_object.cpp src/service/memory_records.cpp src/service/point_probe.cpp src/service/service.cpp src/service/sync.cpp)
 add_library(dlt698::service ALIAS dlt698_service)
 set_target_properties(dlt698_service PROPERTIES EXPORT_NAME service VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR} CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)

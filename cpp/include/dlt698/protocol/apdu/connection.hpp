@@ -85,6 +85,7 @@ struct ConnectResponse {
     std::uint8_t result = 0;  ///< 0 至 5 或 255，保留远端认证结果原码。
     std::optional<SecurityData> security;
     std::optional<TimeTag> time_tag;
+    std::optional<FollowReport> follow_report{};
 };
 
 struct ReleaseRequest {
@@ -96,6 +97,7 @@ struct ReleaseResponse {
     std::uint8_t piid_acd = 0;
     std::uint8_t result = 0;  ///< 标准仅定义成功（0）。
     std::optional<TimeTag> time_tag;
+    std::optional<FollowReport> follow_report{};
 };
 
 struct ReleaseNotification {
@@ -103,6 +105,7 @@ struct ReleaseNotification {
     model::DateTimeS established_at;
     model::DateTimeS current_time;
     std::optional<TimeTag> time_tag;
+    std::optional<FollowReport> follow_report{};
 };
 
 struct ErrorResponse {
@@ -110,6 +113,7 @@ struct ErrorResponse {
     std::uint8_t piid = 0;
     std::uint8_t type = 2;  ///< 1=无法解析，2=服务不支持，255=其他。
     std::optional<TimeTag> time_tag;
+    std::optional<FollowReport> follow_report{};
 };
 
 using ConnectionApdu =
@@ -119,7 +123,7 @@ using ConnectionApdu =
  * @brief 解码恰好一个连接管理或异常响应 APDU。
  * @param[in] bytes 完整 APDU，不含链路封装。
  * @param[in] limits 输入及可变认证字段的字节上限。
- * @return 精确类型消息或含偏移的错误；非空 FollowReport 暂返回 unsupported_service。
+ * @return 精确类型消息或含偏移的错误。
  */
 DLT698_API Result<ConnectionApdu> decode_connection(ByteView bytes, const Limits& limits = {});
 /**

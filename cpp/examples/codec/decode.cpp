@@ -32,8 +32,11 @@ int main(int argc, char** argv) {
                 else if constexpr (std::is_same_v<T, dlt698::protocol::apdu::GetRecordRequest> ||
                                    std::is_same_v<T, dlt698::protocol::apdu::GetRecordResponse>)
                     std::cout << "GET records: " << m.records.size() << '\n';
-                else
+                else if constexpr (std::is_same_v<T, dlt698::protocol::apdu::GetNextRequest> ||
+                                   std::is_same_v<T, dlt698::protocol::apdu::GetNextResponse>)
                     std::cout << "GET block: " << m.block << '\n';
+                else
+                    std::cout << "GET MD5 OI: " << m.attribute.oi << '\n';
             },
             apdu.value());
     return 0;

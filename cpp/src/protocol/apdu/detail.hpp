@@ -78,13 +78,62 @@ inline void write_time_tag(Writer& writer, const std::optional<TimeTag>& tag) {
     writer.be(tag->allowed_delay.interval, 2);
 }
 
-/** @brief 读取服务器 APDU 的无跟随上报标记。
- * @param[in,out] reader 输入读取器。
- * @throws DecodeFailure 标记非法、输入不足或存在未支持的 FollowReport。
+/** @brief 读取并校验序列数量。
+ * @param[in,out] r 输入读取器。
+ * @param[in] l 数量资源上限。
+ * @param[in] list true 要求非空列表，false 要求恰好一项。
+ * @return 已验证数量。
+ * @throws DecodeFailure 数量非法、超限或输入不足。
  */
-inline void no_follow(Reader& reader) {
-    const auto offset = reader.position();
-    if (present(reader, "FollowReport presence"))
-        throw DecodeFailure({ErrorCode::unsupported_service, offset, "FollowReport"});
-}
+std::size_t count(Reader& r, const Limits& l, bool list = true);
+/** @brief 校验并写入序列数量。
+ * @param[in,out] w 输出写入器。
+ * @param[in] l 数量资源上限。
+ * @param[in] n 待写数量。
+ * @param[in] list true 要求非空列表，false 要求恰好一项。
+ * @throws DecodeFailure 数量非法或输出超限。
+ */
+void count(Writer& w, const Limits& l, std::size_t n, bool list = true);
+/** @brief 读取拥有型属性结果（OAD 与 Data/DAR）。
+ * @param[in,out] r 输入读取器。
+ * @param[in] l Data 资源上限。
+ * @return 属性结果。
+ * @throws DecodeFailure 字段非法、输入不足或超限。
+ */
+AttributeResult attribute(Reader& r, const Limits& l);
+/** @brief 写入属性结果。
+ * @param[in,out] w 输出写入器。
+ * @param[in] a 属性结果。
+ * @param[in] l Data 资源上限。
+ * @throws DecodeFailure 字段非法或超限。
+ */
+void attribute(Writer& w, const AttributeResult& a, const Limits& l);
+/** @brief 读取拥有型记录结果（OAD、RCSD 与行数据/DAR）。
+ * @param[in,out] r 输入读取器。
+ * @param[in] l 行、列与 Data 资源上限。
+ * @return 记录结果。
+ * @throws DecodeFailure 字段非法、输入不足或超限。
+ */
+RecordResult record(Reader& r, const Limits& l);
+/** @brief 写入记录结果并检查每行列数。
+ * @param[in,out] w 输出写入器。
+ * @param[in] v 记录结果。
+ * @param[in] l 行、列与 Data 资源上限。
+ * @throws DecodeFailure 字段非法或超限。
+ */
+void record(Writer& w, const RecordResult& v, const Limits& l);
+/** @brief 读取可选的普通/记录跟随上报。
+ * @param[in,out] r 输入读取器。
+ * @param[in] l 列表与 Data 资源上限。
+ * @return 拥有型跟随上报或空值。
+ * @throws DecodeFailure 存在标记/分支非法、输入不足或超限。
+ */
+std::optional<FollowReport> read_follow(Reader& r, const Limits& l);
+/** @brief 写入可选跟随上报。
+ * @param[in,out] w 输出写入器。
+ * @param[in] v 普通/记录跟随上报或空值。
+ * @param[in] l 列表与 Data 资源上限。
+ * @throws DecodeFailure 字段非法或超限。
+ */
+void write_follow(Writer& w, const std::optional<FollowReport>& v, const Limits& l);
 }  // namespace dlt698::protocol::apdu::detail

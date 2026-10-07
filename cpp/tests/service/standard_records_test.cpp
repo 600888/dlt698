@@ -85,7 +85,7 @@ struct Peers {
 }  // namespace
 
 TEST_CASE("标准记录模板、列定义和独立报文", "[standard][record]") {
-    CHECK(standard::objects().size() == 127);
+    CHECK(standard::objects().size() == 131);
     for (auto identifier : {oi::daily_freeze, oi::monthly_freeze, oi::meter_power_down_event,
                             oi::terminal_initialization_event}) {
         REQUIRE(standard::find_record(identifier));

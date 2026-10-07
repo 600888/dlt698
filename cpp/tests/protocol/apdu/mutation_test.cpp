@@ -191,14 +191,14 @@ TEST_CASE("SET 普通响应按附录 D.4.1 向量往返", "[apdu][mutation][set]
         }
     }
 
-    SECTION("非空 FollowReport 暂不支持") {
+    SECTION("不完整 FollowReport 选择符被拒绝") {
         const Bytes bytes = fixture("set-normal-response.hex");
         Bytes with_follow = bytes;
         with_follow[with_follow.size() - 2] = 1;
         auto decoded = decode_mutation(ByteView{with_follow});
         REQUIRE_FALSE(static_cast<bool>(decoded));
-        CHECK(decoded.error().code == ErrorCode::unsupported_service);
-        CHECK(decoded.error().context == "FollowReport");
+        CHECK(decoded.error().code == ErrorCode::invalid_value);
+        CHECK(decoded.error().context == "FollowReport choice");
     }
 }
 

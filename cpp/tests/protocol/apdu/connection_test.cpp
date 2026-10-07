@@ -567,13 +567,13 @@ TEST_CASE("CONNECT 响应按附录 D.2 向量往返", "[apdu][connection][connec
         }
     }
 
-    SECTION("非空FollowReport 暂不支持") {
+    SECTION("不完整 FollowReport 选择符被拒绝") {
         Bytes bytes = fixture("connect-response.hex");
         bytes[73] = 1;
         auto decoded = decode_connection(ByteView{bytes});
         REQUIRE_FALSE(static_cast<bool>(decoded));
-        CHECK(decoded.error().code == ErrorCode::unsupported_service);
-        CHECK(decoded.error().context == "FollowReport");
+        CHECK(decoded.error().code == ErrorCode::invalid_value);
+        CHECK(decoded.error().context == "FollowReport choice");
     }
 
     SECTION("时间标签可附加在服务器响应尾部") {
