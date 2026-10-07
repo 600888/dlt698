@@ -1,5 +1,7 @@
 # 当前 C++ API
 
+新增可选收发观察：`Session::set_traffic_handler`、`ClientOptions::traffic` 和 `ServerOptions::traffic` 提供方向、系统时间、原始字节视图和写入结果，服务器另附连接 ID。回调在会话执行器内借用数据，异常被隔离；未注册时不复制发送缓冲区。完整示例及字节边界、发送失败与关闭生命周期见[报文调试](../website/docs/guide/packet-debug.md#在应用中监控收发)。
+
 2026-10-07 新增普通服务器入口：`app::Server::set/start_tcp/start_serial/stop`，不要求使用者创建执行器、目录、会话或接入回调。`service::Device` 支持严格标准值校验、运行中首次发布、同 OI 多属性扩充、自定义只读声明、元素更新和资源预算；多个服务器可共享同一设备。完整契约见[托管服务器与设备数据](../website/docs/session/server.md)。现有分层 API 保持默认行为。
 
 客户端同步新增 `app::Client::connect_tcp/open_serial/get/set/action/disconnect`，复用已有同步服务与分块事务，自动等待登录并建立关联；拒绝码、DAR 和远端 ERROR 保留原码。完整契约见[托管客户端](../website/docs/session/client.md)。外部运行时与高层 provider 仍待后续阶段。

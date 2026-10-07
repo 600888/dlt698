@@ -37,6 +37,8 @@ class Session {
 
 ## 状态机
 
+`set_traffic_handler(handler)` 注册可选收发观察器，建议在 `start()` 前设置，空回调移除观察器。回调在会话执行器内借用 `TrafficEvent`，含方向、系统时间、原始字节视图及写入结果；TX 使用提交时的观察器快照，关闭或注销后仍可交付在途写入结果。完整边界与生命周期约定见[报文调试](../guide/packet-debug.md#在应用中监控收发)。
+
 ```cpp
 enum class Role { client, server };
 

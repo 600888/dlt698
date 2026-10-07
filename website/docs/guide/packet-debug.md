@@ -9,6 +9,67 @@ description: 用 dlt698_decode 拆解链路帧和 APDU；自写解码程序、�
 
 调试 DL/T 698 报文时，你手上通常只有一串十六进制字节。库自带一个解码工具 `dlt698_decode`，不需要写代码就能拆开看。
 
+## 在应用中监控收发
+
+托管入口提供可选 `ClientOptions::traffic` 和 `ServerOptions::traffic`；不配置时不会为发送观察复制缓冲区。分层入口可在 `Session::start()` 前调用 `set_traffic_handler(handler)`，传入空回调可注销。
+
+```cpp
+#include <dlt698/app.hpp>
+#include <chrono>
+#include <iostream>
+
+int main() {
+    const auto log = [](const dlt698::session::TrafficEvent& event) {
+        const auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+            event.timestamp.time_since_epoch()).count();
+        const bool tx = event.direction == dlt698::session::TrafficDirection::send;
+        std::cout << milliseconds << (tx ? " TX " : " RX ")
+                  << dlt698::to_hex(event.bytes);
+        if (!event.result) std::cout << " failed: " << event.result.error().context;
+        std::cout << '\n';
+    };
+
+    dlt698::app::ClientOptions options;
+    options.traffic = log;
+    dlt698::app::Client client(options);
+    auto connected = client.connect_tcp("127.0.0.1", 6980);
+    if (!connected) return 1;
+    auto value = client.get({0x200F, 2, 0});
+    auto disconnected = client.disconnect();
+    return value && disconnected ? 0 : 2;
+}
+```
+
+服务器用相同事件类型，并额外提供连接 ID：
+
+```cpp
+dlt698::app::ServerOptions options;
+options.traffic = [](std::uint64_t connection_id,
+                     const dlt698::session::TrafficEvent& event) {
+    std::cout << "connection=" << connection_id
+              << (event.direction == dlt698::session::TrafficDirection::send ? " TX " : " RX ")
+              << dlt698::to_hex(event.bytes) << '\n';
+};
+dlt698::app::Server server(options);
+```
+
+连接 ID 非零，在一次服务器运行内唯一，与 `diagnostic` 使用同一 ID；服务器重启后重新编号，监听器没有报文事件。
+
+| 字段 | 含义 |
+| --- | --- |
+| `direction` | 相对于当前会话的 `receive` / `send` |
+| `timestamp` | 通道完成回调入口的 `system_clock::time_point`，不代表物理线路时刻，系统校时可能使它回退 |
+| `bytes` | 回调期间有效的只读 `ByteView`，保存或跨线程处理须复制为 `Bytes` |
+| `result` | RX 恒成功；TX 保留通道写入的成功或完整错误信息 |
+
+RX 在流解析前观察成功读取的字节块，包含半帧、粘帧、噪声、校验失败帧和接收到的 FE 前导字节。读失败没有 RX 字节事件，错误仍由诊断或事务结果报告。需要按完整帧显示时，在自己的观察器中按连接维护 `FrameStreamDecoder`。
+
+TX 每次实际提交给会话通道的写操作完成时通知一次，包括 LINK、CONNECT、业务请求/响应、确认、重发和 RELEASE。字节是提交的完整链路帧，**不含串口适配器随后添加的四个 FE**；编码失败或排队后尚未提交通道就被取消，没有 TX 事件。成功表示通道完成写入，不保证对端收到或处理；失败可能已经发送部分字节，`bytes` 仍保留完整提交内容。
+
+回调在会话串行执行器中运行；托管 Client/Server 使用自己的工作线程。异常被隔离，回调应快速返回；生产应用可复制字节到有容量限制的日志队列。回调内不要同步读取、连接、断开或停止同一入口，可使用 `request_disconnect()` / `request_stop()` 发起关闭，不应强引用对应入口形成引用环。
+
+注册与注销异步生效。RX 使用处理时的观察器，TX 使用提交时的观察器快照；已提交的 TX 即使注销、关闭或销毁 Session，仍向原观察器报告最终结果，须持续驱动执行器。观察器引用的日志资源必须活到回调排空；托管入口的 `disconnect()` / `stop()` 在普通调用线程等待线程收尾。启用观察后，每个在途写入额外保留一份完整帧，库不积累历史日志。
+
 ## 用 dlt698_decode 拆帧
 
 ```bash

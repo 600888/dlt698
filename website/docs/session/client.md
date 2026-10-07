@@ -67,6 +67,8 @@ CONNECT 拒绝返回 `association_failed`，`Error::remote_code` 保留原始认
 
 ## 超时、并发和关闭
 
+`ClientOptions::traffic` 可监控握手、业务及释放过程的收发字节、系统时间和写入结果。回调在工作线程执行，事件与字节视图仅在回调期间有效，异常被隔离；保存日志须复制数据。完整示例与半帧、发送完成及串口 FE 边界说明见[报文调试](../guide/packet-debug.md#在应用中监控收发)。
+
 `ClientOptions::transport_timeout` 默认 5 秒，限制 DNS/TCP 建连的合计时长；`login_timeout` 默认 5 秒，限制远程 LINK 等待；`protocol.request_timeout` 默认 5 秒，限制 CONNECT、业务请求和 RELEASE。失败关闭并排空在途 I/O，之后可以显式重新连接。操作系统同步打开串口的耗时不受 DNS/TCP 超时控制。
 
 一个连接只允许一个在途请求，并发冲突返回 `busy`，不维护无界请求队列。`state()` 的 `connected` 表示已关联，对端关闭或结束关联后最终变为 `disconnected`。
