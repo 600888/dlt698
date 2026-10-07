@@ -1,16 +1,16 @@
 ---
 title: dlt698 接口文档
-description: DL/T 698.45 协议库的对外 C++ 接口文档。
+description: DL/T 698.45 协议库的 C++ 与 Python 使用指南及接口文档。
 comments: false
 ---
 
 import { ModuleCards } from '../theme/ModuleCards';
 
-<p className="doc-eyebrow">DLT698 / C++ API REFERENCE</p>
+<p className="doc-eyebrow">DLT698 / C++ &amp; PYTHON</p>
 
 # 把协议细节交给库，把精力留给业务。
 
-<p className="doc-lead">这是 dlt698 的对外 C++ 接口文档。库从零实现 DL/T 698.45—2017 的编解码、会话与传输，<br />面向集中器、采集终端和电力网关等协议对接场景。</p>
+<p className="doc-lead">这是 dlt698 的 C++ 与 Python 使用指南及接口文档。两种语言共用同一协议内核，<br />面向集中器、采集终端和电力网关等 DL/T 698.45—2017 协议对接场景。</p>
 
 <div className="doc-meta"><span className="doc-dot" /> 版本 0.1.0 <span className="doc-meta-divider">/</span> C++17 <span className="doc-meta-divider">/</span> CMake 3.20+ <span className="doc-meta-divider">/</span> 持续更新中</div>
 
@@ -22,13 +22,15 @@ import { ModuleCards } from '../theme/ModuleCards';
 
 ## 从哪里开始
 
+使用 C++ 看[使用指南(C++)](./guide/index.md)；使用 Python 看[安装与第一个程序](./python/quick-start.md)。Python 指南提供简短代码示例，协议概念和点位说明共用已有 C++ 文档。
+
 1. **先把库装上。** 读[安装与构建](./getting-started/installation.md)，确认导出目标和编译选项。
 2. **跑通第一个程序。** [第一个程序](./getting-started/quick-start.md)用内存通道完成一次 CONNECT → GET → RELEASE，不需要网络和设备。
 3. **按需深入。** 只需要编解码就直接看[核心类型](./core/result.md)；要做完整通信再看[会话与服务](./session/session.md)和[传输层](./transport/tcp.md)。
 
 ## 关于本文档
 
-<div className="reading-note"><strong>文档描述的是公开头文件，不是全部实现。</strong><p>所有公开接口都使用中文 Doxygen 注释，本文档与其保持一致。行为细节以 <code>cpp/include</code> 下的头文件为准；文档重点补充调用顺序、前置条件和容易踩到的边界。</p></div>
+<div className="reading-note"><strong>文档围绕公开接口和实际用法编写。</strong><p>C++ 行为以公开头文件为准，Python 签名以公开模块和类型声明为准。Python 按阶段开放能力，共享 C++ 内核和版本；指南重点补充调用顺序、结果处理及生命周期约定。</p></div>
 
 当前版本尚未覆盖完整协议。已实现范围、限制和待办集中在[协议覆盖范围](./appendix/coverage.md)，跨设备联调前请先确认对应条目。发现文档与实现不一致，欢迎通过页面底部的编辑链接提交修正。
 

@@ -3,6 +3,24 @@ import { Link } from '@rspress/core/theme-original';
 const modules = [
   {
     number: '01',
+    label: '使用指南(C++)',
+    en: 'C++ GUIDE',
+    href: '/guide/',
+    description: '连接设备、读取点位、理解结果，按业务场景查找详细用法。',
+    tags: 'Client · Server · 点位与报文',
+    icon: 'book',
+  },
+  {
+    number: '02',
+    label: '使用指南(Python)',
+    en: 'PYTHON GUIDE',
+    href: '/python/',
+    description: '安装后直接读取，代码示例覆盖同步、异步及常用操作。',
+    tags: 'pip · Data · asyncio',
+    icon: 'book',
+  },
+  {
+    number: '03',
     label: '快速开始',
     en: 'GETTING STARTED',
     href: '/getting-started/',
@@ -11,7 +29,7 @@ const modules = [
     icon: 'rocket',
   },
   {
-    number: '02',
+    number: '04',
     label: '核心类型',
     en: 'CORE TYPES',
     href: '/core/',
@@ -20,7 +38,7 @@ const modules = [
     icon: 'cube',
   },
   {
-    number: '03',
+    number: '05',
     label: '协议层',
     en: 'PROTOCOL',
     href: '/protocol/',
@@ -29,7 +47,7 @@ const modules = [
     icon: 'network',
   },
   {
-    number: '04',
+    number: '06',
     label: '会话与服务',
     en: 'SESSION & SERVICE',
     href: '/session/',
@@ -38,7 +56,7 @@ const modules = [
     icon: 'link',
   },
   {
-    number: '05',
+    number: '07',
     label: '传输层',
     en: 'TRANSPORT',
     href: '/transport/',
@@ -47,7 +65,7 @@ const modules = [
     icon: 'plug',
   },
   {
-    number: '06',
+    number: '08',
     label: '附录',
     en: 'APPENDIX',
     href: '/appendix/',

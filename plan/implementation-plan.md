@@ -355,6 +355,7 @@ M0 先确定可获得的 ESAM/主站安全模块、SDK、算法/profile 和授�
 - Python 首版提供 `app::Client` / `app::Server` 的托管入口、TCP/简单串口、普通 GET/列表、本地数据发布、Data codec 和标准目录查询。远端 SET/ACTION 与记录次之，Python 用户回调、REPORT/PROXY/安全和 asyncio 后续开放。
 - 已开放能力保持 C++ 精确类型、DAR、本地错误、资源限制与生命周期；未开放成员记录在接口对应清单中，不以分阶段开放为理由容忍已有绑定漂移。
 - 使用 pybind11、scikit-build-core、类型声明、上下文管理器和标准 Python 工具；首发 CPython 3.11–3.14 标准 GIL 构建，逐 minor 构建 wheel。详细 GIL/所有权、测试及平台门槛见专项计划。
+- 在线文档将原「使用指南」改为「使用指南(C++)」，在其右侧新增「使用指南(Python)」；Python 以代码和简短介绍为主，共享概念链接现有 C++ 页面。页面范围、导航顺序和验收按专项计划第 10 节执行。
 - 首个联合版本将 C++ 包、wheel 和 sdist 放在同一个 GitHub Release 草稿中，完整验证后一起公开。PyPI 是后续推广渠道，只分发已通过联合验证的同版本制品；不能承诺跨独立服务原子公开。
 
 里程碑、首版验收、现代 Python 规范和联合发布流程统一以专项计划为准，协议实现与现场验证范围继续以 [支持矩阵](../docs/protocol-coverage.md)为准。

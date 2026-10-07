@@ -2,7 +2,7 @@ import { defineConfig } from '@rspress/core';
 
 const sections = [
   {
-    text: '使用指南',
+    text: '使用指南(C++)',
     path: 'guide',
     articles: [
       ['index', '指南首页'],
@@ -31,6 +31,16 @@ const sections = [
       ['server', '对外提供设备数据'],
       ['packet-debug', '调试助手使用'],
       ['troubleshooting', '常见问题排查'],
+    ],
+  },
+  {
+    text: '使用指南(Python)',
+    path: 'python',
+    articles: [
+      ['index', '指南首页'],
+      ['quick-start', '安装与第一个程序'],
+      ['operations', '常用操作'],
+      ['async', '异步调用'],
     ],
   },
   {
@@ -107,7 +117,7 @@ export default defineConfig({
   siteOrigin: 'https://600888.github.io',
   title: 'dlt698 接口文档',
   description:
-    'DL/T 698.45 协议库的对外 C++ 接口文档：使用指南、核心类型、协议编解码、会话与对象服务、TCP 与串口传输。',
+    'DL/T 698.45 协议库的 C++ 与 Python 使用指南及接口文档：核心类型、协议编解码、会话与对象服务、TCP 与串口传输。',
   lang: 'zh',
   icon: '/logo.svg',
   logo: '/logo.svg',
