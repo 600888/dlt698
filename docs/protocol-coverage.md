@@ -1,6 +1,6 @@
 # 协议实现进度
 
-更新日期：2026-10-07。M4 软件功能与 M5 两类分段、记录及第一批托管服务器接口已实现；真实串口/RS-485 和独立设备互操作仍未验收，尚非完整协议库。标准基线：DL/T 698.45—2017。阶段依据见 [实施计划](../plan/implementation-plan.md)。
+更新日期：2026-10-07。M4/M5 及 M6 高级服务软件实现已完成，含 REPORT、ThenGet、PROXY、MD5、FollowReport/ACD 与安全后端状态机；真实串口/RS-485 和独立设备互操作仍未验收，尚非完整协议库。标准基线：DL/T 698.45—2017。阶段依据见 [实施计划](../plan/implementation-plan.md)。
 
 已建立根目录与 `cpp/` 独立 CMake 入口、安装导出、标准向量、CTest 和三平台 CI 配置。网络模块采用用户提供的 standalone Asio 1.38.2，入口 `third/asio/include/asio.hpp`；Asio 仅为传输模块的私有编译依赖。
 
@@ -17,7 +17,7 @@
 | 流解析 | 已实现 | 半帧、粘帧、噪声、校验失败恢复；合法但不完整帧须由调用方超时 reset | core，每个切分点/噪声洪流 |
 | 链路分帧格式与逐帧确认 | LinkFragmenter/Reassembler、Session 已实现 | 起始/中间逐片确认、末片交付；12 位回绕、有界重组/发送、有限重发与关闭回收 | m4m5，独立字段、回绕、丢失 ACK、重复/乱序/超限/超时 |
 | GET Record/RecordList/Next | 双向 codec、会话、同步/异步服务已实现 | 完整单元分块、单份快照、PIID/序号/表头匹配；应用块可继续链路分帧 | m4m5，D.3.3 向量、组合分段、DAR10/11、缓存回收、installed_consumer |
-| GET Normal/NormalList | 请求/响应已实现 | PIID、逐项 Data/DAR、可选 TimeTag；FollowReport 存在时返回不支持 | 附录 D.3.1/D.3.2 固定向量、tcp |
+| GET Normal/NormalList | 请求/响应已实现 | PIID、逐项 Data/DAR、可选 TimeTag；两类 FollowReport 尾部及观察回调 | 附录 D.3.1/D.3.2 固定向量、tcp |
 | SET Normal/NormalList | 请求/响应 codec 与会话已实现 | 原始 DAR、精确 OAD/顺序匹配；无重试或列表回滚 | mutation，附录 D.4.1/D.4.2、tcp |
 | ACTION 普通/列表 | 请求/响应 codec 与会话已实现 | DAR/可选 Data、完整 OMD 模式匹配，区分 NULL 与没有数据 | mutation，附录 D.5.1 与规范构造列表、tcp |
 | TCP 客户端/监听/双向通道 | 已实现 | DNS/连接、单个在途读、串行全量写、关闭、队列限制 | tcp，含 GET 回环与销毁测试 |
@@ -33,9 +33,9 @@
 | 串行时序适配 | SerialLinkChannel 已实现 | 四 FE、收发 33 位间隔、投递前预算、方向与真实排空 hooks；无 hook 时只做时间估算 | serial_link，虚拟时间/重复排空/关闭/故障；memory_mutation 闭环 |
 | RS-485 物理验收 | 未验证 | 手动切换必须有真实排空驱动；USB/流控/适配器需硬件测量 | 待设备 |
 | 对象 schema/provider | 通用读写及方法 schema 已实现 | 显式 writable、方法权限/参数/返回类型、一级索引、异常映射 DAR | mutation、session，部分成功/类型/权限/重入/异常 |
-| 常用标准点位 | 118 个 OI（电能、最大需量、变量/状态/谐波、参数）的元数据、OAD、精确倍率与只读绑定已实现 | 接线/费率/最高谐波次数显式配置；字段顺序、数组/位串/字符串长度、资源校验；需量时间保留；不自动提供数据或推断远端支持 | standard_points、installed_consumer、dlt698_standard_points、dlt698_standard_points_extended；详细范围见 [固定点位](../website/docs/protocol/standard-points.md) |
-| 安全 | CONNECT 认证 CHOICE codec 已实现 | Session 仅接受 NullSecurity，拒绝其他机制；实际认证/SECURITY 封装未实现 | connection、session，非公共机制拒绝 |
-| 标准记录与能力筛选 | 4 个记录入口、5 个记录列，完整目录共 127 个 OI；模板及 MemoryRecords、读取计划和显式点位探测已实现 | 日/月冻结、掉电/初始化事件投影；RSD 0/1/2/9、平面 OAD、预算及原子快照；按行 GET Next；全零功能位按未知，不推断 OAD 存在 | standard_records_test、installed_consumer、dlt698_standard_records；范围见[标准记录](../website/docs/protocol/standard-records.md) |
+| 常用标准点位 | 122 个普通 OI（原 118 个常用点位与 F100/F101/F200/F201 安全/端口对象）的元数据、OAD、精确倍率与只读绑定已实现 | 接线/费率/最高谐波次数显式配置；字段顺序、数组/位串/字符串长度、资源校验；需量时间保留；不自动提供数据或推断远端支持 | standard_points、installed_consumer、dlt698_standard_points、dlt698_standard_points_extended；详细范围见 [固定点位](../website/docs/protocol/standard-points.md) |
+| 安全 | CONNECT / SECURITY codec、IBackend 注入及认证状态机已实现 | 真正 MAC/签名/加解密由 ESAM 厂商后端执行；SDK、凭据及硬件验收待提供；默认拒绝明文降级 | advanced，状态机测试替身；非真实密码/硬件证据 |
+| 标准记录与能力筛选 | 4 个记录入口、5 个记录列，完整目录共 131 个 OI；模板及 MemoryRecords、读取计划和显式点位探测已实现 | 日/月冻结、掉电/初始化事件投影；RSD 0/1/2/9、平面 OAD、预算及原子快照；按行 GET Next；全零功能位按未知，不推断 OAD 存在 | standard_records_test、installed_consumer、dlt698_standard_records；范围见[标准记录](../website/docs/protocol/standard-records.md) |
 | 传输层 CLI | tcp_server/client、rtu_server/client、master/terminal 已实现 | 服务端与客户端各一个独立程序，共用模拟对象目录；TCP 拨号方向独立；串口无连接概念，服务端直接应答 | 独立进程 TCP：tcp_server 接受 4 个客户端 × get/set/action/record；master/terminal 双向拨号共 8 次 |
 | Python 绑定和分发 | 未开始 | C++ 稳定阶段之后进行 | 待补 |
 | 托管两端与设备数据 | app::Server、app::Client、service::Device、app 安装目标及配对示例已实现 | TCP 多连接、自动 LINK/CONNECT、同步读写/方法/记录、阶段超时及取消；数据跨连接/停止保留；串口自动适配；高层服务器值只读；provider/外部运行时/重拨待后续 | device、app、installed_consumer；真实串口和独立设备互操作未验证；见[服务器](../website/docs/session/server.md)和[客户端](../website/docs/session/client.md) |
@@ -75,16 +75,16 @@
 | 83 | OMD | 已实现/已测 |
 | 84 | TI | 已实现/已测 |
 | 85 | TSA | 原始地址字节已实现/已测 |
-| 86 | MAC | 未实现 |
-| 87 | RN | 未实现 |
+| 86 | MAC | 已实现/已测；密码语义由后端负责 |
+| 87 | RN | 已实现/已测；密码语义由后端负责 |
 | 88 | Region | 已实现/已测（RecordData 不可变有类型节点） |
 | 89 | Scaler_Unit | 已实现/已测；standard::unit_symbol 收录本批普通点位使用的单位，完整枚举目录待补 |
 | 90 | RSD | 已实现/已测（RecordData 不可变有类型节点） |
 | 91 | CSD | 已实现/已测（RecordData 不可变有类型节点） |
 | 92 | MS | 已实现/已测（RecordData 不可变有类型节点） |
-| 93 | SID | 未实现 |
-| 94 | SID_MAC | 未实现 |
-| 95 | COMDCB | 未实现 |
+| 93 | SID | 已实现/已测；密码语义由后端负责 |
+| 94 | SID_MAC | 已实现/已测；密码语义由后端负责 |
+| 95 | COMDCB | 已实现/已测；COMDCB 检查枚举范围 |
 | 96 | RCSD | 已实现/已测（RecordData 不可变有类型节点） |
 
 保留/未知标签返回 `unsupported_tag`，不会猜测长度后跳过。`max_elements` 为单个 Data 树的节点总数，包含根节点；`max_depth` 从根的 0 开始。完整输入 codec 拒绝尾随字节。
@@ -117,23 +117,28 @@
 | CSD 0/1、RCSD | OAD/ROAD 列及列集合 | 已实现/已测，D.3.3、独立字段向量 |
 | Region 0–3 | 四种开闭边界、精确 Data 端点 | 已实现/已测，全树深度/节点预算 |
 
-## APDU 分支待办
+## APDU 分支与剩余验收
 
-| 服务 | 已实现 | 尚待实现 |
+| 服务 | 已实现 | 剩余工作 |
 | --- | --- | --- |
-| LINK | 登录/心跳/退出 Request，Response；自动周期心跳与无应答关闭 | 自动重新拨号/重登录由应用负责 |
-| CONNECT | Request/Response、四种认证 CHOICE 线格式；公共连接协商 | 非公共机制真实认证及安全策略 |
-| RELEASE | Request/Response/Notification；会话释放、空闲失效、TimeTag 检查与回传 | 无 |
-| GET | Normal、NormalList、Record、RecordList、Next 请求/响应与服务 | MD5 请求/响应 |
-| SET | Normal、NormalList 请求/响应及服务 | ThenGetNormalList 请求/响应 |
-| ACTION | 普通、列表请求/响应及服务 | ThenGetNormalList 请求/响应 |
-| REPORT | 无 | List、RecordList、TransData 通知/确认 |
-| PROXY | 无 | GetList、GetRecord、SetList、SetThenGetList、ActionList、ActionThenGetList、TransCommand 请求/响应 |
-| SECURITY | 无 | Request/Response 全部明文/密文/验证结果分支及真实后端 |
-| FollowReport | 无 | 普通结果/记录结果 |
-| ERROR | 双向异常 codec、远端原码与 TimeTag 回显匹配 | 无 |
+| LINK | 登录/心跳/退出及自动周期心跳 | 应用重拨/重登录、现场验收 |
+| CONNECT | 四种机制 codec、公共协商、可注入认证后端及失败关闭 | 厂商 ESAM SDK 与真实策略联调 |
+| RELEASE | 请求/响应/通知，明文与安全会话释放清理 | 真实设备验证 |
+| GET | Normal/List、Record/List、Next、MD5 | 型号对象与数据库语义 |
+| SET / ACTION | 普通/列表及 ThenGetNormalList | 目标 provider 与业务授权 |
+| REPORT | List、RecordList、TransData 通知/确认、重发与去重 | 现场上报配置/持久化及设备验收 |
+| PROXY | 七类双向 codec、目标路由、超时/取消、透明 provider | 目标设备与真实端口驱动联调 |
+| SECURITY | 明文/密文/验证 DAR、全部验证分支、后端保护/解封 | 真实 ESAM MAC/签名/加解密、密钥生命周期和硬件验收 |
+| FollowReport / ACD | 普通/记录结果、分块尾部、观察器及服务器 ACD 设置 | 应用事件 OAD/配置与处理策略 |
+| ERROR | 双向 codec、远端原码与 TimeTag | 无新增软件缺项 |
 
-下一批进入 M6 then-get、REPORT、PROXY、MD5、FollowReport/ACD。记录选择器的采集/数据库语义由应用 provider 实现，不能把模型与 codec 覆盖当作真实设备业务覆盖。
+高级服务使用分层 Session API，详见 [接入说明](advanced-services.md)。安全完成范围及缺少材料见 [ESAM 接入](esam-integration.md)。尚未提供具体电表/集中器型号及 OI/方法清单，不能宣称覆盖目标设备全部业务；记录选择器的采集/数据库语义仍由 provider 解释。
+
+## 本次 M6 软件验证
+
+MSVC Release 静态全量 11 项 CTest（包括真实本机 TCP 回环）、MSVC 共享纯核心 8 项、MinGW GCC 纯核心 8 项均通过；库目标通过 MSVC `/WX` 和 GCC `-Werror`，全部项目 C/C++ 源码通过格式检查；新增固定报文覆盖标准附录 D 的 ThenGet/PROXY，其他分支覆盖截断、尾随字节、资源上限、超时、取消、REPORT 重发、FollowReport/ACD 和安全验证失败。安全测试使用明确标注的测试替身，不能证明真实 ESAM 密码实现或独立设备互操作。安装消费方使用新增 MD5、SECURITY 和高级服务导出 API。
+
+下面保留之前批次的验证范围；它们不替代本次新增功能的跨平台/硬件验收。
 
 ## 本地验证范围
 
@@ -141,6 +146,6 @@
 
 项目自身全部 C/C++ 源码通过根目录 .clang-format 的 --style=file --dry-run --Werror 检查；公开头文件使用中文 Doxygen，关键实现有中文注释。MinGW 静态网络崩溃已定位为 Asio 有线程/无线程类型因包含顺序而混用，通过 transport 的私有编译定义统一线程配置，transport_tcp 已恢复默认执行。未修改第三方源码；真实 TCP 回环证据来自 MSVC 与 MinGW。
 
-GitHub Actions 已配置 Ubuntu/Windows/macOS 静态/共享及纯核心检查；尚未在远程执行，不能据此宣告 Linux/macOS 已验证。串口目前只完成软件模拟/打开失败测试，真实串口、RS-485 设备、安全后端、sanitizer 和 fuzz 验证均未开展。
+GitHub Actions 已配置 Ubuntu/Windows/macOS 静态/共享及纯核心检查；尚未在远程执行，不能据此宣告 Linux/macOS 已验证。串口目前只完成软件模拟/打开失败测试，真实串口、RS-485 设备、真实 ESAM 安全后端、sanitizer 和 fuzz 验证均未开展。
 
 托管客户端更新重新验证上述构建组合，app 新增 9 项客户端用例，覆盖实际读写/方法、400 行记录分块、阶段超时、取消、原码和回调销毁；独立进程 `dlt698_server` / `dlt698_client` 配对读到频率 5000 并正常退出。详见[本批验收](../plan/application-api-plan.md)。

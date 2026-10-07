@@ -52,7 +52,7 @@ if (apdu) {
 
 `decode_apdu/encode_apdu` 使用统一 Apdu 变体，当前包含 LINK 登录/心跳/退出与响应、CONNECT 请求/响应、RELEASE 请求/响应/通知、双向 ERROR 和 GET/SET/ACTION 普通、列表形式。也可单独使用 connection、get、mutation 编解码接口。SET 响应直接保存 DAR，ACTION 保存 DAR 与可选 Data，区分无数据与存在 NULL Data。完整输入 codec 拒绝尾随字节及超限输入，then-get 与其他未实现分支返回 unsupported_service。
 
-CONNECT codec 支持 NullSecurity、PasswordSecurity、SymmetrySecurity、SignatureSecurity 及响应认证附加数据的线格式，不执行认证。协议一致性位图按最高位对应序号零；帧尺寸是长度域 L 的上限，不含起止字符，APDU 尺寸不含链路封装。TimeTag 可按原字段编解码，尚未验证日历、延时及有效期语义；非空 FollowReport 返回不支持。PIID-ACD 的 ACD 位可保存，但未实现相应上报流程。
+CONNECT codec 支持 NullSecurity、PasswordSecurity、SymmetrySecurity、SignatureSecurity 及响应认证附加数据的线格式，不执行认证。协议一致性位图按最高位对应序号零；帧尺寸是长度域 L 的上限，不含起止字符，APDU 尺寸不含链路封装。TimeTag 保留原字段并在 Session 中校验日历、允许延时和回显。两类 FollowReport 已编解码并通过会话观察器交付，ACD 可通知应用处理待访问事件。
 
 Frame.payload 为未扰码的链路用户数据，encode/decode 负责 SC 的变换和校验。单帧 decode 不接受 FE 前导或尾随多帧；FrameStreamDecoder 处理前导、噪声、半帧和粘帧，输出 Frame/Error 事件。它是单线程状态对象，须在会话执行器或 strand 中使用；独立使用时，合法但不完整的帧需要调用方设置超时并 reset。
 
@@ -75,7 +75,7 @@ MemoryChannel 的两端共享执行器。单端只允许一个在途读取，每
 
 Session 绑定已连接的 IChannel、串行 IExecutor 和 SessionOptions。协议客户机/服务器角色由 Role 配置，与 TCP 拨号方向独立。地址只接受精确单地址，并验证 SA、CA、DIR、PRM 和功能码；不支持组、通配、广播会话。
 
-先注册服务器处理器并调用 `start()`，再由客户机 `async_connect()`。Session 只发起并接受公共 NullSecurity 连接；非公共认证请求被拒绝。声明应用连接、GET 普通/列表/记录/Next、SET/ACTION 普通及列表和链路分帧能力，默认协议位图前三字节 F3 8C 08；功能位图为零，窗口固定为 1。SessionOptions 可缩减能力，协商取交集。未注册 GET 处理器返回 DAR=4，未注册 SET/ACTION 处理器逐项返回拒绝 DAR=3。
+先注册服务器处理器并调用 `start()`，再由客户机 `async_connect()`。未安装安全后端时 Session 只发起并接受公共 NullSecurity 连接；安装 security::IBackend 后由厂商实现完成认证及 SECURITY 保护，默认拒绝明文降级。默认协议位图前三字节 FF FF F8，包含已实现的 MD5、ThenGet、REPORT、PROXY、FollowReport/ACD；只有安装后端时设置安全位 31。功能位图为零，窗口固定为 1。SessionOptions 可缩减能力，协商取交集。未注册 GET 处理器返回 DAR=4，未注册 SET/ACTION 处理器逐项返回拒绝 DAR=3。
 
 `require_login=true` 要求先由协议服务器调用 `async_link(login, ...)` 完成预连接；async_link 也支持单次心跳及退出，async_link 的 heartbeat_seconds 为单次线上声明；SessionOptions.heartbeat_seconds 非零时自动周期心跳，超时关闭通道。`preset_association=true` 显式跳过 CONNECT，按本地配置进入应用连接，调用方负责两端一致性；它不表示远端经过认证。
 
@@ -173,3 +173,7 @@ Session 自动处理链路分帧及 GET Next，两类状态机也可独立使用
 第三阶段标准记录模板、MemoryRecords 模拟后端、CONNECT 能力提示/读取计划及显式逐项探测见[标准记录与能力筛选](../website/docs/protocol/standard-records.md)。功能位默认零，应用可明确配置实际支持位，协商交集；全零按未知处理，业务提示不证明 OAD 存在。
 
 详见 [M4/M5 资源配置与示例](m4-m5.md)，其中列出分段序号、重复/乱序处理、生命周期及命令行用法。
+
+## 高级服务与安全后端
+
+使用 `Session::async_exchange` 提交 MD5、ThenGet、PROXY 或服务器 REPORT，`service::AdvancedService` 接入对象和异步代理后端。REPORT 接收、FollowReport、ACD 分别使用对应注册方法。完整接入和超时/取消约定见 [高级服务](advanced-services.md)；真实 ESAM SDK、测试凭据和硬件验收材料见 [ESAM 接入](esam-integration.md)。
