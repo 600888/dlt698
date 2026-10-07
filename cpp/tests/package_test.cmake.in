@@ -1,4 +1,5 @@
-set(stage "@CMAKE_CURRENT_BINARY_DIR@/stage")
+set(install_stage "@CMAKE_CURRENT_BINARY_DIR@/stage-install-${CONFIG}")
+set(stage "@CMAKE_CURRENT_BINARY_DIR@/stage-relocated-${CONFIG}")
 set(consumer_build "@CMAKE_CURRENT_BINARY_DIR@/consumer-build-${CONFIG}")
 set(consumer_rc "@CMAKE_RC_COMPILER@")
 if("@MSVC@" AND NOT "@CMAKE_GENERATOR@" MATCHES "Visual Studio")
@@ -12,9 +13,13 @@ function(run)
         message(FATAL_ERROR "${ARGV}\n${output}\n${error}")
     endif()
 endfunction()
-run("@CMAKE_COMMAND@" --install "@CMAKE_BINARY_DIR@" --config "${CONFIG}" --prefix "${stage}")
+run("@CMAKE_COMMAND@" --install "@CMAKE_BINARY_DIR@" --config "${CONFIG}" --prefix "${install_stage}")
+# 先移动安装目录，再构建并运行调用方，验证导出目标与共享库的运行时路径可迁移。
+file(REMOVE_RECURSE "${stage}")
+file(RENAME "${install_stage}" "${stage}")
+# 清除上次配置缓存的包路径，确保消费方只使用本次移动后的安装目录。
 run("@CMAKE_COMMAND@" -S "@CMAKE_CURRENT_SOURCE_DIR@/package_consumer" -B "${consumer_build}"
-    -G "@CMAKE_GENERATOR@" "-DCMAKE_PREFIX_PATH=${stage}" "-DCMAKE_CXX_COMPILER=@CMAKE_CXX_COMPILER@"
+    -G "@CMAKE_GENERATOR@" -Udlt698_DIR "-DCMAKE_PREFIX_PATH=${stage}" "-DCMAKE_CXX_COMPILER=@CMAKE_CXX_COMPILER@"
     "-DCMAKE_MAKE_PROGRAM=@CMAKE_MAKE_PROGRAM@" "-DCMAKE_MT=@CMAKE_MT@"
     "-DCMAKE_RC_COMPILER=${consumer_rc}" "-DCMAKE_RC_COMPILER_INIT=${consumer_rc}"
     "-DCMAKE_BUILD_TYPE=@CMAKE_BUILD_TYPE@")

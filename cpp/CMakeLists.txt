@@ -19,6 +19,16 @@ function(dlt698_target_setup target)
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+    get_target_property(dlt698_target_type ${target} TYPE)
+    if(dlt698_target_type STREQUAL "SHARED_LIBRARY")
+        # 安装后的各组件共享库位于同一目录，间接依赖也须由加载它的库自行定位。
+        # 使用相对库自身的路径，使安装前缀移动后仍可加载，避免依赖构建目录或环境变量。
+        if(APPLE)
+            set_property(TARGET ${target} APPEND PROPERTY INSTALL_RPATH "@loader_path")
+        elseif(UNIX)
+            set_property(TARGET ${target} APPEND PROPERTY INSTALL_RPATH "$ORIGIN")
+        endif()
+    endif()
     if(MSVC)
         target_compile_options(${target} PRIVATE /W4 /permissive-)
         # 公开头文件包含 UTF-8 中文注释，安装后的调用方也须使用相同源文件编码。
