@@ -43,7 +43,7 @@ auto value = client.get({0x200F, 2, 0});
 | 服务 | 编解码 | 会话 / 服务层 | 备注 |
 | --- | :---: | :---: | --- |
 | LINK | ✅ | ✅ | 自动周期心跳、TimeTag |
-| CONNECT | ✅ | ✅ | 仅公共认证机制 |
+| CONNECT | ✅ | ✅ | 公共认证及可注入 ESAM 认证后端 |
 | RELEASE | ✅ | ✅ | 含 Notification |
 | GET Normal / NormalList | ✅ | ✅ | 逐项 Data / DAR |
 | GET Record / RecordList | ✅ | ✅ | 完整记录选择器 |
@@ -51,12 +51,14 @@ auto value = client.get({0x200F, 2, 0});
 | SET Normal / NormalList | ✅ | ✅ | 精确 OAD 匹配 |
 | ACTION 普通 / 列表 | ✅ | ✅ | 完整 OMD 模式匹配 |
 | ERROR | ✅ | ✅ | 远端原码与 TimeTag 回显 |
-| REPORT | ❌ | ❌ | |
-| PROXY | ❌ | ❌ | |
-| SECURITY | ❌ | ❌ | |
-| FollowReport / ACD | ❌ | ❌ | |
-| ThenGetNormalList | ❌ | ❌ | |
-| MD5 | ❌ | ❌ | |
+| REPORT | ✅ | ✅ | 三类通知/确认、有限重发 |
+| PROXY | ✅ | ✅ | 七类代理、路由及端口 provider |
+| SECURITY | ✅ | ✅ | 外层 codec / 后端状态机；实机 ESAM 待接入 |
+| FollowReport / ACD | ✅ | ✅ | 跟随结果及业务观察回调 |
+| ThenGetNormalList | ✅ | ✅ | 依次执行、单调延时、独立读取结果 |
+| MD5 | ✅ | ✅ | 完整 Data 编码的一致性摘要 |
+
+高级服务用法见 [REPORT / ThenGet / PROXY 接入](docs/advanced-services.md)，安全后端和联调材料见 [ESAM 接入](docs/esam-integration.md)。
 
 ### 编解码与链路
 
@@ -70,8 +72,8 @@ auto value = client.get({0x200F, 2, 0});
 | 变长 SA / 逻辑地址 / CA | ✅ |
 | OI / OAD / OMD / TI / TSA | ✅ |
 | ROAD / Region / RSD / MS / CSD / RCSD | ✅ |
-| Data 标签 0–96（35 类） | ✅ |
-| Data 标签 MAC / RN / SID / SID_MAC / COMDCB | ❌ |
+| Data 标签 0–96（40 类） | ✅ |
+| Data 标签 MAC / RN / SID / SID_MAC / COMDCB | ✅ |
 | 广播地址的会话行为（无需应答） | ❌ |
 
 ### 传输与运行时
@@ -94,11 +96,11 @@ auto value = client.get({0x200F, 2, 0});
 | --- | :---: |
 | ObjectRegistry / MemoryObject 读写与 schema | ✅ |
 | ClientService / ServerService 方法分发 | ✅ |
-| 118 个常用固定 OI（电能、需量、状态、谐波、参数） | ✅ |
-| 记录模板 4 个入口 / 5 个记录列，共 127 个 OI | ✅ |
+| 122 个常用及安全/端口 OI（电能、需量、状态、谐波、参数） | ✅ |
+| 记录模板 4 个入口 / 5 个记录列，共 131 个 OI | ✅ |
 | 记录选择器 RSD 0–10、MS 0–7、CSD、Region 0–3 | ✅ |
 | 有界行列筛选、不可变快照、能力筛选、点位探测 | ✅ |
-| 非公共认证机制、SECURITY 封装 | ❌ |
+| 非公共认证机制、SECURITY 封装 | ✅ 后端接口；真实 ESAM SDK 待接入 |
 
 完整矩阵与验证证据见 [支持矩阵与验证范围](docs/protocol-coverage.md)。
 
@@ -229,7 +231,7 @@ dlt698_rtu_client COM4 9600 get
 
 ## 已知限制
 
-- Session 只接受公共认证，其他机制仅有线格式编解码。
+- 实际 ESAM 认证/MAC/加解密交给厂商 SDK 后端；缺少模块型号、SDK 和测试凭据，实机安全验收待完成。
 - 记录选择器的采集与数据库语义由应用 provider 实现。
 - 原始串口与 RS-485 硬件时序需实测验证；手动方向切换必须提供真实排空驱动。
-- Data 标签 86、87、93、94、95 尚未实现，遇到时返回 `unsupported_tag`。
+- 型号专用对象与端口转发须配置 provider；新增高级服务目前使用分层 Session API。
