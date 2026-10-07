@@ -13,7 +13,47 @@
 #include <dlt698/transport/serial.hpp>
 #include <dlt698/transport/tcp.hpp>
 #endif
+
+namespace {
+/**
+ * @brief 验证安装后的调用方可以捕获库抛出的异常，并读取完整诊断信息。
+ * @param[in] operation 触发库内编解码错误的操作。
+ * @param[in] code 预期错误码。
+ * @param[in] offset 预期字节偏移。
+ * @param[in] context 预期字段上下文。
+ * @return 异常类型及诊断信息均符合预期时返回 true。
+ */
+template <class Operation>
+bool catches_decode_failure(Operation operation, dlt698::ErrorCode code, std::size_t offset,
+                            std::string_view context) {
+    try {
+        operation();
+    } catch (const dlt698::DecodeFailure& failure) {
+        return failure.error.code == code && failure.error.offset == offset &&
+               failure.error.context == context;
+    } catch (...) {
+        // RTTI 被隐藏时，跨共享库的类型匹配可能失败，只能进入兜底捕获。
+        return false;
+    }
+    return false;
+}
+}  // namespace
+
 int main() {
+    // 两个错误均在库的 .cpp 中抛出，避免仅验证调用方内联 Reader 的本地异常。
+    const dlt698::Bytes invalid_rsd{0x0b, 0x00};
+    dlt698::Reader rsd_reader{invalid_rsd};
+    if (!catches_decode_failure([&] { dlt698::codec::read_rsd(rsd_reader); },
+                                dlt698::ErrorCode::invalid_value, 0, "RSD choice"))
+        return 25;
+    const dlt698::Bytes excessive_columns{0x03};
+    dlt698::Reader rcsd_reader{excessive_columns};
+    dlt698::Limits limits;
+    limits.max_elements = 2;
+    if (!catches_decode_failure([&] { dlt698::codec::read_rcsd(rcsd_reader, limits); },
+                                dlt698::ErrorCode::resource_limit, 0, "A-XDR length limit"))
+        return 26;
+
     dlt698::service::Device device;
     if (!device.set({0x200F, 2, 0}, dlt698::model::UInt16{5000}) ||
         std::get<dlt698::model::Data>(device.get({0x200F, 2, 0}))

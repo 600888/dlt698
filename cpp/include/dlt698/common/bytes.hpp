@@ -95,8 +95,11 @@ struct Limits {
     std::size_t max_stream_bytes = 32770;  ///< 流解析器缓存字节上限，须能容纳最大帧。
 };
 
-/// 组合读写工具使用的错误异常，由完整输入编解码接口转换为 Result。
-class DecodeFailure final {
+/**
+ * @brief 组合读写工具使用的错误异常，由完整输入编解码接口转换为 Result。
+ * @note 导出异常类型及其 RTTI，保证共享库与调用方之间可按此类型捕获异常。
+ */
+class DLT698_API DecodeFailure final {
    public:
     /**
      * @brief 保存解析或编码失败的诊断信息。
