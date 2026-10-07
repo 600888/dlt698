@@ -6,6 +6,35 @@
 
 实现基线：DL/T 698.45—2017。
 
+## 启动服务端
+
+```cpp
+#include <dlt698/app.hpp>
+
+dlt698::app::Server server;
+auto value = server.set({0x200F, 2, 0}, dlt698::model::UInt16{5000});
+auto started = server.start_tcp("0.0.0.0", 6980);
+```
+
+检查 `value` 和 `started` 后，应用可以继续自己的业务，运行中仍可调用 `server.set(...)`。频率 `5000` 表示 `50.00 Hz`；库自动运行 I/O、接入连接、登录和应答。串口使用 `server.start_serial("COM3", 9600)`。结束时调用 `server.stop()`，析构也会收尾，设备数据跨连接和同实例重启保留。
+
+链接 `dlt698::app` 或聚合目标，开启 `DLT698_BUILD_TRANSPORT`。完整错误处理、地址/布局配置与高级入口见[托管服务器](website/docs/session/server.md)，可直接运行新示例 `dlt698_server`。
+
+## 连接客户端
+
+普通客户端同样只需创建、连接、读取：
+
+```cpp
+dlt698::app::Client client;
+auto connected = client.connect_tcp("127.0.0.1", 6980);
+// 检查 connected 成功后再读取；value 保留 Data/DAR。
+auto value = client.get({0x200F, 2, 0});
+```
+
+运行 `dlt698_server` 后在另一终端运行 `dlt698_client`，读取标准频率后断开。串口使用
+`client.open_serial("COM4", 9600)`。CONNECT、运行线程和分块读取由库管理，支持直接
+`get/set/action` 及列表/记录；完整返回结果、超时和退出约定见[托管客户端](website/docs/session/client.md)。
+
 ## 能力一览
 
 ### APDU 服务
@@ -100,9 +129,11 @@ cmake --install build --config Release --prefix ./build/stage
 | `cpp/tests/protocol/link` | `protocol_link` | 帧编解码、CRC、流式拆帧、分片与重组 |
 | `cpp/tests/protocol/apdu` | `protocol_apdu` | 统一 APDU 路由、连接服务、GET 家族、SET/ACTION、分块、时间标签 |
 | `cpp/tests/service` | `service` | 对象目录与 provider、标准对象与记录、客户端/服务器服务、同步封装 |
+| `cpp/tests/service` | `device` | 标准数据发布、自定义定义、预算及并发快照 |
 | `cpp/tests/session` | `session` | 状态机、事务匹配、取消与超时、诊断回调 |
 | `cpp/tests/transport` | `transport` | 内存通道、串行链路适配 |
-| `cpp/tests/transport` | `transport_tcp` | TCP 通道与 IO 运行时（默认禁用，见下） |
+| `cpp/tests/transport` | `transport_tcp` | TCP 通道与 IO 运行时 |
+| `cpp/tests/app` | `app` | 托管两端、多连接、读写/记录、登录、超时、取消与回调析构 |
 
 公用辅助在 `cpp/tests/catch/test_support.hpp`：`hex()`、`fixture()`、`require_ok()`、
 `require_error()`、`require_truncation_rejected()` 与 `CHECK_DECODE_ERROR` 宏。
@@ -115,9 +146,10 @@ ctest --test-dir build -R codec --output-on-failure        # 按测试名
 ./build/bin/dlt698_test_protocol_apdu "[apdu][get]"        # 按 Catch2 标签
 ```
 
-`transport_tcp` 需要 Asio 与真实回环 socket。MinGW 下该组合在部分沙箱环境会出现
-链接布局异常（执行期段错误且崩溃点漂移，同一份代码手工链接则正常），因此默认以
-`DISABLED` 注册。需要时手动运行 `ctest -R transport_tcp` 或直接执行对应可执行文件。
+`transport_tcp` 和 `app` 默认参与 CTest，带 `network` 标签，需要真实回环 socket。
+transport 目标统一启用 Asio 线程支持，已修复 MinGW 因头文件包含顺序不同而混用
+有线程/无线程类型的静态链接崩溃。可用 `ctest --test-dir build -L network --output-on-failure`
+单独执行网络回归；受限环境不能联网时应记录未执行范围。
 
 ## 集成
 
@@ -132,31 +164,62 @@ target_link_libraries(your_app PRIVATE dlt698::dlt698)
 | `dlt698::session` | 会话、同步 / 异步服务 |
 | `dlt698::service` | 对象服务与 provider 分发 |
 | `dlt698::transport` | TCP 与原始串口（需开启传输构建） |
+| `dlt698::app` | 托管 TCP/串口两端，直接发布数据或连接读写（需开启传输构建） |
 
 各目标自动传递其依赖。Windows 共享库运行时需将安装目录的 DLL 放在程序旁边或加入 PATH。
 
 ## 示例程序
 
-示例位于构建目录 `bin/`（Visual Studio 多配置构建为 `bin/Release/`）。
+示例位于构建目录 `bin/`（Visual Studio 多配置构建为 `bin/Release/`），普通入口在 `cpp/examples/app`，其余源码按用途分三个目录：
+`cpp/examples/codec`（协议编解码）、`cpp/examples/service`（对象服务，全部跑在内存通道上）、
+`cpp/examples/transport`（真实 TCP 与串口）。
+
+| 普通程序 | 用途 |
+| --- | --- |
+| `dlt698_server` | 设置标准频率后启动 TCP/串口，按 Enter 停止 |
+| `dlt698_client` | 与新服务器配对，连接后读取频率并断开 |
+
+### 编解码层
 
 | 程序 | 说明 |
 | --- | --- |
 | `dlt698_decode` | 十六进制帧解码，可用固定测试帧验证 |
+
+### 对象服务层（无需设备）
+
+| 程序 | 说明 |
+| --- | --- |
 | `dlt698_memory_get` | 内存通道 CONNECT → GET NormalList（部分成功）→ RELEASE |
 | `dlt698_memory_mutation` | 同步 CONNECT → SET → ACTION → GET → RELEASE，输出 `SET DAR=0 ACTION DAR=0 GET UInt16=42` |
 | `dlt698_standard_points` | 常用固定 OI 的内存通信示例 |
 | `dlt698_standard_points_extended` | 分相电能、带发生时间的需量、谐波、状态字与参数 |
 | `dlt698_standard_records` | 记录模板、有界行列筛选、GET Next 按行收齐 |
-| `dlt698_master` / `dlt698_terminal` | TCP 双向拨号与串口，支持 `get`、`set 25`、`action 25`、`record` |
+
+### 传输层（真实 socket / 串口）
+
+服务端与客户端各一个独立程序，模拟数据相同，可直接配对运行：
+
+| 程序 | 角色 | 说明 |
+| --- | --- | --- |
+| `dlt698_tcp_server` | 协议服务器 | `TcpListener` 监听，循环接受客户机，LINK 登录 + 心跳 |
+| `dlt698_tcp_client` | 协议客户机 | 主动拨号，CONNECT → 命令 → RELEASE 后退出 |
+| `dlt698_rtu_server` | 协议服务器 | 打开串口 + `SerialLinkChannel`，应答请求直至时限 |
+| `dlt698_rtu_client` | 协议客户机 | 打开串口 + `SerialLinkChannel`，执行一次命令 |
+| `dlt698_master` / `dlt698_terminal` | 双角色 | TCP 双向拨号，用于验证协议角色与拨号方向相互独立 |
 
 ```sh
 dlt698_decode "68 17 00 43 05 07 09 19 05 16 20 00 15 60 05 01 01 40 01 02 00 00 C6 07 16"
 
-dlt698_terminal tcp-listen 127.0.0.1 6980 60
-dlt698_master tcp-connect 127.0.0.1 6980 get
+# TCP：先起服务端（可省略 lifetime，默认 60 秒）
+dlt698_tcp_server 0.0.0.0 6980 60
+dlt698_tcp_client 127.0.0.1 6980 get        # 也可 set 25 / action 25 / record
+
+# RTU：两端各占一个真实串口
+dlt698_rtu_server COM3 9600 60
+dlt698_rtu_client COM4 9600 get
 ```
 
-源码：[memory_get.cpp](cpp/examples/memory_get.cpp)、[memory_mutation.cpp](cpp/examples/memory_mutation.cpp)。完整用法与资源预算见 [使用说明](docs/m4-m5.md)、[C++ API 摘要](docs/cpp-api.md)、[标准测试向量](tests/vectors/README.md)。
+源码：[transport/](cpp/examples/transport)、[service/](cpp/examples/service)、[codec/](cpp/examples/codec)。完整用法与资源预算见 [使用说明](docs/m4-m5.md)、[C++ API 摘要](docs/cpp-api.md)、[标准测试向量](tests/vectors/README.md)。
 
 ## 已知限制
 

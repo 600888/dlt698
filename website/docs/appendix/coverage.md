@@ -51,6 +51,8 @@ description: 已实现能力、限制、待办事项和验证状态。
 
 ## 会话与对象
 
+普通应用可使用[托管服务器与 Device](../session/server.md)及[托管客户端](../session/client.md)：直接设置、启动、连接和读取，由库管理线程、协议会话和关闭。多个连接或服务器可共享设备，数据跨连接和停止保留；动态 provider、外部运行时及恢复连接仍待后续开发。
+
 | 项目 | 状态 | 协议行为与限制 | 测试证据 |
 | --- | --- | --- | --- |
 | 预连接与应用会话 | 已实现 | 公共 CONNECT、版本/能力/尺寸协商、单次 LINK、预设连接、RELEASE/闲置通知；精确单地址、单在途事务 | session、tcp，两种拨号方向 |
@@ -137,14 +139,18 @@ description: 已实现能力、限制、待办事项和验证状态。
 
 ## 本地验证范围
 
-最近一批 Windows x64 验证：
+2026-10-07 托管服务器这一批 Windows x64 验证：
 
 | 配置 | 结果 |
 | --- | --- |
-| MSVC 19.39 Release 共享库、严格警告 | 通过 core、connection、mutation、serial_link、session、tcp、installed_consumer 共 7 项 |
-| MinGW GCC 15.1 Release 静态库、关闭 Asio 传输、严格警告 | 通过相应 6 项 |
+| MSVC 19.39 Release 共享库 | 完整构建、11 项 CTest 通过，含安装调用方与两项网络测试 |
+| MSVC 19.39 Release 静态库 | 完整构建、11 项 CTest 通过 |
+| MinGW GCC 15.1 Release 静态库、开启 Asio | 完整构建、11 项 CTest 通过 |
+| MinGW GCC 15.1 Release 静态库、关闭传输 | 完整构建、8 项 CTest 通过，Device 仍可使用 |
 
-安装消费方独立验证了同步 SET、串行适配及原始串口导出符号。`memory_mutation` 运行输出 `SET DAR=0 ACTION DAR=0 GET UInt16=42`。
+新库和 device/app 测试通过 `/WX` / `-Werror`；完整现有回归使用普通告警配置，原测试中的窄化转换、变量遮蔽和未使用函数告警仍保留。安装消费方独立验证只链接 `dlt698::app` 以及原分层接口的导出。transport 统一 Asio 线程配置，修复 MinGW 因包含顺序导致的类型混用；`transport_tcp` 已恢复默认执行。
+
+客户端更新沿用上述构建组合，app 新增 9 个客户端用例，包含 400 行记录分块、实际读写/方法、超时/取消、原码及回调销毁。两个独立进程 `dlt698_server` / `dlt698_client` 成功读取频率 5000 并正常关闭。
 
 GitHub Actions 已配置 Ubuntu/Windows/macOS 静态/共享及纯核心检查，但**尚未在远程执行**，不能据此宣告 Linux/macOS 已验证。串口目前只完成软件模拟和打开失败测试；真实串口、RS-485 设备、安全后端、sanitizer 和 fuzz 验证均未开展。
 

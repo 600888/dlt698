@@ -1,6 +1,6 @@
 # 协议实现进度
 
-更新日期：2026-10-06。M4 软件功能与 M5 两类分段、记录已实现；真实串口/RS-485 和独立设备互操作仍未验收，尚非完整协议库。标准基线：DL/T 698.45—2017。阶段依据见 [实施计划](../plan/implementation-plan.md)。
+更新日期：2026-10-07。M4 软件功能与 M5 两类分段、记录及第一批托管服务器接口已实现；真实串口/RS-485 和独立设备互操作仍未验收，尚非完整协议库。标准基线：DL/T 698.45—2017。阶段依据见 [实施计划](../plan/implementation-plan.md)。
 
 已建立根目录与 `cpp/` 独立 CMake 入口、安装导出、标准向量、CTest 和三平台 CI 配置。网络模块采用用户提供的 standalone Asio 1.38.2，入口 `third/asio/include/asio.hpp`；Asio 仅为传输模块的私有编译依赖。
 
@@ -36,8 +36,9 @@
 | 常用标准点位 | 118 个 OI（电能、最大需量、变量/状态/谐波、参数）的元数据、OAD、精确倍率与只读绑定已实现 | 接线/费率/最高谐波次数显式配置；字段顺序、数组/位串/字符串长度、资源校验；需量时间保留；不自动提供数据或推断远端支持 | standard_points、installed_consumer、dlt698_standard_points、dlt698_standard_points_extended；详细范围见 [固定点位](../website/docs/protocol/standard-points.md) |
 | 安全 | CONNECT 认证 CHOICE codec 已实现 | Session 仅接受 NullSecurity，拒绝其他机制；实际认证/SECURITY 封装未实现 | connection、session，非公共机制拒绝 |
 | 标准记录与能力筛选 | 4 个记录入口、5 个记录列，完整目录共 127 个 OI；模板及 MemoryRecords、读取计划和显式点位探测已实现 | 日/月冻结、掉电/初始化事件投影；RSD 0/1/2/9、平面 OAD、预算及原子快照；按行 GET Next；全零功能位按未知，不推断 OAD 存在 | standard_records_test、installed_consumer、dlt698_standard_records；范围见[标准记录](../website/docs/protocol/standard-records.md) |
-| 主站/终端 CLI | dlt698_master/terminal 已实现 | TCP 拨号方向独立、原始串口 + 串行时序；终端数据为模拟 | 独立进程 TCP 双向拨号 × get/set/action/record 共 8 次 |
+| 传输层 CLI | tcp_server/client、rtu_server/client、master/terminal 已实现 | 服务端与客户端各一个独立程序，共用模拟对象目录；TCP 拨号方向独立；串口无连接概念，服务端直接应答 | 独立进程 TCP：tcp_server 接受 4 个客户端 × get/set/action/record；master/terminal 双向拨号共 8 次 |
 | Python 绑定和分发 | 未开始 | C++ 稳定阶段之后进行 | 待补 |
+| 托管两端与设备数据 | app::Server、app::Client、service::Device、app 安装目标及配对示例已实现 | TCP 多连接、自动 LINK/CONNECT、同步读写/方法/记录、阶段超时及取消；数据跨连接/停止保留；串口自动适配；高层服务器值只读；provider/外部运行时/重拨待后续 | device、app、installed_consumer；真实串口和独立设备互操作未验证；见[服务器](../website/docs/session/server.md)和[客户端](../website/docs/session/client.md) |
 
 ## Data 标签覆盖
 
@@ -136,8 +137,10 @@
 
 ## 本地验证范围
 
-本批 Windows x64 验证：MSVC 19.39 Release 共享库、严格警告，通过 core、connection、mutation、serial_link、session、m4m5、tcp、installed_consumer 共 8 项；MinGW GCC 15.1 Release 静态库、关闭 Asio 传输、严格警告，通过相应 7 项。安装消费方独立使用 RecordData、链路分帧、同步记录、SET、串行适配及原始串口导出符号。memory_mutation 运行输出 SET DAR=0、ACTION DAR=0、GET UInt16=42。
+本批 Windows x64 验证：MSVC 19.39 Release 共享/静态及 MinGW GCC 15.1 Release 静态、开启 Asio 三组完整构建与 11 项 CTest 均通过：installed_consumer、common、codec、protocol_link、protocol_apdu、service、device、session、transport、transport_tcp、app。MinGW 静态、关闭传输的 8 项也通过。新库和 device/app 测试通过 `/WX` / `-Werror`；完整现有测试采用普通告警配置，已有窄化转换、变量遮蔽和未使用函数告警另行保留。安装消费方验证只链接 `dlt698::app` 以及关闭传输时的 Device；原描述符、分帧和同步服务导出仍有回归。
 
-项目自身全部 C/C++ 源码使用根目录 .clang-format 格式化，并运行 --style=file --dry-run --Werror；公开头文件使用中文 Doxygen，关键实现有中文注释。第一批曾验证的 MinGW TCP/共享配置不视为本批结果；本机 MinGW TCP 当前因线程创建错误未通过，本批真实 TCP 证据来自 MSVC。未修改系统环境或第三方源码。
+项目自身全部 C/C++ 源码通过根目录 .clang-format 的 --style=file --dry-run --Werror 检查；公开头文件使用中文 Doxygen，关键实现有中文注释。MinGW 静态网络崩溃已定位为 Asio 有线程/无线程类型因包含顺序而混用，通过 transport 的私有编译定义统一线程配置，transport_tcp 已恢复默认执行。未修改第三方源码；真实 TCP 回环证据来自 MSVC 与 MinGW。
 
 GitHub Actions 已配置 Ubuntu/Windows/macOS 静态/共享及纯核心检查；尚未在远程执行，不能据此宣告 Linux/macOS 已验证。串口目前只完成软件模拟/打开失败测试，真实串口、RS-485 设备、安全后端、sanitizer 和 fuzz 验证均未开展。
+
+托管客户端更新重新验证上述构建组合，app 新增 9 项客户端用例，覆盖实际读写/方法、400 行记录分块、阶段超时、取消、原码和回调销毁；独立进程 `dlt698_server` / `dlt698_client` 配对读到频率 5000 并正常退出。详见[本批验收](../plan/application-api-plan.md)。

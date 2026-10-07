@@ -39,6 +39,8 @@ const sections = [
     text: '会话与服务',
     path: 'session',
     articles: [
+        ['server', '托管服务器与设备数据'],
+        ['client', '托管客户端'],
       ['session', 'Session 会话'],
       ['service', 'Client/ServerService'],
       ['object', '对象目录与 Provider'],

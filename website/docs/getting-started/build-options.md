@@ -18,12 +18,12 @@ description: CMake 选项、导出目标和兼容性约束。
 关闭传输构建：
 
 ```sh
-cmake -S . -B build-core -DDLT698_BUILD_TRANSPORT=OFF -DCMAKE_BUILD_TYPE=Release
-cmake --build build-core --config Release --parallel
-ctest --test-dir build-core -C Release --output-on-failure
+cmake -S . -B build/core -DDLT698_BUILD_TRANSPORT=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build/core --config Release --parallel
+ctest --test-dir build/core -C Release --output-on-failure
 ```
 
-`DLT698_BUILD_TRANSPORT=OFF` **不会**移除内存通道、`SerialLinkChannel`、会话和对象服务——它们都在 core/session/service 里。只有 `IoRuntime`、TCP 通道与监听器、原始 `SerialChannel` 会消失。
+`DLT698_BUILD_TRANSPORT=OFF` **不会**移除内存通道、`SerialLinkChannel`、会话、对象服务或 Device——它们都在 core/session/service 里。IoRuntime、TCP/原始串口以及 app 托管入口不构建，也不安装对应头文件。
 
 严格警告检查：
 
@@ -40,8 +40,9 @@ cmake -S . -B build-werror -DDLT698_WARNINGS_AS_ERRORS=ON -DCMAKE_BUILD_TYPE=Rel
 | `dlt698::session` | 静态/共享 | `core`（公开） |
 | `dlt698::service` | 静态/共享 | `session`（公开）、Threads（私有） |
 | `dlt698::transport` | 静态/共享 | 仅 `DLT698_BUILD_TRANSPORT=ON` 时存在 |
+| `dlt698::app` | 静态/共享 | 公开依赖 service/transport，仅启用传输构建时存在 |
 
-`dlt698::dlt698` 是接口目标，不产生库文件，只聚合依赖。它会按顺序链接 `core`、`service`，以及启用时的 `transport`。
+`dlt698::dlt698` 是接口目标，不产生库文件，只聚合 core/session/service，以及启用时的 transport/app。普通服务器和客户端可直接链接 `dlt698::app`，不需要手动链接各个底层目标。
 
 ## 兼容性约束
 

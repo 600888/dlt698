@@ -1,30 +1,68 @@
 ---
 title: 示例程序
-description: 仓库附带示例的用途、构建与运行方式。
+description: 仓库示例的分类、用途、构建与运行方式。
 ---
 
 # 示例程序
 
-示例源码位于 `cpp/examples/`，构建后输出到 `bin/`（Visual Studio 多配置构建为 `bin/Release/`）。
+示例源码位于 `cpp/examples/`，按用途分为四个目录。普通服务器和客户端优先使用 `app/`，其余目录用于分层接入与高级定制：
 
-构建示例需要 `-DDLT698_BUILD_EXAMPLES=ON`（默认开启）。
+| 目录 | 层次 | 依赖 | 是否需要设备 |
+| --- | --- | --- | --- |
+| `app/` | 托管服务器/客户端，直接设置、连接和读取 | `dlt698::app` | TCP 不需要，串口需要 |
+| `codec/` | 链路帧与 APDU 编解码 | `dlt698::core` | 否 |
+| `service/` | 对象目录、读写方法、记录查询 | `dlt698::service` | 否 |
+| `transport/` | 真实 TCP 与串口链路 | `dlt698::service` + `dlt698::transport` | TCP 不需要，串口需要 |
 
-## 概览
+构建后输出到 `bin/`（Visual Studio 多配置构建为 `bin/Release/`）。
+构建示例需要 `-DDLT698_BUILD_EXAMPLES=ON`（默认开启），`app/` 和 `transport/` 下的程序还需要
+`-DDLT698_BUILD_TRANSPORT=ON`（默认开启）。
 
-| 程序 | 用途 | 需要设备 |
+## 总览
+
+### 普通服务器入口
+
+`dlt698_server`：无参数监听 `0.0.0.0:6980`，传串口名时使用默认 9600/8E1；发布频率 OAD `200F/2/0`，按 Enter 停止。库管理运行时和会话，核心业务只需设置和启动。完整说明见[托管服务器](../session/server.md)。
+
+`dlt698_client`：无参数连接 `127.0.0.1:6980`，读取服务器的频率后断开；传串口名时使用本地串口。配对时先运行 `dlt698_server`，再在另一终端运行客户端。完整说明见[托管客户端](../session/client.md)。旧 TCP 客户端固定访问 `2000`，仍与原 tcp_server 配对。
+
+### 编解码层
+
+| 程序 | 用途 |
+| --- | --- |
+| `dlt698_decode` | 解一帧给定十六进制数据 |
+
+### 对象服务层
+
+全部跑在 `MemoryChannel::pair` 上，不需要真实设备，用于理解对象服务与会话的分层接线。
+
+| 程序 | 用途 |
+| --- | --- |
+| `dlt698_memory_get` | CONNECT → GET NormalList（含部分成功）→ RELEASE |
+| `dlt698_memory_mutation` | 串行链路适配下的同步 CONNECT → SET → ACTION → GET → RELEASE |
+| `dlt698_standard_points` | 标准点位绑定、OAD 构造、逐项 DAR |
+| `dlt698_standard_points_extended` | 分相电能、带时间的最大需量、谐波、状态字和参数 |
+| `dlt698_standard_records` | 日冻结行列查询、GET Next 收齐、能力配置和显式点位探测 |
+
+### 传输层
+
+服务端与客户端各一个独立程序，**两侧使用同一份模拟对象目录**（`transport/demo_device.hpp`），
+因此可以直接配对运行验证，不需要真实设备。RTU 一对需要各占一个真实串口。
+
+| 程序 | 协议角色 | 链路建立方式 |
 | --- | --- | --- |
-| `dlt698_decode` | 解一帧给定十六进制数据 | 否 |
-| `dlt698_memory_get` | 内存通道上的 CONNECT → GET → RELEASE | 否 |
-| `dlt698_standard_points` | 标准点位绑定、OAD 构造、逐项 DAR 和精确工程值 | 否 |
-| `dlt698_standard_points_extended` | 分相电能、带时间的最大需量、谐波、状态字和参数的批量 GET | 否 |
-| `dlt698_standard_records` | 日冻结行列查询、GET Next 收齐、能力配置和显式点位探测 | 否 |
-| `dlt698_memory_mutation` | 内存链路上的同步 CONNECT → SET → ACTION → GET → RELEASE | 否 |
-| `dlt698_master` | 协议客户机：TCP/串口下的 get、set、action、record | 视模式而定 |
-| `dlt698_terminal` | 协议服务器：监听或拨号，接受主站请求 | 视模式而定 |
+| `dlt698_tcp_server` | 服务器 | `TcpListener` 监听，循环接受客户机 |
+| `dlt698_tcp_client` | 客户机 | `TcpChannel::connect` 主动拨号 |
+| `dlt698_rtu_server` | 服务器 | 打开串口，`SerialLinkChannel` 适配 |
+| `dlt698_rtu_client` | 客户机 | 打开串口，`SerialLinkChannel` 适配 |
+| `dlt698_master` / `dlt698_terminal` | 由宏决定 | TCP 监听或拨号，串口，用于验证双向拨号 |
 
-`dlt698_master` 和 `dlt698_terminal` 只在 `DLT698_BUILD_TRANSPORT=ON` 时构建，由同一份 `peer.cpp` 编译，通过 `DLT698_TERMINAL` 宏区分角色。
+传输层程序只在 `DLT698_BUILD_TRANSPORT=ON` 时构建。`dlt698_master` 和 `dlt698_terminal`
+由同一份 `transport/peer.cpp` 编译，通过 `DLT698_TERMINAL` 宏区分角色。
 
-## dlt698_decode
+## 编解码层
+
+### dlt698_decode
 
 解一帧固定测试数据，观察链路层和 APDU 的解析结果。
 
@@ -38,7 +76,9 @@ dlt698_decode "68 17 00 43 05 07 09 19 05 16 20 00 15 60 05 01 01 40 01 02 00 00
 - 链路层字段（地址、长度、控制字、HCS/FCS）解析正确；
 - APDU 层的 GET Normal 请求结构符合预期。
 
-## dlt698_memory_get
+## 对象服务层
+
+### dlt698_memory_get
 
 内存通道上的完整异步示例：注册对象、启动两端、CONNECT、读取数据与未知对象、RELEASE、关闭。
 
@@ -53,7 +93,7 @@ dlt698_memory_get
 - [对象目录与 Provider](../session/object.md)
 - [Client/ServerService](../session/service.md)
 
-## dlt698_standard_points 与 dlt698_standard_points_extended
+### dlt698_standard_points 与 dlt698_standard_points_extended
 
 基础示例读取电压、电流、电能和通信地址；扩充示例读取分相电能、最大需量及发生时间、B 相 2 次谐波、状态字、表号和需量周期。两者均通过内存链路完成 CONNECT → 批量 GET → RELEASE，见[标准固定点位](../protocol/standard-points.md)。
 
@@ -62,7 +102,7 @@ dlt698_standard_points
 dlt698_standard_points_extended
 ```
 
-## dlt698_standard_records
+### dlt698_standard_records
 
 记录示例 `dlt698_standard_records` 使用 80 字节协商 APDU，输出 12 行冻结值，以及 `frequency=Data, voltage=DAR 4` 的逐项探测结果；详见[标准记录与能力筛选](../protocol/standard-records.md)。
 
@@ -70,7 +110,7 @@ dlt698_standard_points_extended
 dlt698_standard_records
 ```
 
-## dlt698_memory_mutation
+### dlt698_memory_mutation
 
 同步客户机 + 串行链路适配的完整示例：内存链路两端都经过 FE 前导和 33 位间隔处理，然后完成同步 CONNECT → SET → ACTION → GET → RELEASE。
 
@@ -94,11 +134,67 @@ SET DAR=0 ACTION DAR=0 GET UInt16=42
 
 完整代码和逐段说明见[第一个程序](../getting-started/quick-start.md)。
 
-## dlt698_master 与 dlt698_terminal
+## 传输层
 
-一对协议对端程序，用于验证两种拨号方向和真实 socket 路径。
+### 配对运行
 
-**协议角色与拨号方向独立**——`dlt698_master` 永远是协议客户机，`dlt698_terminal` 永远是协议服务器，但两边都可以主动拨号：
+TCP 一对可直接在同一台机器上验证，服务端会循环接受多个客户机：
+
+```sh
+# 终端 1
+dlt698_tcp_server 0.0.0.0 6980 60
+# 终端 2
+dlt698_tcp_client 127.0.0.1 6980 get
+dlt698_tcp_client 127.0.0.1 6980 set 25
+dlt698_tcp_client 127.0.0.1 6980 action 25
+dlt698_tcp_client 127.0.0.1 6980 record
+```
+
+串口一对需要两个真实端口（Windows 的 `COMx` 或 POSIX 的 `/dev/ttyUSBx`）：
+
+```sh
+dlt698_rtu_server COM3 9600 60
+dlt698_rtu_client COM4 9600 get
+```
+
+### 用法
+
+```text
+dlt698_tcp_server <bind-address> <port> [lifetime-seconds]
+dlt698_tcp_client <host> <port> get|set|action|record [value]
+
+dlt698_rtu_server <device> <baud> [lifetime-seconds]
+dlt698_rtu_client <device> <baud> get|set|action|record [value]
+```
+
+- `lifetime-seconds` 是应用级空闲时限，默认 60 秒；到期后程序正常关闭退出。
+- `set` 和 `action` 必须带 `value`，`get` 和 `record` 不接受该参数。
+- 串口模式同时演示了 [SerialLinkChannel](../transport/serial.md) 的 FE 前导和 33 位间隔适配。
+
+### 两侧的差异
+
+| 关注点 | 服务端 | 客户端 |
+| --- | --- | --- |
+| 角色 | `SessionOptions::role = Role::server` | `SessionOptions::role = Role::client` |
+| 预连接 | TCP 需 `require_login` + `async_link(login)`；串口不需要 | `start()` 后即进入 `preconnected` |
+| 心跳 | TCP 设 `heartbeat_seconds`，串口为 0 | 不涉及 |
+| 生命周期 | 循环 accept，服务多个客户机直到时限 | 执行一条命令后 RELEASE 并退出 |
+| 请求分发 | `ServerService` + `ObjectRegistry` | `SyncClientService` 同步调用 |
+
+几个容易踩的点，这些示例都显式处理了：
+
+- **业务成功不能只看外层 `Result`**。CONNECT 被拒绝时 `connect()` 返回成功但
+  `response.result` 非零，客户端示例单独检查并退出。
+- **串口没有"连接"概念**。RS-485 是半双工共享总线，服务端打开串口后就一直应答，
+  没有 accept 也没有 LINK 登录。
+- **串口帧间隔只是估算**。`SerialLinkChannel` 没有收到真实排空回调时按字节数与
+  波特率推算时间，手动方向切换的 RS-485 必须自行注入 `async_drain`。
+- **`run_for` 是事件循环的时间预算**，不是单次请求超时；事务超时由 `Session` 内部管理。
+
+### dlt698_master 与 dlt698_terminal
+
+这一对用于验证**协议角色与拨号方向相互独立**——`dlt698_master` 永远是协议客户机，
+`dlt698_terminal` 永远是协议服务器，但两边都可以主动拨号：
 
 | 场景 | 命令 |
 | --- | --- |
@@ -106,8 +202,6 @@ SET DAR=0 ACTION DAR=0 GET UInt16=42
 | 终端监听等主站 | `dlt698_terminal tcp-listen 0.0.0.0 4059` |
 | 终端反向拨号 | `dlt698_terminal tcp-connect 127.0.0.1 4059` |
 | 主站监听等终端 | `dlt698_master tcp-listen 0.0.0.0 4059 get` |
-
-### 用法
 
 ```text
 dlt698_master tcp-connect|tcp-listen address port get|set|action|record [value]
@@ -117,11 +211,7 @@ dlt698_terminal tcp-listen|tcp-connect address port [lifetime-seconds]
 dlt698_terminal serial device baud [lifetime-seconds]
 ```
 
-- `address`：`tcp-connect` 填远端地址，`tcp-listen` 填本地绑定地址。
-- `lifetime-seconds`：应用连接空闲时限，默认 60 秒。
-- `serial` 模式同时演示了 [SerialLinkChannel](../transport/serial.md) 的 FE 前导和 33 位间隔适配。
-
-具体行为以 `--help` 和 `usage` 输出为准。相关 API 见 [TCP 通道](../transport/tcp.md)和[串口与串行链路](../transport/serial.md)。
+具体行为以 `usage` 输出为准。相关 API 见 [TCP 通道](../transport/tcp.md)和[串口与串行链路](../transport/serial.md)。
 
 ## 在自己的项目里使用
 

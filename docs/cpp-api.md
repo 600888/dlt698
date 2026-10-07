@@ -1,6 +1,10 @@
 # 当前 C++ API
 
-这是第三批开发接口，0.x 阶段允许调整。公开头文件使用中文 Doxygen 注释，接口细节以头文件为准。
+2026-10-07 新增普通服务器入口：`app::Server::set/start_tcp/start_serial/stop`，不要求使用者创建执行器、目录、会话或接入回调。`service::Device` 支持严格标准值校验、运行中首次发布、同 OI 多属性扩充、自定义只读声明、元素更新和资源预算；多个服务器可共享同一设备。完整契约见[托管服务器与设备数据](../website/docs/session/server.md)。现有分层 API 保持默认行为。
+
+客户端同步新增 `app::Client::connect_tcp/open_serial/get/set/action/disconnect`，复用已有同步服务与分块事务，自动等待登录并建立关联；拒绝码、DAR 和远端 ERROR 保留原码。完整契约见[托管客户端](../website/docs/session/client.md)。外部运行时与高层 provider 仍待后续阶段。
+
+这是 0.x 开发接口，允许调整。公开头文件使用中文 Doxygen 注释，接口细节以头文件为准。
 
 | CMake 目标 | 当前内容 |
 | --- | --- |
@@ -8,7 +12,8 @@
 | `dlt698::session` | Session，公开依赖 core |
 | `dlt698::service` | ObjectRegistry、MemoryObject、ClientService、ServerService、SyncClientService，公开依赖 session |
 | `dlt698::transport` | IoRuntime、TCP 通道/监听器、原始 SerialChannel；仅在启用传输构建时提供 |
-| `dlt698::dlt698` | 聚合 core/session/service，以及启用时的 transport |
+| `dlt698::app` | Server/Client 托管 TCP/串口、关联、线程、数据发布和同步请求；仅在启用传输构建时提供 |
+| `dlt698::dlt698` | 聚合 core/session/service，以及启用时的 transport/app |
 
 `DLT698_BUILD_TRANSPORT=OFF` 不会移除内存通道、会话或对象服务。静态/共享目标均有安装导出；MSVC 的 `/utf-8` 编译选项会传递给安装包调用方。生产方和消费方须使用兼容编译器、标准库和运行库，MSVC 与 MinGW 库不可混用；共享库不承诺跨工具链 C++ ABI。Asio 类型只出现在实现文件，消费方不需要 Asio 头文件。
 
@@ -103,7 +108,7 @@ ObjectSchema.methods 用 MethodSchema 声明非零方法编号、可选参数/�
 
 ClientService 的 async_get/set/action 返回单项 ObjectValue、DAR、ActionValue；对应 list 方法返回逐项完整响应。ServerService 接入 GET、记录、SET、ACTION 四类处理器，持有共享目录，不捕获自身地址。列表按顺序独立执行，部分成功不回滚；超时/取消只说明本地没有得到确定响应，不能证明远端没有执行 SET/ACTION，因此不会自动重试。
 
-[memory_get.cpp](../cpp/examples/memory_get.cpp) 给出了完整的注册对象、启动两端、CONNECT、读取数据与未知对象、RELEASE 和关闭示例。构建后运行 `dlt698_memory_get` 即可观察精确 Data 字节和 DAR=4。
+[service/memory_get.cpp](../cpp/examples/service/memory_get.cpp) 给出了完整的注册对象、启动两端、CONNECT、读取数据与未知对象、RELEASE 和关闭示例。构建后运行 `dlt698_memory_get` 即可观察精确 Data 字节和 DAR=4。
 
 ## 同步客户机
 

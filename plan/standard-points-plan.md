@@ -93,7 +93,7 @@
 | `cpp/src/standard/catalog.cpp` | 14 个 OI 的不可变定义表及查询/校验；链接 core，不依赖网络会话 |
 | `cpp/include/dlt698/service/standard_object.hpp` | 从选定目录属性生成 ObjectSchema，以及绑定 provider 的辅助接口 |
 | `cpp/src/service/standard_object.cpp` | 生成只读 schema；可选的标准值结构校验适配器，复用原 IObjectProvider |
-| `cpp/examples/standard_points.cpp` | 电压、电流、电能、通信地址的客户端查表和服务端内存模拟示例 |
+| `cpp/examples/service/standard_points.cpp` | 电压、电流、电能、通信地址的客户端查表和服务端内存模拟示例 |
 | `cpp/tests/standard_points_test.cpp` | 标准定义、索引、结构和倍率验证 |
 | `website/docs/protocol/standard-points.md` | 首批点表、典型 OAD、查表与绑定 provider 使用说明 |
 

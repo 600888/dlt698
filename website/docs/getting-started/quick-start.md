@@ -1,11 +1,56 @@
 ---
 title: 第一个程序
-description: 用内存通道和同步客户机跑通一次完整会话。
+description: 用托管服务器直接发布数据，也可通过内存示例了解分层接口。
 ---
 
 # 第一个程序
 
-这个程序不需要网络和真实设备：两端都跑在内存通道上，客户机用[同步客户机](../session/sync.md)在同一个线程里驱动虚拟时钟。完整源码见 `cpp/examples/memory_mutation.cpp`。
+普通服务端使用 `<dlt698/app.hpp>` 和 `dlt698::app`：创建服务器、设置数据、启动即可，库管理监听、连接、会话和运行线程。
+
+```cpp
+#include <dlt698/app.hpp>
+#include <iostream>
+
+int main() {
+    dlt698::app::Server server;
+    auto value = server.set({0x200F, 2, 0}, dlt698::model::UInt16{5000});
+    if (!value) {
+        std::cerr << value.error().context << '\n';
+        return 1;
+    }
+    auto started = server.start_tcp("0.0.0.0", 6980);
+    if (!started) {
+        std::cerr << started.error().context << '\n';
+        return 1;
+    }
+    std::cin.get();
+    return server.stop() ? 0 : 1;
+}
+```
+
+`200F/属性2/索引0` 是频率原始值，`5000` 表示 `50.00 Hz`。等待 Enter 只用于让应用保持运行，不需要手动驱动事件循环。串口把启动行换成 `server.start_serial("COM3", 9600)`；运行中继续 `server.set(...)` 即可更新或首次发布其他属性。
+
+```cmake
+find_package(dlt698 0.1 CONFIG REQUIRED)
+target_link_libraries(your_app PRIVATE dlt698::app)
+```
+
+构建后运行 `dlt698_server`，或 `dlt698_server COM3`。默认 TCP 会自动 LINK 登录并等待客户端 CONNECT；本地和预设关联、共享设备、布局/预算及退出约定见[托管服务器与设备数据](../session/server.md)。
+
+## 客户端：连接后直接读取
+
+```cpp
+dlt698::app::Client client;
+auto connected = client.connect_tcp("127.0.0.1", 6980);
+// 先检查 connected，再读取；value 保留 Data/DAR，仍需检查业务结果。
+auto value = client.get({0x200F, 2, 0});
+```
+
+客户端也不需要手动驱动 I/O。完整错误处理示例为 `cpp/examples/app/client.cpp`；在另一终端运行 `dlt698_client`，读取频率后自动断开。串口使用 `client.open_serial("COM4", 9600)`，完整契约见[托管客户端](../session/client.md)。
+
+## 分层接口：内存中的完整会话
+
+这个程序不需要网络和真实设备：两端都跑在内存通道上，客户机用[同步客户机](../session/sync.md)在同一个线程里驱动虚拟时钟。完整源码见 `cpp/examples/service/memory_mutation.cpp`。
 
 ```cpp
 #include <dlt698/service/sync.hpp>
@@ -85,7 +130,7 @@ SET DAR=0 ACTION DAR=0 GET UInt16=42
 
 **协议角色与拨号方向无关。** 这里只给 `terminal` 设置了 `Role::server`。谁主动发起 TCP 连接是传输层的事，与协议角色独立配置。
 
-**对象目录。** `register_object` 的第二个参数是 schema：属性编号 2、类型 `uint16`、可读可写；方法编号 1，参数和返回类型都是 `uint16`。属性 `writable` 默认 `false`，必须显式打开。详见[对象目录与 Provider](../session/object.md)。
+**对象目录。** `register_object` 的第一个参数是 schema：属性编号 2、类型 `uint16`、可读可写；方法编号 1，参数和返回类型都是 `uint16`。属性 `writable` 默认 `false`，必须显式打开。详见[对象目录与 Provider](../session/object.md)。
 
 **方法回调不能捕获 shared_ptr。** 目录持有 provider，provider 又被方法回调捕获会形成引用环。示例用 `std::weak_ptr` 打破环，并在调用时 `lock()`。
 

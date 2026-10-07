@@ -21,8 +21,8 @@ Visual Studio 等多配置生成器必须带 `--config Release`，`-DCMAKE_BUILD
 只编译库本身、不需要测试时可以直接用 `cpp/` 独立入口：
 
 ```sh
-cmake -S cpp -B build-core -DCMAKE_BUILD_TYPE=Release
-cmake --build build-core --config Release --parallel
+cmake -S cpp -B build/core -DCMAKE_BUILD_TYPE=Release
+cmake --build build/core --config Release --parallel
 ```
 
 ## 安装后的引用
@@ -39,8 +39,9 @@ target_link_libraries(your_app PRIVATE dlt698::dlt698)
 | `dlt698::core` | 基础模型、Data/帧/APDU codec、ManualExecutor、IChannel、MemoryChannel、SerialLinkChannel |
 | `dlt698::session` | Session，公开依赖 core |
 | `dlt698::service` | ObjectRegistry、MemoryObject、ClientService、ServerService、SyncClientService，公开依赖 session |
+| `dlt698::app` | 托管 Server/Client，公开依赖 service/transport，仅启用传输构建时提供 |
 | `dlt698::transport` | IoRuntime、TCP 通道/监听器、原始 SerialChannel；仅在启用传输构建时提供 |
-| `dlt698::dlt698` | 聚合 core/session/service，以及启用时的 transport |
+| `dlt698::dlt698` | 聚合 core/session/service，以及启用时的 transport/app |
 
 只使用编解码、虚拟执行器和内存通道时链接 `dlt698::core` 就够了。
 
