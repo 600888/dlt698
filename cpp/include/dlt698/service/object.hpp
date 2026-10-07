@@ -53,22 +53,19 @@ class DLT698_SERVICE_API IObjectProvider {
      * @return 拥有所有列与行内存的快照或 DAR；提供者负责选择器业务语义。
      * @note 调用期间不得保留借用引用或阻塞同一执行器，跨查询的一致性由提供者决定。
      */
-    DLT698_SERVICE_API virtual protocol::apdu::RecordResult read_record(
-        const protocol::apdu::GetRecord& query);
+    virtual protocol::apdu::RecordResult read_record(const protocol::apdu::GetRecord& query);
     /** @brief 写入属性，默认拒绝以保持既有只读 provider 合约。
      * @param[in] attribute 完整 OAD，索引/特征由 provider 解释。
      * @param[in] value 精确 Data，调用期间有效，不得保留借用引用。
      * @return 原始 DAR，0 成功；非零不得自动重试。
      */
-    DLT698_SERVICE_API virtual std::uint8_t write(const model::Oad& attribute,
-                                                  const model::Data& value);
+    virtual std::uint8_t write(const model::Oad& attribute, const model::Data& value);
     /** @brief 执行方法，默认拒绝；调用发生在会话执行器中。
      * @param[in] method 完整 OMD，模式由 provider 解释。
      * @param[in] parameter 参数 Data，不得保留借用引用。
      * @return DAR 与可选拥有内存的数据；不得阻塞等待同一执行器。
      */
-    DLT698_SERVICE_API virtual ActionValue invoke(const model::Omd& method,
-                                                  const model::Data& parameter);
+    virtual ActionValue invoke(const model::Omd& method, const model::Data& parameter);
 };
 
 class ObjectRegistry {

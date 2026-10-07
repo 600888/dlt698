@@ -1,27 +1,38 @@
-add_executable(dlt698_decode decode.cpp)
-add_executable(dlt698_standard_records standard_records.cpp)
-target_link_libraries(dlt698_standard_records PRIVATE dlt698_service)
-dlt698_target_setup(dlt698_standard_records)
-add_executable(dlt698_standard_points standard_points.cpp)
-target_link_libraries(dlt698_standard_points PRIVATE dlt698_service)
-dlt698_target_setup(dlt698_standard_points)
-add_executable(dlt698_standard_points_extended standard_points_extended.cpp)
-target_link_libraries(dlt698_standard_points_extended PRIVATE dlt698_service)
-dlt698_target_setup(dlt698_standard_points_extended)
-target_link_libraries(dlt698_decode PRIVATE dlt698_core)
-dlt698_target_setup(dlt698_decode)
-add_executable(dlt698_memory_get memory_get.cpp)
-target_link_libraries(dlt698_memory_get PRIVATE dlt698_service)
-dlt698_target_setup(dlt698_memory_get)
-add_executable(dlt698_memory_mutation memory_mutation.cpp)
-target_link_libraries(dlt698_memory_mutation PRIVATE dlt698_service)
-dlt698_target_setup(dlt698_memory_mutation)
+function(dlt698_add_example target)
+    cmake_parse_arguments(ARG "" "" "SOURCES;LIBS" ${ARGN})
+    add_executable(${target} ${ARG_SOURCES})
+    target_link_libraries(${target} PRIVATE ${ARG_LIBS})
+    target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/transport)
+    dlt698_target_setup(${target})
+endfunction()
+
+# 编解码层：不依赖会话和对象服务，单进程离线运行。
+dlt698_add_example(dlt698_decode SOURCES codec/decode.cpp LIBS dlt698_core)
+
+# 业务层：内存通道上的对象目录、读写方法和记录查询，无需真实设备。
+dlt698_add_example(dlt698_memory_get SOURCES service/memory_get.cpp LIBS dlt698_service)
+dlt698_add_example(dlt698_memory_mutation SOURCES service/memory_mutation.cpp LIBS dlt698_service)
+dlt698_add_example(dlt698_standard_points SOURCES service/standard_points.cpp LIBS dlt698_service)
+dlt698_add_example(dlt698_standard_points_extended
+    SOURCES service/standard_points_extended.cpp LIBS dlt698_service)
+dlt698_add_example(dlt698_standard_records SOURCES service/standard_records.cpp LIBS dlt698_service)
+
 if(DLT698_BUILD_TRANSPORT)
-    add_executable(dlt698_master peer.cpp)
-    target_link_libraries(dlt698_master PRIVATE dlt698_service dlt698_transport)
-    dlt698_target_setup(dlt698_master)
-    add_executable(dlt698_terminal peer.cpp)
+    # 传输层：真实 socket 和串口，服务端与客户端各一个独立程序。
+    dlt698_add_example(dlt698_tcp_server SOURCES transport/tcp_server.cpp
+        LIBS dlt698_service dlt698_transport)
+    dlt698_add_example(dlt698_tcp_client SOURCES transport/tcp_client.cpp
+        LIBS dlt698_service dlt698_transport)
+    dlt698_add_example(dlt698_rtu_server SOURCES transport/rtu_server.cpp
+        LIBS dlt698_service dlt698_transport)
+    dlt698_add_example(dlt698_rtu_client SOURCES transport/rtu_client.cpp
+        LIBS dlt698_service dlt698_transport)
+    # 双向拨号：协议角色由程序决定，TCP 连接发起方向独立，用于验证该约定。
+    dlt698_add_example(dlt698_master SOURCES transport/peer.cpp
+        LIBS dlt698_service dlt698_transport)
+    add_executable(dlt698_terminal transport/peer.cpp)
     target_compile_definitions(dlt698_terminal PRIVATE DLT698_TERMINAL)
+    target_include_directories(dlt698_terminal PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/transport)
     target_link_libraries(dlt698_terminal PRIVATE dlt698_service dlt698_transport)
     dlt698_target_setup(dlt698_terminal)
 endif()
