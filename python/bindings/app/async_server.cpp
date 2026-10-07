@@ -58,6 +58,9 @@ std::uint64_t ServerRunner::start_serial_configured(std::string path,
                                                     transport::SerialOptions serial,
                                                     transport::SerialLinkOptions link,
                                                     app::ConnectionProfile profile) {
+    if (link.set_transmit || link.async_drain)
+        throw std::invalid_argument(
+            "Python serial hooks require a caller-driven Engine or SerialLinkChannel");
     return submit([server = server_, path = std::move(path), serial, link, profile] {
         return server->start_serial(path, serial, link, profile);
     });

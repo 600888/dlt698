@@ -25,7 +25,9 @@ struct SessionOptions {
     // function 默认全零；应用须显式配置自身实际支持的 C.2 业务位，CONNECT 取双方交集。
     protocol::apdu::FactoryVersion factory;
     std::shared_ptr<security::IBackend>
-        security_backend;             ///< 会话独占实例，生命周期覆盖所有安全调用。
+        security_backend;  ///< 会话独占实例，生命周期覆盖所有安全调用。
+    std::function<std::shared_ptr<security::IBackend>()>
+        security_backend_factory;  ///< 每次构造会话调用，必须返回非空新实例；不能同时指定 security_backend。
     bool protect_application = true;  ///< 有后端时，关联后的业务必须使用 SECURITY，拒绝明文降级。
     std::chrono::milliseconds request_timeout{5000};
     std::chrono::milliseconds id_reuse_delay{
@@ -44,6 +46,13 @@ struct SessionOptions {
     std::function<model::DateTime()>
         calendar_clock;  ///< 空时使用 UTC；注入时钟在执行器中调用，抛异常会关闭会话并返回 invalid_value。
 };
+
+/** @brief 校验会话配置，不构造会话、不调用安全工厂或清理后端。
+ * @param[in] options 地址、能力、时间和安全后端配置。
+ * @return 成功或 invalid_value；工厂返回值及实例独占性在实际构造会话时检查。
+ * @note 托管入口可在创建监听器或线程前调用，避免预校验消耗认证材料。
+ */
+DLT698_SESSION_API Result<void> validate_options(const SessionOptions& options);
 
 /**
  * @brief 一个通道上的会话，支持公共连接、读写/方法、记录及两类分段事务。
@@ -112,7 +121,8 @@ class Session {
      * @param[in] channel 已连接的字节通道。
      * @param[in] executor 所有会话操作及定时器共用的串行执行器。
      * @param[in] options 协议角色、精确地址、能力与超时配置。
-     * @throws std::invalid_argument 通道/执行器为空、地址非单地址或限制配置非法。
+     * @throws std::invalid_argument 通道/执行器为空、配置非法、工厂返回空值或后端已被其他存活会话持有。
+     * @note 工厂在构造线程调用一次，异常向调用者传播；工厂不得返回其他会话使用中的实例。
      */
     DLT698_SESSION_API Session(std::shared_ptr<transport::IChannel> channel,
                                std::shared_ptr<IExecutor> executor, SessionOptions options = {});

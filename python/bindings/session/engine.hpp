@@ -4,6 +4,9 @@
 #pragma once
 #include <dlt698/app/connection.hpp>
 #include <dlt698/service/advanced.hpp>
+#include <dlt698/service/point_probe.hpp>
+#include <dlt698/transport/serial.hpp>
+#include <dlt698/transport/serial_link.hpp>
 #include <dlt698/transport/tcp.hpp>
 #include <thread>
 
@@ -19,6 +22,8 @@ struct Completion {
     std::optional<Error> error;
     std::optional<protocol::apdu::Apdu> message;
     std::optional<session::State> state;
+    std::optional<Event> traffic;
+    std::optional<std::vector<service::PointResult>> points;
 };
 
 /** @brief 单线程驱动的高级会话，不创建后台线程。
@@ -28,7 +33,7 @@ struct Completion {
 class Engine {
    public:
     /** @brief 创建独立原生运行时。
-     * @param[in] options 原生会话配置，角色按连接或监听场景设置。
+     * @param[in] options 原生会话配置；连接/监听默认角色可由相应入口的 role 参数覆盖。
      * @param[in] objects 服务器目录；客户端可为空。
      * @param[in] queue_limit 待取出完成通知的数量上限，必须非零。
      * @param[in] advanced 高级服务配置，与当前 C++ 服务一致。
@@ -47,19 +52,57 @@ class Engine {
      * @param[in] port 非零远端端口。
      * @param[in] profile 关联场景。
      * @param[in] channel 原始通道的读写资源预算。
+     * @param[in] role 协议角色，空值沿用拨号客户端默认值。
      * @return 完成通知 token。
      */
     std::uint64_t connect_tcp(std::string host, std::uint16_t port, app::ConnectionProfile profile,
-                              transport::ChannelOptions channel = {});
+                              transport::ChannelOptions channel = {},
+                              std::optional<session::Role> role = std::nullopt);
+    /** @brief 打开串口并排队交付连接完成；原生 I/O 在 poll 中执行。
+     * @param[in] path 系统串口设备路径。
+     * @param[in] serial 端口字格式、波特率及资源配置。
+     * @param[in] link 链路预算及可选方向/排空回调，只在拥有线程执行。
+     * @param[in] profile 连接场景。
+     * @param[in] role 协议角色，默认客户端。
+     * @return transport 完成通知 token；打开失败也经队列返回。
+     */
+    std::uint64_t open_serial(std::string path, transport::SerialOptions serial,
+                              transport::SerialLinkOptions link, app::ConnectionProfile profile,
+                              session::Role role = session::Role::client);
     /** @brief 启动专家服务器监听，持续接入各自独立的会话。
      * @param[in] address 数字 IP 地址。
      * @param[in] port 零或实际端口。
      * @param[in] profile 协议场景。
      * @param[in] max_connections 活动连接上限，必须非零。
+     * @param[in] role 协议角色，空值沿用监听服务器默认值；服务器要求目录。
      * @return 系统分配或指定的监听端口。
      */
     std::uint16_t listen(std::string address, std::uint16_t port, app::ConnectionProfile profile,
-                         std::size_t max_connections = 16);
+                         std::size_t max_connections = 16,
+                         std::optional<session::Role> role = std::nullopt);
+    /** @brief 显式发送登录、心跳或退出 LINK。
+     * @param[in] type 请求类型。
+     * @param[in] heartbeat_seconds 心跳周期，零表示关闭自动心跳。
+     * @param[in] connection 连接标识。
+     * @return 完成 token，消息为 LinkResponse。
+     */
+    std::uint64_t link(protocol::apdu::LinkRequestType type, std::uint16_t heartbeat_seconds = 0,
+                       std::uint64_t connection = 1);
+    /** @brief 等待原生 RELEASE 完成，不自动销毁运行时。
+     * @param[in] connection 连接标识。
+     * @return 完成 token；成功无消息，失败保留完整错误。
+     */
+    std::uint64_t release(std::uint64_t connection = 1);
+    /** @brief 依原生规划顺序探测候选点，不并行发起事务。
+     * @param[in] capabilities 当前连接的协商能力。
+     * @param[in] attributes 非空候选列表，保留重复项。
+     * @param[in] options 批量、布局和资源预算。
+     * @param[in] connection 连接标识。
+     * @return 完成 token，结果位于 Completion.points。
+     */
+    std::uint64_t probe_points(standard::Capabilities capabilities,
+                               std::vector<model::Oad> attributes,
+                               service::ProbeOptions options = {}, std::uint64_t connection = 1);
     /** @brief 从唯一驱动线程推进原生异步 I/O。
      * @param[in] budget 本次驱动预算，单位秒，毫秒精度。
      * @return 本次完成队列的拥有型快照。
@@ -124,6 +167,11 @@ class Engine {
    private:
     /** @brief 检查唯一驱动线程及关闭状态。 */
     void check() const;
+    /** @brief 设置协议角色和场景，不推断 TCP 方向。
+     * @param[in] profile 协议场景。
+     * @param[in] role 显式角色。
+     */
+    void configure(app::ConnectionProfile profile, session::Role role);
     /** @brief 安装持续接入操作，不同步调用 Python。 */
     void accept();
     /** @brief 为已连接通道安装原生服务、事件及状态观察器。
@@ -160,7 +208,7 @@ class Engine {
     std::thread::id owner_ = std::this_thread::get_id();
     std::shared_ptr<transport::IoRuntime> runtime_;
     std::shared_ptr<transport::TcpListener> listener_;
-    std::shared_ptr<transport::TcpChannel> pending_channel_;
+    std::shared_ptr<transport::IChannel> pending_channel_;
     session::SessionOptions options_;
     std::shared_ptr<service::ObjectRegistry> objects_;
     service::AdvancedServiceOptions advanced_;

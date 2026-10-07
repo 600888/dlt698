@@ -25,6 +25,8 @@ PYBIND11_MODULE(_native, module) {
     dlt698::python::bind_options(module);
     dlt698::python::bind_standard(module);
     dlt698::python::bind_codec(module);
+    dlt698::python::bind_fragments(module);
     dlt698::python::bind_app(module);
     dlt698::python::bind_expert(module);
+    dlt698::python::bind_channels(module);
 }

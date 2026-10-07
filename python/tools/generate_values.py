@@ -135,10 +135,12 @@ GROUPS = {
             "protocol::link::Frame": "control server client payload",
             "session::SessionOptions": (
                 "role server client_address limits parameters factory security_backend "
+                "security_backend_factory "
                 "protect_application request_timeout id_reuse_delay require_login "
                 "preset_association "
                 "clock_trusted heartbeat_seconds request_time_tag fragment_timeout "
-                "reassembly_timeout fragment_retries report_retries prefer_get_blocks"
+                "reassembly_timeout fragment_retries report_retries prefer_get_blocks "
+                "calendar_clock"
             ),
             "app::ClientOptions": "protocol transport_timeout login_timeout channel",
             "app::ServerOptions": "protocol max_connections heartbeat_seconds channel",
@@ -160,6 +162,8 @@ def generate() -> None:
         text += "#include <dlt698/app/client.hpp>\n#include <dlt698/app/server.hpp>\n"
         text += "#include <dlt698/standard/records.hpp>\n"
         text += "#include <dlt698/protocol/apdu/security.hpp>\n"
+        if group == "options":
+            text += '#include "options_callbacks.hpp"\n'
         text += "\nnamespace dlt698::python {\n"
         text += f"void bind_{group}(py::module_& module) {{\n"
         # 先注册本组全部类型，再生成属性签名，避免前向引用退化成 C++ 原始类型名。
@@ -173,6 +177,8 @@ def generate() -> None:
             short = name.split("::")[-1]
             for field in fields.split():
                 properties += f'    value_{short}.field("{field}", &{qualified}::{field});\n'
+            if short == "SerialLinkOptions":
+                properties += "    serial_callbacks(value_SerialLinkOptions);\n"
             properties += f"    value_{short}.finish();\n"
         if group == "records":
             for field, typ in {

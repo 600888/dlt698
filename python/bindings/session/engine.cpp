@@ -42,6 +42,25 @@ void Engine::check() const {
 void Engine::push(Completion completion) {
     std::size_t bytes = completion.kind.size();
     if (completion.error) bytes += completion.error->context.size();
+    if (completion.traffic) {
+        bytes += completion.traffic->bytes.size();
+        if (completion.traffic->error) bytes += completion.traffic->error->context.size();
+    }
+    if (completion.points) {
+        for (const auto& point : *completion.points) {
+            bytes += sizeof(service::PointResult);
+            if (auto data = std::get_if<model::Data>(&point.outcome)) {
+                auto encoded = codec::encode_data(*data, options_.limits);
+                if (!encoded) {
+                    overflow_ = true;
+                    return;
+                }
+                bytes += encoded.value().size();
+            } else if (auto error = std::get_if<Error>(&point.outcome))
+                bytes += error->context.size();
+            if (point.validation_error) bytes += point.validation_error->context.size();
+        }
+    }
     if (completion.message) {
         // 复用核心编码预算衡量拥有型消息，不能积累无界的大记录快照。
         auto encoded = protocol::apdu::encode_apdu(*completion.message, options_.limits);
@@ -63,6 +82,14 @@ void Engine::attach(std::shared_ptr<transport::IChannel> channel, std::uint64_t 
     auto session =
         std::make_shared<session::Session>(std::move(channel), runtime_->executor(), options_);
     sessions_[id] = session;
+    session->set_traffic_handler([this, id](const session::TrafficEvent& traffic) {
+        Completion done;
+        done.connection = id;
+        done.kind = "traffic";
+        // 原生 ByteView 只在回调内有效；完成队列必须保留独立字节副本。
+        done.traffic = traffic_event(id, traffic);
+        push(std::move(done));
+    });
     session->set_state_handler([this, id](session::State state) {
         Completion done;
         done.connection = id;
@@ -118,16 +145,13 @@ void Engine::attach(std::shared_ptr<transport::IChannel> channel, std::uint64_t 
 }
 
 std::uint64_t Engine::connect_tcp(std::string host, std::uint16_t port,
-                                  app::ConnectionProfile profile,
-                                  transport::ChannelOptions channel) {
+                                  app::ConnectionProfile profile, transport::ChannelOptions channel,
+                                  std::optional<session::Role> role) {
     check();
     if (host.empty() || !port) throw std::invalid_argument("TCP host/port");
     if (pending_channel_ || listener_ || !sessions_.empty())
         throw std::runtime_error("Engine already connected");
-    options_.role = session::Role::client;
-    options_.require_login = profile == app::ConnectionProfile::remote_public;
-    options_.preset_association = profile == app::ConnectionProfile::local_preset;
-    options_.heartbeat_seconds = 0;
+    configure(profile, role.value_or(session::Role::client));
     auto token = next_token_++;
     pending_channel_ = transport::TcpChannel::connect(
         runtime_, std::move(host), port,
@@ -149,6 +173,57 @@ std::uint64_t Engine::connect_tcp(std::string host, std::uint16_t port,
             push(std::move(done));
         },
         channel);
+    return token;
+}
+
+void Engine::configure(app::ConnectionProfile profile, session::Role role) {
+    if (role == session::Role::server && !objects_)
+        throw std::invalid_argument("protocol server requires ObjectRegistry");
+    options_.role = role;
+    options_.require_login = profile == app::ConnectionProfile::remote_public;
+    options_.preset_association = profile == app::ConnectionProfile::local_preset;
+    if (role == session::Role::client)
+        options_.heartbeat_seconds = 0;
+    else if (options_.require_login && !options_.heartbeat_seconds)
+        options_.heartbeat_seconds = 5;
+}
+
+std::uint64_t Engine::open_serial(std::string path, transport::SerialOptions serial,
+                                  transport::SerialLinkOptions link, app::ConnectionProfile profile,
+                                  session::Role role) {
+    check();
+    if (pending_channel_ || listener_ || !sessions_.empty())
+        throw std::runtime_error("Engine already connected");
+    configure(profile, role);
+    auto token = next_token_++;
+    Completion done;
+    done.token = token;
+    done.connection = 1;
+    done.kind = "transport";
+    if (serial.stop_bits == transport::SerialStopBits::one_point_five) {
+        done.error = Error{ErrorCode::unsupported_service, 0, "1.5 serial stop bits"};
+    } else if (link.set_transmit && !link.async_drain) {
+        done.error = Error{ErrorCode::invalid_value, 0, "RS-485 drain required"};
+    } else {
+        // 字符时间必须按实际端口计算；不能用默认 11 位覆盖用户选择的 8N1。
+        link.baud_rate = serial.baud_rate;
+        link.bits_per_character = 1 + serial.data_bits +
+                                  (serial.parity == transport::SerialParity::none ? 0 : 1) +
+                                  (serial.stop_bits == transport::SerialStopBits::two ? 2 : 1);
+        try {
+            auto opened = transport::SerialChannel::open(runtime_, path, serial);
+            if (!opened)
+                done.error = opened.error();
+            else {
+                pending_channel_ = transport::SerialLinkChannel::wrap(
+                    std::move(opened).value(), runtime_->executor(), std::move(link));
+                attach(pending_channel_, 1);
+            }
+        } catch (const std::exception& error) {
+            done.error = Error{ErrorCode::invalid_value, 0, error.what()};
+        }
+    }
+    push(std::move(done));
     return token;
 }
 
@@ -187,15 +262,12 @@ void Engine::accept() {
 }
 
 std::uint16_t Engine::listen(std::string address, std::uint16_t port,
-                             app::ConnectionProfile profile, std::size_t max_connections) {
+                             app::ConnectionProfile profile, std::size_t max_connections,
+                             std::optional<session::Role> role) {
     check();
-    if (!objects_) throw std::invalid_argument("listen requires ObjectRegistry");
     if (!max_connections || listener_ || pending_channel_)
         throw std::invalid_argument("invalid listener state/budget");
-    options_.role = session::Role::server;
-    options_.require_login = profile == app::ConnectionProfile::remote_public;
-    options_.preset_association = profile == app::ConnectionProfile::local_preset;
-    if (options_.require_login && !options_.heartbeat_seconds) options_.heartbeat_seconds = 5;
+    configure(profile, role.value_or(session::Role::server));
     max_connections_ = max_connections;
     listener_ = unwrap(transport::TcpListener::listen(runtime_, address, port));
     accept();
@@ -237,6 +309,49 @@ std::uint64_t Engine::connect(std::uint64_t id) {
     auto session = session_at(id);
     auto token = next_token_++;
     session->async_connect(handler<protocol::apdu::ConnectResponse>(id, token));
+    return token;
+}
+
+std::uint64_t Engine::link(protocol::apdu::LinkRequestType type, std::uint16_t heartbeat_seconds,
+                           std::uint64_t id) {
+    auto session = session_at(id);
+    auto token = next_token_++;
+    session->async_link(type, heartbeat_seconds, handler<protocol::apdu::LinkResponse>(id, token));
+    return token;
+}
+
+std::uint64_t Engine::release(std::uint64_t id) {
+    auto session = session_at(id);
+    auto token = next_token_++;
+    session->async_release([this, id, token](Result<void> result) {
+        Completion done;
+        done.token = token;
+        done.connection = id;
+        done.kind = "complete";
+        if (!result) done.error = result.error();
+        push(std::move(done));
+    });
+    return token;
+}
+
+std::uint64_t Engine::probe_points(standard::Capabilities capabilities,
+                                   std::vector<model::Oad> attributes,
+                                   service::ProbeOptions options, std::uint64_t id) {
+    auto session = session_at(id);
+    auto token = next_token_++;
+    service::async_probe_points(
+        std::move(session), std::move(capabilities), std::move(attributes), std::move(options),
+        [this, id, token](Result<std::vector<service::PointResult>> result) {
+            Completion done;
+            done.token = token;
+            done.connection = id;
+            done.kind = "complete";
+            if (!result)
+                done.error = result.error();
+            else
+                done.points = std::move(result).value();
+            push(std::move(done));
+        });
     return token;
 }
 

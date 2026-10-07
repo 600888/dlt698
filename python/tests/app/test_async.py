@@ -2,10 +2,12 @@
 
 import asyncio
 import socket
+import threading
 
 import pytest
 
 import dlt698 as d
+from dlt698 import _native as n
 
 
 @pytest.mark.asyncio
@@ -83,3 +85,85 @@ async def test_task_cancel_and_loop_close_leave_no_callbacks():
         await asyncio.sleep(0)
         assert len(events) == before
     await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_async_serial_failure_retry_probe_disconnect_and_no_python_threads(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Python worker thread creation is forbidden")
+
+    monkeypatch.setattr(threading.Thread, "start", forbidden)
+    monkeypatch.setattr(asyncio, "to_thread", forbidden)
+    monkeypatch.setattr(asyncio.get_running_loop(), "run_in_executor", forbidden)
+    events = []
+    async with d.AsyncServer() as server, d.AsyncClient(on_event=events.append) as client:
+        with pytest.raises(d.Dlt698Error):
+            await client.open_serial("COM9999")
+        with pytest.raises(d.Dlt698Error) as failure:
+            await client.open_serial_configured(
+                "COM9999",
+                n.SerialOptions(stop_bits=n.SerialStopBits.one_point_five),
+                n.SerialLinkOptions(),
+            )
+        assert failure.value.code == d.ErrorCode.unsupported_service
+        with pytest.raises(d.Dlt698Error) as failure:
+            await client.open_serial_configured(
+                "COM9999", n.SerialOptions(), n.SerialLinkOptions(set_transmit=lambda tx: None)
+            )
+        assert failure.value.code == d.ErrorCode.invalid_value
+        frequency = d.Oad(oi=0x200F, attribute=2)
+        server.set(frequency, d.Data.uint16(5000))
+        await server.start_tcp("127.0.0.1", 0)
+        await client.connect_tcp("127.0.0.1", server.local_port)
+        points = await client.probe_points([frequency, d.Oad(oi=0xFFFF, attribute=2), frequency])
+        assert points[0].outcome.as_uint16() == 5000 and points[1].outcome == 4
+        assert client.capabilities.negotiated is not None
+        await client.disconnect()
+        assert client.capabilities.negotiated is None
+        await client.connect_tcp("127.0.0.1", server.local_port)
+        assert (await client.get(frequency)).require_data().as_uint16() == 5000
+        assert any(event.traffic is not None for event in events)
+        await client.aclose()
+        before = len(events)
+        await asyncio.sleep(0.005)
+        assert len(events) == before
+
+
+@pytest.mark.asyncio
+async def test_disconnect_cancels_inflight_request_and_rejects_competing_connect():
+    async with d.AsyncServer() as server, d.AsyncClient() as client:
+        await server.start_tcp("127.0.0.1", 0)
+        await client.connect_tcp("127.0.0.1", server.local_port)
+
+        request = asyncio.create_task(client.get(d.Oad(oi=0xFFFF, attribute=2)))
+        await asyncio.sleep(0)
+        releasing = asyncio.create_task(client.disconnect())
+        await asyncio.sleep(0)
+        with pytest.raises(d.Dlt698Error) as failure:
+            await client.connect_tcp("127.0.0.1", server.local_port)
+        assert failure.value.code == d.ErrorCode.busy
+        await releasing
+        result = (await asyncio.gather(request, return_exceptions=True))[0]
+        assert (
+            result.dar == 4
+            if isinstance(result, d.ReadResult)
+            else result.code == d.ErrorCode.cancelled
+        )
+        await client.connect_tcp("127.0.0.1", server.local_port)
+
+
+@pytest.mark.asyncio
+async def test_disconnect_finishes_old_probe_before_reused_tokens_can_affect_reconnect():
+    async with d.AsyncServer() as server, d.AsyncClient() as client:
+        await server.start_tcp("127.0.0.1", 0)
+        await client.connect_tcp("127.0.0.1", server.local_port)
+        task = asyncio.create_task(
+            client.probe_points([d.Oad(oi=0xFFFF, attribute=2)] * 128, n.ProbeOptions(batch_size=1))
+        )
+        await asyncio.sleep(0)
+        await client.disconnect()
+        await client.connect_tcp("127.0.0.1", server.local_port)
+        async with asyncio.timeout(2):
+            result = (await asyncio.gather(task, return_exceptions=True))[0]
+        assert isinstance(result, (list, d.Dlt698Error))
+        assert (await client.get(d.Oad(oi=0xFFFF, attribute=2))).dar == 4

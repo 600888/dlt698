@@ -128,6 +128,46 @@ struct TestEsam final : security::IBackend {
 };
 }  // namespace
 
+TEST_CASE("安全后端工厂与独占生命周期", "[advanced][security]") {
+    auto executor = std::make_shared<ManualExecutor>();
+    auto channels = transport::MemoryChannel::pair(executor);
+    session::SessionOptions options;
+    unsigned created = 0;
+    std::vector<std::shared_ptr<TestEsam>> backends;
+    options.security_backend_factory = [&] {
+        ++created;
+        auto backend = std::make_shared<TestEsam>();
+        backends.push_back(backend);
+        return backend;
+    };
+    REQUIRE(session::validate_options(options));
+    CHECK(created == 0);
+    auto first = std::make_shared<session::Session>(channels.first, executor, options);
+    auto second = std::make_shared<session::Session>(channels.second, executor, options);
+    CHECK(created == 2);
+    REQUIRE(backends.size() == 2);
+    CHECK(backends[0] != backends[1]);
+    first.reset();
+    CHECK(backends[0]->resets == 1);
+    CHECK(backends[1]->resets == 0);
+
+    options.security_backend_factory = {};
+    options.security_backend = backends[1];
+    auto other = transport::MemoryChannel::pair(executor);
+    CHECK_THROWS_AS(session::Session(other.first, executor, options), std::invalid_argument);
+    CHECK(backends[1]->resets == 0);
+    second.reset();
+    CHECK(backends[1]->resets == 1);
+    CHECK_NOTHROW(session::Session(other.first, executor, options));
+
+    options.security_backend_factory = [] { return std::shared_ptr<security::IBackend>{}; };
+    CHECK_FALSE(session::validate_options(options));
+    options.security_backend = {};
+    CHECK_THROWS_AS(session::Session(other.second, executor, options), std::invalid_argument);
+    options.preset_association = true;
+    CHECK_FALSE(session::validate_options(options));
+}
+
 TEST_CASE("ThenGet 用虚拟时间依次执行副作用和读取且默认延时生效", "[advanced][service]") {
     Peers p;
     AdvancedServiceOptions options;

@@ -30,7 +30,8 @@ pybind11_add_module(_native NO_EXTRAS
     bindings/model/records.cpp bindings/protocol/apdu/messages.cpp bindings/protocol/apdu/connection.cpp
     bindings/protocol/apdu/mutation.cpp bindings/protocol/apdu/advanced.cpp bindings/app/options.cpp bindings/standard/standard.cpp
     bindings/codec/codec.cpp bindings/app/app.cpp bindings/app/async_server.cpp
-    bindings/service/providers.cpp bindings/security/backend.cpp bindings/session/engine.cpp bindings/transport/trans.cpp)
+    bindings/service/providers.cpp bindings/security/backend.cpp bindings/session/engine.cpp bindings/transport/trans.cpp
+    bindings/protocol/fragments.cpp bindings/transport/channels.cpp)
 target_compile_features(_native PRIVATE cxx_std_17)
 target_include_directories(_native PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/bindings/common"

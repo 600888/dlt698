@@ -114,6 +114,17 @@ def mappings() -> list[dict[str, object]]:
             "tests": ["python/tests/transport/test_transparent.py"],
         }
     )
+    entries.append(
+        {
+            "cpp": "dlt698::session::validate_options",
+            "header": "cpp/include/dlt698/session/session.hpp",
+            "python": "dlt698._native.validate_session_options",
+            "status": "exposed",
+            "phase": "P3",
+            "contract": "native preflight; no backend factory calls or reset side effects",
+            "tests": ["python/tests/security/test_security.py"],
+        }
+    )
     return entries
 
 
@@ -123,7 +134,10 @@ def exported_surface(symbols: list[dict[str, object]]) -> list[dict[str, object]
     aliases = {
         "Enum": "Enumeration",
         "IObjectProvider": "ObjectProvider",
+        "IProxyProvider": "ProxyProvider",
         "IBackend": "SecurityBackend",
+        "Client": "NativeClient",
+        "Server": "NativeServer",
         "State": "SessionState",
         "Session": "SessionHandle",
     }

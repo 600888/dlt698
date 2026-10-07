@@ -1,5 +1,6 @@
 """专家入口的兼容汇总；业务实现位于对应分层模块。"""
 
+from ..common import IExecutor, ITimer, ManualExecutor
 from ..security import AuthenticationResult, SecurityBackend
 from ..service import (
     AdvancedServiceOptions,
@@ -10,24 +11,55 @@ from ..service import (
     ObjectProvider,
     ObjectRegistry,
     ObjectSchema,
+    PointResult,
+    ProbeOptions,
+    ProxyProvider,
     ProxyRouter,
     RecordLimits,
+    async_probe_points,
+    attach_advanced_services,
+    attach_services,
     make_object_schema,
     register_standard_object,
 )
 from ..session import Completion, Engine, SessionHandle, SessionState
 from ..transport import (
+    IChannel,
+    IoRuntime,
+    MemoryChannel,
+    MemoryOptions,
+    SerialChannel,
     SerialFlowControl,
+    SerialLinkChannel,
     SerialLinkOptions,
     SerialOptions,
     SerialParity,
     SerialStopBits,
+    TcpChannel,
+    TcpListener,
     TransBridge,
     TransJob,
 )
 from .endpoint import Endpoint
 
 __all__ = [
+    "IExecutor",
+    "ITimer",
+    "ManualExecutor",
+    "PointResult",
+    "ProbeOptions",
+    "async_probe_points",
+    "attach_services",
+    "attach_advanced_services",
+    "ProxyProvider",
+    "IChannel",
+    "IoRuntime",
+    "MemoryChannel",
+    "MemoryOptions",
+    "SerialChannel",
+    "SerialLinkChannel",
+    "TcpChannel",
+    "TcpListener",
     "AdvancedServiceOptions",
     "AttributeSchema",
     "AuthenticationResult",

@@ -44,22 +44,22 @@ with Server() as server:
 ```text
 python/src/dlt698/
   app/        Client、Server、AsyncClient、AsyncServer、生命周期
-  common/     错误、资源限制
+  common/     错误、资源限制、执行器与计时器
   codec/      Data、链路帧及 APDU 编解码
   model/      原生协议值
   protocol/   apdu 消息与 link 帧接口
   security/   安全后端扩展点
   service/    Device、对象目录、provider、记录、代理
   session/    Engine、会话状态、完成通知
-  standard/   标准对象、工程量与记录模板
-  transport/  通道与串口配置、透明转发桥
+  standard/   标准对象、工程量、记录校验、能力与读取规划
+  transport/  原生/自定义通道、I/O 运行时、串口与 RS-485、透明转发桥
   expert/     Endpoint 与原有专家入口的兼容汇总
 ```
 
 推荐 `from dlt698.app import AsyncServer`、`from dlt698.service import ObjectRegistry` 等
 业务导入；根入口及原有 `dlt698.client / server / async_client / errors / expert` 导入仍可使用。
 生成工具写入新的目录，不会重新产生扁平模块。
-`python/tests/` 同样按 app/common/model/protocol/security/service/transport/release/interop
+`python/tests/` 同样按 app/common/model/protocol/security/service/session/standard/transport/release/interop
 分目录；`tools/` 保留构建、生成和发布工具，`examples/` 保留独立示例。
 
 ```python
@@ -85,7 +85,28 @@ C++ 线程执行启停等待，通过完成通知唤醒 asyncio Future。Python 
 `await stop()` 保留设备并允许重启；`close()` 发起终止，`await aclose()` 等待完整收尾。
 启动取消时会等原生操作结束再停止，避免取消后迟到的监听器继续运行。
 
-与当前 C++ 公开能力的逐项缺口及替代路径见 [功能差异审计](feature-gaps.md)。
+九类已确认缺口的实现入口、回调约定及验收范围见 [补全记录](feature-gaps.md)。
+
+`AsyncClient` 同时提供 `await open_serial(path, baud=9600)` 和
+`await open_serial_configured(path, serial, link, profile)`。本地端口打开/配置为原生操作，
+后续 I/O、LINK 和 CONNECT 通过原生完成队列等待；失败会排空旧运行时，允许重新连接。
+`await disconnect()` 等待 RELEASE 后关闭通道，保留客户端供重连；`close()` 强制终止，
+`await aclose()` 在空闲关联时优先释放协议连接，再确定性收尾。
+
+```python
+from dlt698.service import ProbeOptions
+from dlt698.standard import ReadService, service_support
+
+# client 已通过 TCP 或串口关联；预设连接使用本地能力，公共连接使用 CONNECT 协商快照。
+support = service_support(client.capabilities, ReadService.list)
+points = await client.probe_points(attributes, ProbeOptions(batch_size=16))
+for point in points:
+    print(point.attribute, point.outcome, point.validation_error)
+```
+
+探测复用 C++ 读取规划及逐项校验：保留重复点与顺序，不按业务提示自动删除候选。
+`PointResult.outcome` 为 Data、原始 DAR 或 Error，标准校验失败保留 Data 和 validation_error。
+离线规划与验证通过 `standard.plan_reads / candidate_points / validate_record_*` 使用。
 
 ## 数据、配置和错误
 
@@ -95,7 +116,7 @@ C++ 线程执行启停等待，通过完成通知唤醒 asyncio Future。Python 
 
 `Data.uint16(5000)` 与 `Data.int16(5000)` 是不同标签；访问器标签不符抛 `TypeError`。字节入口接受 `bytes / bytearray /` 连续一维单字节 `memoryview`，不接受文本或隐式整数列表。输入和返回均拥有内存，修改原输入不会改变协议快照。
 
-配置通过关键字构造，未知字段报错。时间参数使用有限、非负秒，底层按毫秒向下取整。配置字段读取返回副本：
+配置通过关键字构造，未知字段报错。时间参数使用有限、非负秒；会话超时及 Engine.poll / IoRuntime.run_for 须为毫秒精度，精度损失报错。执行器延时和虚拟时间按原生时钟刻度处理，支持 RS-485 位时间的小数毫秒。配置字段读取返回副本：
 
 ```python
 from dlt698 import ClientOptions, SessionOptions
@@ -117,9 +138,48 @@ options.protocol = protocol
 
 专家 Engine 只接受所属线程访问，禁止在 provider/backend 中重入。`poll()` 默认预算 1 ms；预算不强行中断业务 callback。事务完成队列默认最多 1024 项和 16 MiB 编码消息字节，超限关闭 Engine 并明确报错。Python provider 收到拥有型参数，可安全保存；目录权限、类型校验、异常转 DAR=255 沿用 C++。
 
+`Engine.connect_tcp(..., role=Role.server)` 支持协议服务器主动拨号；
+`Engine.listen(..., role=Role.client)` 支持协议客户端接收连接，后者不要求对象目录。
+协议服务器始终要求 ObjectRegistry。未传 role 时仍采用拨号客户端、监听服务器的默认值。
+`link(type, heartbeat_seconds, connection)`、`release(connection)` 返回完成 token；
+`Completion.traffic` 是 Event 副本，含 send/receive、bytes、timestamp、error。
+`SessionOptions.calendar_clock` 接收无参函数并返回 model.DateTime，异常由原生会话关闭处理。
+
+低层接口可将 `MemoryChannel.pair(executor)` 或自定义 IChannel/IExecutor 与
+`SessionHandle(channel, executor, options)` 组合；通过 `attach_services(session, registry)`
+安装原生普通服务。先 start，再持续驱动执行器。异步完成回调接收拥有型成功值或 Error，
+void 成功为 None；自定义完成函数只允许调用一次。IoRuntime.run_for 在当前线程推进原生
+TCP/串口 I/O，不启动线程。MemoryObject.bind_method / bind_record 可直接注册便利回调。
+
+`SerialLinkOptions.set_transmit` 与 `async_drain` 支持实际 RS-485 驱动控制；
+方向控制返回 None/Error，排空函数在最后停止位发出后调用 done(None/Error)。
+这些 Python hooks 与日历时钟仅用于调用线程驱动的 Engine/AsyncClient/低层 Session，
+托管 Client/Server/AsyncServer 拒绝它们。关闭后继续驱动，直到挂起操作回调排空。
+完整扩展点约束及异常处理见 [回调与生命周期约定](feature-gaps.md#回调与生命周期约定)。
+
 `ProxyRouter.bind(tsa, engine.session_at())` 将前六类代理路由到已关联原生 Session；所有相关 Engine 必须持续驱动。第七类透明转发使用 `TransBridge`：传给 `Engine(transparent=bridge)`，应用 `drain()` 取命令，异步设备完成后 `complete(token, ProxyTransResponse(...))` 或完整 `Error`。桥默认最多 128 项、1 MiB 命令字节；取消后的迟到/重复完成返回 False。桥不调用后台 Python；真实透明端口由应用接入。
 
 `SecurityBackend` 子类只能配置在调用线程驱动的 Engine/AsyncClient。同步托管 Client/Server 拒绝 Python 安全后端，避免原生工作线程进入 Python。认证、保护和验证均委托实际后端，默认不提供假认证或伪 ESAM。安全 mock 测试仅验证委托，不代表真实设备安全认证。
+
+子类构造时必须完整实现 8 个后端方法，包括 `reset`。多连接监听配置
+`SessionOptions(security_backend_factory=YourBackend)`，每个会话构造时创建独立实例；
+不能同时指定 `security_backend` 和工厂，也不能用于预设关联。C++ 会拒绝仍被其他
+存活会话持有的实例，包括工厂错误返回同一实例的情况；仅关闭会话不代表其句柄已析构。
+`session.validate_session_options(options)` 只做配置校验，不调用工厂、不清理后端。
+`reset` 必须返回 None 且幂等；异常通过 `sys.unraisablehook` 报告，不能跨原生 noexcept。
+
+低层 `SessionHandle` 支持普通 GET/记录/SET/ACTION、高级请求、诊断、REPORT、
+FollowReport 和 ACD 处理器，`None` 移除处理器。请求参数拥有内存，可以保留；
+REPORT 处理器返回 bool，只有 True 才确认。高级处理器接收 `(request, done)`，
+`done` 接受拥有型响应或 Error，至多调用一次；处理器可返回幂等、非阻塞取消函数。
+驱动抛异常后的迟到完成被忽略，关闭后的结果由原生会话丢弃。
+
+`service.attach_services(session, objects)` 安装普通服务；
+`service.attach_advanced_services(session, objects, executor, options, transparent)` 安装
+MD5/ThenGet/PROXY，executor 必须与会话一致，transparent 为可选 TransBridge。
+`service.ProxyProvider` 支持 Python 子类，实现 `async_request(server, request, done)`
+即可接入自定义目标；完成和取消约定与高级处理器相同。所有这些 Python 扩展点必须在
+调用线程驱动，不创建 Python 工作线程。首批修复状态见 [审计记录](implementation-audit.md)。
 
 ## 示例与构建隔离
 

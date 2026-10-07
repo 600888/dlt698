@@ -5,6 +5,8 @@
 #include <dlt698/protocol/apdu/get_block.hpp>
 #include <dlt698/protocol/apdu/time_tag.hpp>
 #include <dlt698/session/session.hpp>
+#include <map>
+#include <mutex>
 
 namespace dlt698::session {
 namespace {
@@ -51,6 +53,24 @@ bool valid_parameters(const apdu::AssociationParameters& p) {
            p.receive_frame_bytes <= 16383 && p.receive_window && p.apdu_bytes && p.timeout_seconds;
 }
 
+// 安全实例是有状态资源；即使调用方错误地复用工厂结果，也不能让两个会话清理彼此材料。
+// 弱令牌只跟随会话内部实现存活，不保活后端；构造失败自动释放预占资格。
+std::shared_ptr<void> claim_backend(const std::shared_ptr<security::IBackend>& backend) {
+    static std::mutex mutex;
+    static std::map<const security::IBackend*, std::weak_ptr<void>> claims;
+    std::lock_guard<std::mutex> lock(mutex);
+    for (auto it = claims.begin(); it != claims.end();) {
+        if (it->second.expired())
+            it = claims.erase(it);
+        else
+            ++it;
+    }
+    if (claims.count(backend.get())) throw std::invalid_argument("security backend already in use");
+    auto lease = std::make_shared<unsigned char>();
+    claims.emplace(backend.get(), lease);
+    return lease;
+}
+
 // 线上含 PIID-ACD 的模型统一处理服务序号与请求访问位，避免新增响应遗漏分支。
 template <class T, class = void>
 struct HasAcd : std::false_type {};
@@ -88,6 +108,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         std::vector<apdu::FollowReport> follow_blocks{};
     };
 
+    std::shared_ptr<void> security_lease;
     std::shared_ptr<transport::IChannel> channel;
     std::shared_ptr<IExecutor> executor;
     SessionOptions options;
@@ -144,8 +165,10 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
     std::shared_ptr<ITimer> idle_timer;
     model::DateTimeS established_at;
 
-    Impl(std::shared_ptr<transport::IChannel> ch, std::shared_ptr<IExecutor> ex, SessionOptions opt)
-        : channel(std::move(ch)),
+    Impl(std::shared_ptr<transport::IChannel> ch, std::shared_ptr<IExecutor> ex, SessionOptions opt,
+         std::shared_ptr<void> lease)
+        : security_lease(std::move(lease)),
+          channel(std::move(ch)),
           executor(std::move(ex)),
           options(std::move(opt)),
           decoder(options.limits),
@@ -1602,12 +1625,13 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
     }
 };
 
-Session::Session(std::shared_ptr<transport::IChannel> channel, std::shared_ptr<IExecutor> executor,
-                 SessionOptions options) {
-    if (!channel || !executor || options.server.type != link::AddressType::single ||
-        options.server.bytes.empty() || options.server.bytes.size() > 16 ||
-        options.server.logical > 3 || !valid_parameters(options.parameters) ||
-        (options.security_backend && options.preset_association) ||
+Result<void> validate_options(const SessionOptions& options) {
+    if (options.server.type != link::AddressType::single || options.server.bytes.empty() ||
+        options.server.bytes.size() > 16 || options.server.logical > 3 ||
+        !valid_parameters(options.parameters) ||
+        ((options.security_backend || options.security_backend_factory) &&
+         options.preset_association) ||
+        (options.security_backend && options.security_backend_factory) ||
         options.request_timeout.count() <= 0 || options.fragment_timeout.count() <= 0 ||
         options.reassembly_timeout.count() <= 0 || options.fragment_retries > 16 ||
         options.report_retries > 16 ||
@@ -1623,7 +1647,25 @@ Session::Session(std::shared_ptr<transport::IChannel> channel, std::shared_ptr<I
         options.parameters.send_frame_bytes + 2u > options.limits.max_frame_bytes ||
         options.parameters.receive_frame_bytes + 2u > options.limits.max_frame_bytes ||
         options.parameters.apdu_bytes > options.limits.max_data_bytes)
-        throw std::invalid_argument("session options");
+        return Error{ErrorCode::invalid_value, 0, "session options"};
+    if (!(options.parameters.protocol[0] & 0x80))
+        return Error{ErrorCode::invalid_value, 0, "application association capability required"};
+    return {};
+}
+
+Session::Session(std::shared_ptr<transport::IChannel> channel, std::shared_ptr<IExecutor> executor,
+                 SessionOptions options) {
+    if (!channel || !executor) throw std::invalid_argument("session channel/executor");
+    const auto valid = validate_options(options);
+    if (!valid) throw std::invalid_argument(valid.error().context);
+    if (options.security_backend_factory) {
+        options.security_backend = options.security_backend_factory();
+        if (!options.security_backend)
+            throw std::invalid_argument("security factory returned null");
+        // 每个会话只持有自己的后端；工厂由外层监听配置持有，不形成回调保活环。
+        options.security_backend_factory = {};
+    }
+    auto lease = options.security_backend ? claim_backend(options.security_backend) : nullptr;
     // 保留已实现服务；标准中未分配的位不能对外声明。
     options.parameters.protocol[0] &= 0xff;
     options.parameters.protocol[1] &= 0xff;
@@ -1637,7 +1679,8 @@ Session::Session(std::shared_ptr<transport::IChannel> channel, std::shared_ptr<I
     // 功能位属于应用实际提供的计量/事件业务，保留显式配置；默认全零仍表示未声明。
     // CONNECT 已按双方位图交集协商，并在客户机验证响应是本地提议的子集。
     options.parameters.receive_window = 1;
-    impl_ = std::make_shared<Impl>(std::move(channel), std::move(executor), std::move(options));
+    impl_ = std::make_shared<Impl>(std::move(channel), std::move(executor), std::move(options),
+                                   std::move(lease));
 }
 
 Session::~Session() = default;

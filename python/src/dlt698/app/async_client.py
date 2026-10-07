@@ -9,7 +9,7 @@ from types import TracebackType
 from typing import Self
 
 from .. import _native as n
-from ..common.errors import _from_native
+from ..common.errors import Dlt698Error, _from_native
 from .client import ReadResult, _read_result
 
 
@@ -34,6 +34,9 @@ class AsyncClient:
         self._on_event = on_event
         self._closed = False
         self._associated = False
+        self._connecting = False
+        self._disconnecting = False
+        self._capabilities = n.Capabilities()
         self._handle: asyncio.TimerHandle | None = None
         self._schedule()
 
@@ -105,15 +108,22 @@ class AsyncClient:
     async def _wait(self, token: int, timeout: float | None = None) -> n.Completion:
         self._check_loop()
         future: asyncio.Future[n.Completion] = self._loop.create_future()
+        engine = self._engine
         self._pending[token] = future
         try:
             if timeout is None:
                 return await future
             async with asyncio.timeout(timeout):
                 return await future
-        except BaseException:
-            self._pending.pop(token, None)
-            if not self._closed:
+        except BaseException as error:
+            if self._pending.get(token) is future:
+                self._pending.pop(token, None)
+            if (
+                not self._closed
+                and engine is self._engine
+                and isinstance(error, (asyncio.CancelledError, TimeoutError))
+            ):
+                self._associated = False
                 try:
                     self._engine.cancel()
                 except IndexError:
@@ -124,14 +134,55 @@ class AsyncClient:
         self, host: str, port: int, profile: n.ConnectionProfile = n.ConnectionProfile.remote_public
     ) -> None:
         """依次等待 TCP、LINK 和 CONNECT，成功后才可读写。"""
+        await self._establish(
+            lambda: self._engine.connect_tcp(host, port, profile, self._options.channel), profile
+        )
+
+    async def open_serial(
+        self,
+        path: str,
+        baud: int = 9600,
+        profile: n.ConnectionProfile = n.ConnectionProfile.local_public,
+    ) -> None:
+        """异步等待串口 LINK/CONNECT，采用与原生 Client 一致的默认字格式。"""
+        await self.open_serial_configured(
+            path,
+            n.SerialOptions(baud_rate=baud, channel=self._options.channel),
+            n.SerialLinkOptions(),
+            profile,
+        )
+
+    async def open_serial_configured(
+        self,
+        path: str,
+        serial: n.SerialOptions,
+        link: n.SerialLinkOptions,
+        profile: n.ConnectionProfile = n.ConnectionProfile.local_public,
+    ) -> None:
+        """配置串口及 RS-485 hooks；Python 回调仅在所属 loop 线程执行。"""
+        await self._establish(
+            lambda: self._engine.open_serial(path, serial, link, profile), profile
+        )
+
+    def _reset_engine(self) -> None:
+        self._engine.close()
+        # 释放完成可早于分批探测等复合操作；旧 token 不得遗留到新运行时并匹配重用序号。
+        for future in self._pending.values():
+            if not future.done():
+                future.set_exception(_from_native(n.ErrorCode.closed, 0, "connection reset", None))
+        self._pending.clear()
+        self._engine = n.Engine(self._options.protocol)
+        self._states = asyncio.Queue(maxsize=64)
+        self._associated = False
+        self._capabilities = n.Capabilities()
+
+    async def _establish(self, start: Callable[[], int], profile: n.ConnectionProfile) -> None:
         self._check_loop()
-        if self._associated:
-            raise _from_native(n.ErrorCode.busy, 0, "client already connected", None)
+        if self._associated or self._connecting or self._disconnecting:
+            raise _from_native(n.ErrorCode.busy, 0, "client already connecting/connected", None)
+        self._connecting = True
         try:
-            await self._wait(
-                self._engine.connect_tcp(host, port, profile, self._options.channel),
-                self._options.transport_timeout,
-            )
+            await self._wait(start(), self._options.transport_timeout)
             expected = (
                 n.SessionState.associated
                 if profile == n.ConnectionProfile.local_preset
@@ -148,14 +199,50 @@ class AsyncClient:
                     raise _from_native(
                         n.ErrorCode.association_failed, 0, "CONNECT rejected", response.result
                     )
+                self._capabilities = n.capabilities_from_connect(response)
+            else:
+                self._capabilities = n.Capabilities(negotiated=self._options.protocol.parameters)
             self._associated = True
         except BaseException:
             # 失败后收尾旧运行时，并恢复可重试状态；close() 仍是终止入口。
             if not self._closed:
-                self._engine.close()
-                self._engine = n.Engine(self._options.protocol)
-                self._states = asyncio.Queue(maxsize=64)
+                self._reset_engine()
             raise
+        finally:
+            self._connecting = False
+
+    @property
+    def capabilities(self) -> n.Capabilities:
+        """当前连接的独立能力快照；未连接时为未知。"""
+        return n.Capabilities(negotiated=self._capabilities.negotiated)
+
+    async def probe_points(
+        self, attributes: Sequence[n.Oad], options: n.ProbeOptions | None = None
+    ) -> list[n.PointResult]:
+        """按原生能力规划探测，保留逐项 Data、DAR、事务错误及标准校验错误。"""
+        self._require_connection()
+        result = await self._wait(
+            self._engine.probe_points(
+                self._capabilities, list(attributes), options or n.ProbeOptions()
+            )
+        )
+        if result.points is None:
+            raise RuntimeError("unexpected point probe response")
+        return result.points
+
+    async def disconnect(self) -> None:
+        """等待原生 RELEASE 后关闭通道；收尾后允许重新连接，失败仍释放资源。"""
+        self._check_loop()
+        if not self._associated:
+            return
+        self._associated = False
+        self._disconnecting = True
+        try:
+            await self._wait(self._engine.release())
+        finally:
+            if not self._closed:
+                self._reset_engine()
+            self._disconnecting = False
 
     def _require_connection(self) -> None:
         self._check_loop()
@@ -266,7 +353,23 @@ class AsyncClient:
 
     async def aclose(self) -> None:
         """确定性收尾后不接受新请求。"""
-        self.close()
+        if self._closed:
+            return
+        try:
+            # 未完成业务或取消后的强制关闭沿用 close；空闲关联优先释放协议连接。
+            if self._associated and not self._pending:
+                try:
+                    await self.disconnect()
+                except Dlt698Error as error:
+                    # 对端已先关闭或取消完成时，资源仍已收尾；保持 aclose 的幂等约定。
+                    if error.code not in (
+                        n.ErrorCode.closed,
+                        n.ErrorCode.not_associated,
+                        n.ErrorCode.cancelled,
+                    ):
+                        raise
+        finally:
+            self.close()
 
     async def __aenter__(self) -> Self:
         return self

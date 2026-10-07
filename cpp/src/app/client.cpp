@@ -51,9 +51,8 @@ struct ClientRun : std::enable_shared_from_this<ClientRun> {
         protocol.preset_association = profile == ConnectionProfile::local_preset;
         protocol.heartbeat_seconds = 0;
         // 打开传输前复用完整协议校验，不用真实 socket 探测非法参数。
-        auto manual = std::make_shared<ManualExecutor>();
-        auto memory = transport::MemoryChannel::pair(manual);
-        session::Session validation(memory.first, manual, protocol);
+        auto valid = session::validate_options(protocol);
+        if (!valid) throw std::invalid_argument(valid.error().context);
     }
 
     ~ClientRun() {

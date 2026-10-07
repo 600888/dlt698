@@ -29,6 +29,8 @@ __all__: builtins.list[str] = [
     "AuthenticationResult",
     "BitString",
     "Boolean",
+    "CandidatePoint",
+    "Capabilities",
     "ChannelOptions",
     "ClientOptions",
     "ClientState",
@@ -56,8 +58,11 @@ __all__: builtins.list[str] = [
     "FactoryVersion",
     "Float32",
     "Float64",
+    "Fragment",
+    "FragmentType",
     "Frame",
     "FrameStreamDecoder",
+    "GetBlockTransfer",
     "GetMd5Request",
     "GetMd5Response",
     "GetNextRequest",
@@ -67,16 +72,25 @@ __all__: builtins.list[str] = [
     "GetRecordResponse",
     "GetRequest",
     "GetResponse",
+    "IChannel",
+    "IExecutor",
+    "ITimer",
     "Int16",
     "Int32",
     "Int64",
     "Int8",
+    "IoRuntime",
     "Limits",
+    "LinkFragmenter",
+    "LinkReassembler",
     "LinkRequest",
     "LinkRequestType",
     "LinkResponse",
     "Mac",
+    "ManualExecutor",
+    "MemoryChannel",
     "MemoryObject",
+    "MemoryOptions",
     "MemoryRecords",
     "MeterAddressRegions",
     "MeterAddresses",
@@ -99,6 +113,8 @@ __all__: builtins.list[str] = [
     "Omd",
     "PasswordSecurity",
     "Phase",
+    "PointResult",
+    "ProbeOptions",
     "ProxyActionResultTarget",
     "ProxyActionTarget",
     "ProxyActionThenGetResultTarget",
@@ -117,6 +133,9 @@ __all__: builtins.list[str] = [
     "ProxySetThenGetTarget",
     "ProxyTransRequest",
     "ProxyTransResponse",
+    "ReadBatch",
+    "ReadService",
+    "Reassembly",
     "RecordDefinition",
     "RecordLimits",
     "RecordResult",
@@ -147,7 +166,9 @@ __all__: builtins.list[str] = [
     "Selector7",
     "Selector8",
     "Selector9",
+    "SerialChannel",
     "SerialFlowControl",
+    "SerialLinkChannel",
     "SerialLinkOptions",
     "SerialOptions",
     "SerialParity",
@@ -171,7 +192,10 @@ __all__: builtins.list[str] = [
     "Sid",
     "SidMac",
     "SignatureSecurity",
+    "Support",
     "SymmetrySecurity",
+    "TcpChannel",
+    "TcpListener",
     "Ti",
     "Time",
     "TimeTag",
@@ -190,17 +214,24 @@ __all__: builtins.list[str] = [
     "advanced_capability",
     "advanced_matches",
     "approximate_value",
+    "async_probe_points",
+    "attach_advanced_services",
+    "attach_services",
     "build_info",
+    "candidate_points",
+    "capabilities_from_connect",
     "crc16",
     "decimal_text",
     "decode_apdu",
     "decode_data",
+    "decode_fragment",
     "decode_frame",
     "decode_security",
     "demand_oad",
     "demand_values",
     "encode_apdu",
     "encode_data",
+    "encode_fragment",
     "encode_frame",
     "encode_security",
     "energy_oad",
@@ -214,14 +245,23 @@ __all__: builtins.list[str] = [
     "make_record_query",
     "objects",
     "phase_oad",
+    "plan_reads",
+    "point_support",
     "record_at",
     "record_between",
     "record_sequences",
     "register_standard_object",
+    "require_record_service",
+    "service_support",
     "tariff_oad",
     "unit_symbol",
     "validate_layout",
     "validate_oad",
+    "validate_record_cell",
+    "validate_record_query",
+    "validate_record_result",
+    "validate_record_time",
+    "validate_session_options",
     "validate_value",
 ]
 
@@ -663,6 +703,24 @@ class Boolean:
     @value.setter
     def value(self, arg1: bool) -> None: ...
 
+class CandidatePoint:
+    def __init__(self, *, attribute: Oad = ..., hint: Support = ...) -> None: ...
+    @property
+    def attribute(self) -> Oad: ...
+    @attribute.setter
+    def attribute(self, arg1: Oad) -> None: ...
+    @property
+    def hint(self) -> Support: ...
+    @hint.setter
+    def hint(self, arg1: Support) -> None: ...
+
+class Capabilities:
+    def __init__(self, *, negotiated: AssociationParameters | None = ...) -> None: ...
+    @property
+    def negotiated(self) -> AssociationParameters | None: ...
+    @negotiated.setter
+    def negotiated(self, arg1: AssociationParameters | None) -> None: ...
+
 class ChannelOptions:
     def __init__(
         self,
@@ -817,8 +875,10 @@ class Completion:
         | ProxyRequest
         | ProxyResponse
         | None = ...,
+        points: builtins.list[PointResult] | None = ...,
         state: SessionState | None = ...,
         token: int = ...,
+        traffic: Event | None = ...,
     ) -> None: ...
     @property
     def connection(self) -> int: ...
@@ -900,6 +960,10 @@ class Completion:
         | None,
     ) -> None: ...
     @property
+    def points(self) -> builtins.list[PointResult] | None: ...
+    @points.setter
+    def points(self, arg1: builtins.list[PointResult] | None) -> None: ...
+    @property
     def state(self) -> SessionState | None: ...
     @state.setter
     def state(self, arg1: SessionState | None) -> None: ...
@@ -907,6 +971,10 @@ class Completion:
     def token(self) -> int: ...
     @token.setter
     def token(self, arg1: int) -> None: ...
+    @property
+    def traffic(self) -> Event | None: ...
+    @traffic.setter
+    def traffic(self, arg1: Event | None) -> None: ...
 
 class ConnectRequest:
     def __init__(
@@ -1462,6 +1530,7 @@ class Engine:
         port: typing.SupportsInt | typing.SupportsIndex,
         profile: ConnectionProfile = ConnectionProfile.remote_public,
         channel: ChannelOptions = ...,
+        role: Role | None | None = None,
     ) -> int: ...
     def exchange(
         self,
@@ -1507,16 +1576,39 @@ class Engine:
         list: bool = False,
         connection: typing.SupportsInt | typing.SupportsIndex = 1,
     ) -> int: ...
+    def link(
+        self,
+        type: LinkRequestType,
+        heartbeat_seconds: typing.SupportsInt | typing.SupportsIndex = 0,
+        connection: typing.SupportsInt | typing.SupportsIndex = 1,
+    ) -> int: ...
     def listen(
         self,
         address: str,
         port: typing.SupportsInt | typing.SupportsIndex,
         profile: ConnectionProfile = ConnectionProfile.remote_public,
         max_connections: typing.SupportsInt | typing.SupportsIndex = 16,
+        role: Role | None | None = None,
+    ) -> int: ...
+    def open_serial(
+        self,
+        path: str,
+        serial: SerialOptions = ...,
+        link: SerialLinkOptions = ...,
+        profile: ConnectionProfile = ConnectionProfile.local_public,
+        role: Role = ...,
     ) -> int: ...
     def poll(
         self, budget: typing.SupportsFloat | typing.SupportsIndex = 0.001
     ) -> builtins.list[Completion]: ...
+    def probe_points(
+        self,
+        capabilities: Capabilities,
+        attributes: collections.abc.Sequence[Oad],
+        options: ProbeOptions = ...,
+        connection: typing.SupportsInt | typing.SupportsIndex = 1,
+    ) -> int: ...
+    def release(self, connection: typing.SupportsInt | typing.SupportsIndex = 1) -> int: ...
     def session_at(
         self, connection: typing.SupportsInt | typing.SupportsIndex = 1
     ) -> SessionHandle: ...
@@ -1773,6 +1865,63 @@ class Float64:
     @value.setter
     def value(self, arg1: float) -> None: ...
 
+class Fragment:
+    def __init__(
+        self, *, data: bytes = ..., sequence: int = ..., type: FragmentType = ...
+    ) -> None: ...
+    @property
+    def data(self) -> bytes: ...
+    @data.setter
+    def data(self, arg1: bytes) -> None: ...
+    @property
+    def sequence(self) -> int: ...
+    @sequence.setter
+    def sequence(self, arg1: int) -> None: ...
+    @property
+    def type(self) -> FragmentType: ...
+    @type.setter
+    def type(self, arg1: FragmentType) -> None: ...
+
+class FragmentType:
+    """
+    Members:
+
+      first
+
+      last
+
+      acknowledgement
+
+      middle
+    """
+
+    __members__: typing.ClassVar[dict[str, FragmentType]]
+    acknowledgement: typing.ClassVar[FragmentType]
+    first: typing.ClassVar[FragmentType]
+    last: typing.ClassVar[FragmentType]
+    middle: typing.ClassVar[FragmentType]
+
+    @typing.overload
+    def __eq__(self, other: FragmentType) -> bool: ...
+    @typing.overload
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> int: ...
+    def __hash__(self) -> int: ...
+    def __index__(self) -> int: ...
+    def __init__(self, value: typing.SupportsInt | typing.SupportsIndex) -> None: ...
+    def __int__(self) -> int: ...
+    @typing.overload
+    def __ne__(self, other: FragmentType) -> bool: ...
+    @typing.overload
+    def __ne__(self, other: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    def __setstate__(self, state: typing.SupportsInt | typing.SupportsIndex) -> None: ...
+    def __str__(self) -> str: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
 class Frame:
     def __init__(
         self,
@@ -1805,6 +1954,22 @@ class FrameStreamDecoder:
     def reset(self) -> None: ...
     @property
     def buffered_size(self) -> int: ...
+
+class GetBlockTransfer:
+    @staticmethod
+    def split(
+        snapshot: GetResponse | GetRecordResponse,
+        target_bytes: typing.SupportsInt | typing.SupportsIndex,
+        limits: Limits = ...,
+    ) -> builtins.list[GetNextResponse]: ...
+    def __init__(
+        self,
+        piid: typing.SupportsInt | typing.SupportsIndex,
+        records: bool,
+        limits: Limits = ...,
+        merge_record_rows: bool = True,
+    ) -> None: ...
+    def accept(self, block: GetNextResponse) -> GetResponse | GetRecordResponse | None: ...
 
 class GetMd5Request:
     def __init__(
@@ -2097,6 +2262,29 @@ class GetResponse:
     @time_tag.setter
     def time_tag(self, arg1: TimeTag | None) -> None: ...
 
+class IChannel:
+    def __init__(self) -> None: ...
+    def async_read(self, callback: collections.abc.Callable[[bytes | Error], None]) -> None: ...
+    def async_write(
+        self, data: bytes, callback: collections.abc.Callable[[None | Error], None]
+    ) -> None: ...
+    def close(self) -> None: ...
+
+class IExecutor:
+    def __init__(self) -> None: ...
+    def is_current(self) -> bool: ...
+    def now(self) -> float: ...
+    def post(self, task: collections.abc.Callable[[], None]) -> None: ...
+    def schedule(
+        self,
+        delay: typing.SupportsFloat | typing.SupportsIndex,
+        task: collections.abc.Callable[[], None],
+    ) -> ITimer: ...
+
+class ITimer:
+    def __init__(self) -> None: ...
+    def cancel(self) -> None: ...
+
 class Int16:
     def __init__(self, *, value: int = ...) -> None: ...
     @property
@@ -2124,6 +2312,14 @@ class Int8:
     def value(self) -> int: ...
     @value.setter
     def value(self, arg1: int) -> None: ...
+
+class IoRuntime:
+    def __init__(self) -> None: ...
+    def executor(self) -> IExecutor: ...
+    def finish(self) -> None: ...
+    def restart(self) -> None: ...
+    def run_for(self, budget: typing.SupportsFloat | typing.SupportsIndex = 0.001) -> None: ...
+    def stop(self) -> None: ...
 
 class Limits:
     def __init__(
@@ -2155,6 +2351,23 @@ class Limits:
     def max_stream_bytes(self) -> int: ...
     @max_stream_bytes.setter
     def max_stream_bytes(self, arg1: int) -> None: ...
+
+class LinkFragmenter:
+    def __init__(
+        self,
+        apdu: bytes,
+        fragment_bytes: typing.SupportsInt | typing.SupportsIndex,
+        limit: typing.SupportsInt | typing.SupportsIndex,
+    ) -> None: ...
+    def acknowledge(self, sequence: typing.SupportsInt | typing.SupportsIndex) -> None: ...
+    def current(self) -> Fragment: ...
+
+class LinkReassembler:
+    def __init__(self, limit: typing.SupportsInt | typing.SupportsIndex) -> None: ...
+    def accept(self, fragment: Fragment) -> Reassembly: ...
+    def reset(self) -> None: ...
+    @property
+    def active(self) -> bool: ...
 
 class LinkRequest:
     def __init__(
@@ -2257,9 +2470,51 @@ class Mac:
     @value.setter
     def value(self, arg1: bytes) -> None: ...
 
+class ManualExecutor(IExecutor):
+    def __init__(self) -> None: ...
+    def advance(self, elapsed: typing.SupportsFloat | typing.SupportsIndex) -> None: ...
+    def run_ready(self) -> None: ...
+
+class MemoryChannel(IChannel):
+    @staticmethod
+    def pair(
+        executor: IExecutor, options: MemoryOptions = ...
+    ) -> tuple[MemoryChannel, MemoryChannel]: ...
+
 class MemoryObject(ObjectProvider):
     def __init__(self) -> None: ...
+    def bind_method(
+        self,
+        method: typing.SupportsInt | typing.SupportsIndex,
+        callback: collections.abc.Callable[[Omd, Data], ActionValue],
+    ) -> None: ...
+    def bind_record(
+        self,
+        attribute: typing.SupportsInt | typing.SupportsIndex,
+        callback: collections.abc.Callable[[GetRecord], RecordResult],
+    ) -> None: ...
     def set(self, arg0: typing.SupportsInt | typing.SupportsIndex, arg1: Data) -> None: ...
+
+class MemoryOptions:
+    def __init__(
+        self,
+        *,
+        max_buffer_bytes: int = ...,
+        max_pending_writes: int = ...,
+        read_chunk_bytes: int = ...,
+    ) -> None: ...
+    @property
+    def max_buffer_bytes(self) -> int: ...
+    @max_buffer_bytes.setter
+    def max_buffer_bytes(self, arg1: int) -> None: ...
+    @property
+    def max_pending_writes(self) -> int: ...
+    @max_pending_writes.setter
+    def max_pending_writes(self, arg1: int) -> None: ...
+    @property
+    def read_chunk_bytes(self) -> int: ...
+    @read_chunk_bytes.setter
+    def read_chunk_bytes(self, arg1: int) -> None: ...
 
 class MemoryRecords(ObjectProvider):
     @staticmethod
@@ -2574,6 +2829,49 @@ class Phase:
     @property
     def value(self) -> int: ...
 
+class PointResult:
+    def __init__(
+        self,
+        *,
+        attribute: Oad = ...,
+        outcome: Data | int | Error = ...,
+        schema_checked: bool = ...,
+        validation_error: Error | None = ...,
+    ) -> None: ...
+    @property
+    def attribute(self) -> Oad: ...
+    @attribute.setter
+    def attribute(self, arg1: Oad) -> None: ...
+    @property
+    def outcome(self) -> Data | int | Error: ...
+    @outcome.setter
+    def outcome(self, arg1: Data | int | Error) -> None: ...
+    @property
+    def schema_checked(self) -> bool: ...
+    @schema_checked.setter
+    def schema_checked(self, arg1: bool) -> None: ...
+    @property
+    def validation_error(self) -> Error | None: ...
+    @validation_error.setter
+    def validation_error(self, arg1: Error | None) -> None: ...
+
+class ProbeOptions:
+    def __init__(
+        self, *, batch_size: int = ..., layout: DeviceLayout = ..., limits: Limits = ...
+    ) -> None: ...
+    @property
+    def batch_size(self) -> int: ...
+    @batch_size.setter
+    def batch_size(self, arg1: int) -> None: ...
+    @property
+    def layout(self) -> DeviceLayout: ...
+    @layout.setter
+    def layout(self, arg1: DeviceLayout) -> None: ...
+    @property
+    def limits(self) -> Limits: ...
+    @limits.setter
+    def limits(self, arg1: Limits) -> None: ...
+
 class ProxyActionResultTarget:
     def __init__(
         self,
@@ -2697,7 +2995,73 @@ class ProxyGetTarget:
     def timeout_seconds(self, arg1: int) -> None: ...
 
 class ProxyProvider:
-    pass
+    def __init__(self) -> None: ...
+    def async_request(
+        self,
+        server: Tsa,
+        request: LinkRequest
+        | LinkResponse
+        | ConnectRequest
+        | ConnectResponse
+        | ReleaseRequest
+        | ReleaseResponse
+        | ReleaseNotification
+        | ErrorResponse
+        | GetRequest
+        | GetResponse
+        | SetRequest
+        | SetResponse
+        | ActionRequest
+        | ActionResponse
+        | GetRecordRequest
+        | GetRecordResponse
+        | GetNextRequest
+        | GetNextResponse
+        | GetMd5Request
+        | GetMd5Response
+        | SetThenGetRequest
+        | SetThenGetResponse
+        | ActionThenGetRequest
+        | ActionThenGetResponse
+        | ReportNotification
+        | ReportResponse
+        | ProxyRequest
+        | ProxyResponse,
+        callback: collections.abc.Callable[
+            [
+                LinkRequest
+                | LinkResponse
+                | ConnectRequest
+                | ConnectResponse
+                | ReleaseRequest
+                | ReleaseResponse
+                | ReleaseNotification
+                | ErrorResponse
+                | GetRequest
+                | GetResponse
+                | SetRequest
+                | SetResponse
+                | ActionRequest
+                | ActionResponse
+                | GetRecordRequest
+                | GetRecordResponse
+                | GetNextRequest
+                | GetNextResponse
+                | GetMd5Request
+                | GetMd5Response
+                | SetThenGetRequest
+                | SetThenGetResponse
+                | ActionThenGetRequest
+                | ActionThenGetResponse
+                | ReportNotification
+                | ReportResponse
+                | ProxyRequest
+                | ProxyResponse
+                | Error
+            ],
+            None,
+        ],
+    ) -> collections.abc.Callable[[], None] | None: ...
 
 class ProxyRecordRequest:
     def __init__(self, *, record: GetRecord = ..., server: Tsa = ...) -> None: ...
@@ -2956,6 +3320,74 @@ class ProxyTransResponse:
     def result(self) -> int | bytes: ...
     @result.setter
     def result(self, arg1: int | bytes) -> None: ...
+
+class ReadBatch:
+    def __init__(self, *, attributes: builtins.list[Oad] = ..., list: bool = ...) -> None: ...
+    @property
+    def attributes(self) -> builtins.list[Oad]: ...
+    @attributes.setter
+    def attributes(self, arg1: builtins.list[Oad]) -> None: ...
+    @property
+    def list(self) -> bool: ...
+    @list.setter
+    def list(self, arg1: bool) -> None: ...
+
+class ReadService:
+    """
+    Members:
+
+      normal
+
+      list
+
+      record
+
+      next
+    """
+
+    __members__: typing.ClassVar[dict[str, ReadService]]
+    list: typing.ClassVar[ReadService]
+    next: typing.ClassVar[ReadService]
+    normal: typing.ClassVar[ReadService]
+    record: typing.ClassVar[ReadService]
+
+    @typing.overload
+    def __eq__(self, other: ReadService) -> bool: ...
+    @typing.overload
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> int: ...
+    def __hash__(self) -> int: ...
+    def __index__(self) -> int: ...
+    def __init__(self, value: typing.SupportsInt | typing.SupportsIndex) -> None: ...
+    def __int__(self) -> int: ...
+    @typing.overload
+    def __ne__(self, other: ReadService) -> bool: ...
+    @typing.overload
+    def __ne__(self, other: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    def __setstate__(self, state: typing.SupportsInt | typing.SupportsIndex) -> None: ...
+    def __str__(self) -> str: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
+class Reassembly:
+    def __init__(
+        self, *, acknowledge: int | None = ..., apdu: bytes | None = ..., duplicate: bool = ...
+    ) -> None: ...
+    @property
+    def acknowledge(self) -> int | None: ...
+    @acknowledge.setter
+    def acknowledge(self, arg1: int | None) -> None: ...
+    @property
+    def apdu(self) -> bytes | None: ...
+    @apdu.setter
+    def apdu(self, arg1: bytes | None) -> None: ...
+    @property
+    def duplicate(self) -> bool: ...
+    @duplicate.setter
+    def duplicate(self, arg1: bool) -> None: ...
 
 class RecordDefinition:
     @property
@@ -3651,6 +4083,10 @@ class Selector9:
     @previous.setter
     def previous(self, arg1: int) -> None: ...
 
+class SerialChannel(IChannel):
+    @staticmethod
+    def open(runtime: IoRuntime, path: str, options: SerialOptions = ...) -> SerialChannel: ...
+
 class SerialFlowControl:
     """
     Members:
@@ -3688,14 +4124,37 @@ class SerialFlowControl:
     @property
     def value(self) -> int: ...
 
+class SerialLinkChannel(IChannel):
+    @staticmethod
+    def wrap(
+        raw: IChannel, executor: IExecutor, options: SerialLinkOptions = ...
+    ) -> SerialLinkChannel: ...
+
 class SerialLinkOptions:
     def __init__(
         self,
         *,
+        async_drain: collections.abc.Callable[
+            [collections.abc.Callable[[Error | None], None]], None
+        ]
+        | None = ...,
         baud_rate: int = ...,
         bits_per_character: int = ...,
         max_pending_write_bytes: int = ...,
         max_pending_writes: int = ...,
+        set_transmit: collections.abc.Callable[[bool], Error | None] | None = ...,
+    ) -> None: ...
+    @property
+    def async_drain(
+        self,
+    ) -> (
+        collections.abc.Callable[[collections.abc.Callable[[Error | None], None]], None] | None
+    ): ...
+    @async_drain.setter
+    def async_drain(
+        self,
+        arg1: collections.abc.Callable[[collections.abc.Callable[[Error | None], None]], None]
+        | None,
     ) -> None: ...
     @property
     def baud_rate(self) -> int: ...
@@ -3713,6 +4172,10 @@ class SerialLinkOptions:
     def max_pending_writes(self) -> int: ...
     @max_pending_writes.setter
     def max_pending_writes(self, arg1: int) -> None: ...
+    @property
+    def set_transmit(self) -> collections.abc.Callable[[bool], Error | None] | None: ...
+    @set_transmit.setter
+    def set_transmit(self, arg1: collections.abc.Callable[[bool], Error | None] | None) -> None: ...
 
 class SerialOptions:
     def __init__(
@@ -3943,9 +4406,219 @@ class ServerState:
     def value(self) -> int: ...
 
 class SessionHandle:
+    def __init__(
+        self, channel: IChannel, executor: IExecutor, options: SessionOptions = ...
+    ) -> None: ...
+    def async_action(
+        self,
+        methods: collections.abc.Sequence[ActionMethod],
+        list: bool,
+        callback: collections.abc.Callable[[ActionResponse | Error], None],
+    ) -> None: ...
+    def async_connect(
+        self, callback: collections.abc.Callable[[ConnectResponse | Error], None]
+    ) -> None: ...
+    def async_exchange(
+        self,
+        request: LinkRequest
+        | LinkResponse
+        | ConnectRequest
+        | ConnectResponse
+        | ReleaseRequest
+        | ReleaseResponse
+        | ReleaseNotification
+        | ErrorResponse
+        | GetRequest
+        | GetResponse
+        | SetRequest
+        | SetResponse
+        | ActionRequest
+        | ActionResponse
+        | GetRecordRequest
+        | GetRecordResponse
+        | GetNextRequest
+        | GetNextResponse
+        | GetMd5Request
+        | GetMd5Response
+        | SetThenGetRequest
+        | SetThenGetResponse
+        | ActionThenGetRequest
+        | ActionThenGetResponse
+        | ReportNotification
+        | ReportResponse
+        | ProxyRequest
+        | ProxyResponse,
+        callback: collections.abc.Callable[
+            [
+                LinkRequest
+                | LinkResponse
+                | ConnectRequest
+                | ConnectResponse
+                | ReleaseRequest
+                | ReleaseResponse
+                | ReleaseNotification
+                | ErrorResponse
+                | GetRequest
+                | GetResponse
+                | SetRequest
+                | SetResponse
+                | ActionRequest
+                | ActionResponse
+                | GetRecordRequest
+                | GetRecordResponse
+                | GetNextRequest
+                | GetNextResponse
+                | GetMd5Request
+                | GetMd5Response
+                | SetThenGetRequest
+                | SetThenGetResponse
+                | ActionThenGetRequest
+                | ActionThenGetResponse
+                | ReportNotification
+                | ReportResponse
+                | ProxyRequest
+                | ProxyResponse
+                | Error
+            ],
+            None,
+        ],
+    ) -> None: ...
+    def async_get(
+        self,
+        attributes: collections.abc.Sequence[Oad],
+        list: bool,
+        callback: collections.abc.Callable[[GetResponse | Error], None],
+    ) -> None: ...
+    def async_get_record(
+        self,
+        records: collections.abc.Sequence[GetRecord],
+        list: bool,
+        callback: collections.abc.Callable[[GetRecordResponse | Error], None],
+    ) -> None: ...
+    def async_link(
+        self,
+        type: LinkRequestType,
+        heartbeat_seconds: typing.SupportsInt | typing.SupportsIndex,
+        callback: collections.abc.Callable[[LinkResponse | Error], None],
+    ) -> None: ...
+    def async_release(self, callback: collections.abc.Callable[[None | Error], None]) -> None: ...
+    def async_set(
+        self,
+        attributes: collections.abc.Sequence[SetAttribute],
+        list: bool,
+        callback: collections.abc.Callable[[SetResponse | Error], None],
+    ) -> None: ...
     def cancel(self) -> None: ...
+    def in_executor_thread(self) -> bool: ...
     def request_close(self) -> None: ...
     def set_access_demand(self, arg0: bool) -> None: ...
+    def set_acd_handler(self, callback: collections.abc.Callable[[], None] | None) -> None: ...
+    def set_action_handler(
+        self, callback: collections.abc.Callable[[ActionRequest], ActionResponse] | None
+    ) -> None: ...
+    def set_advanced_handler(
+        self,
+        callback: collections.abc.Callable[
+            [
+                LinkRequest
+                | LinkResponse
+                | ConnectRequest
+                | ConnectResponse
+                | ReleaseRequest
+                | ReleaseResponse
+                | ReleaseNotification
+                | ErrorResponse
+                | GetRequest
+                | GetResponse
+                | SetRequest
+                | SetResponse
+                | ActionRequest
+                | ActionResponse
+                | GetRecordRequest
+                | GetRecordResponse
+                | GetNextRequest
+                | GetNextResponse
+                | GetMd5Request
+                | GetMd5Response
+                | SetThenGetRequest
+                | SetThenGetResponse
+                | ActionThenGetRequest
+                | ActionThenGetResponse
+                | ReportNotification
+                | ReportResponse
+                | ProxyRequest
+                | ProxyResponse,
+                collections.abc.Callable[
+                    [
+                        LinkRequest
+                        | LinkResponse
+                        | ConnectRequest
+                        | ConnectResponse
+                        | ReleaseRequest
+                        | ReleaseResponse
+                        | ReleaseNotification
+                        | ErrorResponse
+                        | GetRequest
+                        | GetResponse
+                        | SetRequest
+                        | SetResponse
+                        | ActionRequest
+                        | ActionResponse
+                        | GetRecordRequest
+                        | GetRecordResponse
+                        | GetNextRequest
+                        | GetNextResponse
+                        | GetMd5Request
+                        | GetMd5Response
+                        | SetThenGetRequest
+                        | SetThenGetResponse
+                        | ActionThenGetRequest
+                        | ActionThenGetResponse
+                        | ReportNotification
+                        | ReportResponse
+                        | ProxyRequest
+                        | ProxyResponse
+                        | Error
+                    ],
+                    None,
+                ],
+            ],
+            collections.abc.Callable[[], None] | None,
+        ]
+        | None,
+    ) -> None: ...
+    def set_close_handler(
+        self, callback: collections.abc.Callable[[Error], None] | None
+    ) -> None: ...
+    def set_diagnostic_handler(
+        self, callback: collections.abc.Callable[[Error], None] | None
+    ) -> None: ...
+    def set_follow_handler(
+        self,
+        callback: collections.abc.Callable[
+            [builtins.list[AttributeResult] | builtins.list[RecordResult]], None
+        ]
+        | None,
+    ) -> None: ...
+    def set_record_handler(
+        self, callback: collections.abc.Callable[[GetRecordRequest], GetRecordResponse] | None
+    ) -> None: ...
+    def set_report_handler(
+        self, callback: collections.abc.Callable[[ReportNotification], bool] | None
+    ) -> None: ...
+    def set_request_handler(
+        self, callback: collections.abc.Callable[[GetRequest], GetResponse] | None
+    ) -> None: ...
+    def set_set_handler(
+        self, callback: collections.abc.Callable[[SetRequest], SetResponse] | None
+    ) -> None: ...
+    def set_state_handler(
+        self, callback: collections.abc.Callable[[SessionState], None] | None
+    ) -> None: ...
+    def set_traffic_handler(
+        self, callback: collections.abc.Callable[[Event], None] | None
+    ) -> None: ...
+    def start(self) -> None: ...
     @property
     def state(self) -> SessionState: ...
 
@@ -3953,6 +4626,7 @@ class SessionOptions:
     def __init__(
         self,
         *,
+        calendar_clock: collections.abc.Callable[[], DateTime] | None = ...,
         client_address: int = ...,
         clock_trusted: bool = ...,
         factory: FactoryVersion = ...,
@@ -3972,8 +4646,13 @@ class SessionOptions:
         require_login: bool = ...,
         role: Role = ...,
         security_backend: SecurityBackend | None = ...,
+        security_backend_factory: collections.abc.Callable[[], SecurityBackend] | None = ...,
         server: ServerAddress = ...,
     ) -> None: ...
+    @property
+    def calendar_clock(self) -> collections.abc.Callable[[], DateTime] | None: ...
+    @calendar_clock.setter
+    def calendar_clock(self, arg1: collections.abc.Callable[[], DateTime] | None) -> None: ...
     @property
     def client_address(self) -> int: ...
     @client_address.setter
@@ -4050,6 +4729,12 @@ class SessionOptions:
     def security_backend(self) -> SecurityBackend | None: ...
     @security_backend.setter
     def security_backend(self, arg1: SecurityBackend | None) -> None: ...
+    @property
+    def security_backend_factory(self) -> collections.abc.Callable[[], SecurityBackend] | None: ...
+    @security_backend_factory.setter
+    def security_backend_factory(
+        self, arg1: collections.abc.Callable[[], SecurityBackend] | None
+    ) -> None: ...
     @property
     def server(self) -> ServerAddress: ...
     @server.setter
@@ -4296,6 +4981,43 @@ class SignatureSecurity:
     @signature.setter
     def signature(self, arg1: bytes) -> None: ...
 
+class Support:
+    """
+    Members:
+
+      unknown
+
+      no
+
+      yes
+    """
+
+    __members__: typing.ClassVar[dict[str, Support]]
+    no: typing.ClassVar[Support]
+    unknown: typing.ClassVar[Support]
+    yes: typing.ClassVar[Support]
+
+    @typing.overload
+    def __eq__(self, other: Support) -> bool: ...
+    @typing.overload
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> int: ...
+    def __hash__(self) -> int: ...
+    def __index__(self) -> int: ...
+    def __init__(self, value: typing.SupportsInt | typing.SupportsIndex) -> None: ...
+    def __int__(self) -> int: ...
+    @typing.overload
+    def __ne__(self, other: Support) -> bool: ...
+    @typing.overload
+    def __ne__(self, other: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    def __setstate__(self, state: typing.SupportsInt | typing.SupportsIndex) -> None: ...
+    def __str__(self) -> str: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
 class SymmetrySecurity:
     def __init__(self, *, ciphertext: bytes = ..., signature: bytes = ...) -> None: ...
     @property
@@ -4306,6 +5028,31 @@ class SymmetrySecurity:
     def signature(self) -> bytes: ...
     @signature.setter
     def signature(self, arg1: bytes) -> None: ...
+
+class TcpChannel(IChannel):
+    @staticmethod
+    def connect(
+        runtime: IoRuntime,
+        host: str,
+        port: typing.SupportsInt | typing.SupportsIndex,
+        callback: collections.abc.Callable[[None | Error], None],
+        options: ChannelOptions = ...,
+    ) -> TcpChannel: ...
+
+class TcpListener:
+    @staticmethod
+    def listen(
+        runtime: IoRuntime,
+        address: str,
+        port: typing.SupportsInt | typing.SupportsIndex,
+        options: ChannelOptions = ...,
+    ) -> TcpListener: ...
+    def async_accept(
+        self, callback: collections.abc.Callable[[TcpChannel | Error], None]
+    ) -> None: ...
+    def close(self) -> None: ...
+    @property
+    def local_port(self) -> int: ...
 
 class Ti:
     def __init__(self, *, interval: int = ..., unit: int = ...) -> None: ...
@@ -4555,7 +5302,28 @@ def advanced_matches(
     | ProxyResponse,
 ) -> bool: ...
 def approximate_value(arg0: ScaledNumber) -> float: ...
+def async_probe_points(
+    session: SessionHandle,
+    capabilities: Capabilities,
+    attributes: collections.abc.Sequence[Oad],
+    options: ProbeOptions,
+    callback: collections.abc.Callable[[builtins.list[PointResult] | Error], None],
+) -> None: ...
+def attach_advanced_services(
+    session: SessionHandle,
+    objects: ObjectRegistry,
+    executor: IExecutor,
+    options: AdvancedServiceOptions = ...,
+    transparent: TransBridge | None = None,
+) -> None: ...
+def attach_services(session: SessionHandle, objects: ObjectRegistry) -> None: ...
 def build_info() -> dict[str, str]: ...
+def candidate_points(
+    capabilities: Capabilities,
+    attributes: collections.abc.Sequence[Oad],
+    discard_negative: bool = False,
+) -> builtins.list[CandidatePoint]: ...
+def capabilities_from_connect(response: ConnectResponse) -> Capabilities: ...
 def crc16(arg0: bytes | bytearray | memoryview) -> int: ...
 def decimal_text(arg0: ScaledNumber) -> str: ...
 def decode_apdu(
@@ -4591,6 +5359,7 @@ def decode_apdu(
     | ProxyResponse
 ): ...
 def decode_data(input: bytes | bytearray | memoryview, limits: Limits = ...) -> Data: ...
+def decode_fragment(payload: bytes | bytearray | memoryview) -> Fragment: ...
 def decode_frame(input: bytes | bytearray | memoryview, limits: Limits = ...) -> Frame: ...
 def decode_security(
     input: bytes | bytearray | memoryview, limits: Limits = ...
@@ -4636,6 +5405,7 @@ def encode_apdu(
     limits: Limits = ...,
 ) -> bytes: ...
 def encode_data(value: Data, limits: Limits = ...) -> bytes: ...
+def encode_fragment(fragment: Fragment) -> bytes: ...
 def encode_frame(value: Frame, limits: Limits = ...) -> bytes: ...
 def encode_security(value: SecurityRequest | SecurityResponse, limits: Limits = ...) -> bytes: ...
 def energy_oad(
@@ -4687,6 +5457,13 @@ def objects() -> builtins.list[ObjectDefinition]: ...
 def phase_oad(
     oi: typing.SupportsInt | typing.SupportsIndex, phase: Phase, layout: DeviceLayout = ...
 ) -> Oad: ...
+def plan_reads(
+    capabilities: Capabilities,
+    attributes: collections.abc.Sequence[Oad],
+    batch_size: typing.SupportsInt | typing.SupportsIndex = 16,
+    limits: Limits = ...,
+) -> builtins.list[ReadBatch]: ...
+def point_support(capabilities: Capabilities, attribute: Oad) -> Support: ...
 def record_at(
     oi: typing.SupportsInt | typing.SupportsIndex,
     time: DateTimeS,
@@ -4718,6 +5495,8 @@ def register_standard_object(
     layout: DeviceLayout = ...,
     limits: Limits = ...,
 ) -> None: ...
+def require_record_service(capabilities: Capabilities) -> None: ...
+def service_support(capabilities: Capabilities, service: ReadService) -> Support: ...
 def tariff_oad(
     oi: typing.SupportsInt | typing.SupportsIndex,
     tariff: typing.SupportsInt | typing.SupportsIndex,
@@ -4727,6 +5506,21 @@ def tariff_oad(
 def unit_symbol(arg0: typing.SupportsInt | typing.SupportsIndex) -> str: ...
 def validate_layout(arg0: DeviceLayout) -> None: ...
 def validate_oad(attribute: Oad, layout: DeviceLayout = ...) -> None: ...
+def validate_record_cell(
+    oi: typing.SupportsInt | typing.SupportsIndex,
+    column: Oad,
+    value: Data,
+    layout: DeviceLayout = ...,
+    limits: Limits = ...,
+) -> None: ...
+def validate_record_query(
+    query: GetRecord, layout: DeviceLayout = ..., limits: Limits = ...
+) -> None: ...
+def validate_record_result(
+    query: GetRecord, result: RecordResult, layout: DeviceLayout = ..., limits: Limits = ...
+) -> None: ...
+def validate_record_time(time: DateTimeS) -> None: ...
+def validate_session_options(options: SessionOptions) -> None: ...
 def validate_value(
     attribute: Oad, value: Data, layout: DeviceLayout = ..., limits: Limits = ...
 ) -> None: ...

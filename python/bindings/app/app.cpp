@@ -103,9 +103,10 @@ void bind_app(py::module_& module) {
 
     py::class_<app::Client, std::shared_ptr<app::Client>>(module, "NativeClient")
         .def(py::init([](app::ClientOptions options, std::shared_ptr<EventQueue> events) {
-                 if (options.protocol.security_backend)
+                 if (options.protocol.security_backend ||
+                     options.protocol.security_backend_factory || options.protocol.calendar_clock)
                      throw py::value_error(
-                         "Python security backends require a caller-driven Engine");
+                         "Python protocol callbacks require a caller-driven Engine");
                  if (events) {
                      std::weak_ptr<EventQueue> weak = events;
                      options.diagnostic = [weak](const Error& error) {
@@ -146,6 +147,9 @@ void bind_app(py::module_& module) {
             "open_serial_configured",
             [](app::Client& client, std::string path, transport::SerialOptions serial,
                transport::SerialLinkOptions link, app::ConnectionProfile profile) {
+                if (link.set_transmit || link.async_drain)
+                    throw py::value_error(
+                        "Python serial hooks require a caller-driven Engine or SerialLinkChannel");
                 auto result = [&] {
                     py::gil_scoped_release release;
                     return client.open_serial(std::move(path), serial, link, profile);
@@ -232,9 +236,10 @@ void bind_app(py::module_& module) {
     py::class_<app::Server, std::shared_ptr<app::Server>>(module, "NativeServer")
         .def(py::init([](std::shared_ptr<service::Device> device, app::ServerOptions options,
                          std::shared_ptr<EventQueue> events) {
-                 if (options.protocol.security_backend)
+                 if (options.protocol.security_backend ||
+                     options.protocol.security_backend_factory || options.protocol.calendar_clock)
                      throw py::value_error(
-                         "Python security backends require a caller-driven Engine");
+                         "Python protocol callbacks require a caller-driven Engine");
                  if (events) {
                      std::weak_ptr<EventQueue> weak = events;
                      options.diagnostic = [weak](std::uint64_t id, const Error& error) {
@@ -281,6 +286,9 @@ void bind_app(py::module_& module) {
             "start_serial_configured",
             [](app::Server& server, std::string path, transport::SerialOptions serial,
                transport::SerialLinkOptions link, app::ConnectionProfile profile) {
+                if (link.set_transmit || link.async_drain)
+                    throw py::value_error(
+                        "Python serial hooks require a caller-driven Engine or SerialLinkChannel");
                 auto result = [&] {
                     py::gil_scoped_release release;
                     return server.start_serial(std::move(path), serial, link, profile);

@@ -26,6 +26,8 @@ def generate() -> str:
             r"^<dlt698[.]_native[.][^>]+ object at 0x[0-9A-Fa-f]+>$",
             "--enum-class-locations",
             "ConnectionProfile:dlt698._native.ConnectionProfile",
+            "--enum-class-locations",
+            "Role:dlt698._native.Role",
             "--exit-code",
         ],
         check=True,
@@ -33,9 +35,23 @@ def generate() -> str:
     raw = (output / "dlt698/_native.pyi").read_text(encoding="utf-8")
     raw = raw.replace("dlt698._native.", "").replace("typing.Any", "object")
     raw = raw.replace("ConnectionProfile.ConnectionProfile.", "ConnectionProfile.")
+    raw = raw.replace("Role.Role.", "Role.")
     raw = re.sub(r"\blist\[", "builtins.list[", raw)
     tree = ast.parse(raw)
     tree.body.insert(2, ast.Import(names=[ast.alias(name="builtins")]))
+    session_class = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "SessionHandle"
+    )
+    exchange = next(
+        method
+        for method in session_class.body
+        if isinstance(method, ast.FunctionDef) and method.name == "async_exchange"
+    )
+    apdu_type = ast.unparse(
+        next(arg.annotation for arg in exchange.args.args if arg.arg == "request")
+    )
     for node in tree.body:
         if not isinstance(node, ast.ClassDef):
             continue
@@ -53,7 +69,14 @@ def generate() -> str:
                 isinstance(d, ast.Name) and d.id == "property" for d in method.decorator_list
             ):
                 properties[method.name] = method.returns
-        for name in ("security_backend", "proxy"):
+        for name in (
+            "security_backend",
+            "security_backend_factory",
+            "proxy",
+            "calendar_clock",
+            "set_transmit",
+            "async_drain",
+        ):
             if name in properties:
                 nullable = ast.BinOp(
                     left=properties[name], op=ast.BitOr(), right=ast.Constant(value=None)
@@ -69,6 +92,65 @@ def generate() -> str:
         for method in node.body:
             if not isinstance(method, ast.FunctionDef):
                 continue
+            callback_results = {
+                "IChannel": {"async_read": "bytes", "async_write": "None"},
+                "TcpChannel": {"connect": "None"},
+                "TcpListener": {"async_accept": "TcpChannel"},
+                "SessionHandle": {
+                    "async_connect": "ConnectResponse",
+                    "async_link": "LinkResponse",
+                    "async_release": "None",
+                    "async_get": "GetResponse",
+                    "async_set": "SetResponse",
+                    "async_action": "ActionResponse",
+                    "async_get_record": "GetRecordResponse",
+                    "async_exchange": "Apdu",
+                },
+            }
+            outcome = callback_results.get(node.name, {}).get(method.name)
+            if outcome is not None:
+                if outcome == "Apdu":
+                    # 交换消息已有原生 variant 的精确类型签名，直接沿用 request 注解。
+                    outcome = ast.unparse(
+                        next(arg.annotation for arg in method.args.args if arg.arg == "request")
+                    )
+                for arg in method.args.args:
+                    if arg.arg == "callback":
+                        arg.annotation = ast.parse(
+                            f"collections.abc.Callable[[{outcome} | Error], None]", mode="eval"
+                        ).body
+            if node.name == "SessionHandle" and method.name in {
+                "set_state_handler",
+                "set_close_handler",
+                "set_traffic_handler",
+                "set_request_handler",
+                "set_record_handler",
+                "set_set_handler",
+                "set_action_handler",
+                "set_report_handler",
+                "set_follow_handler",
+                "set_diagnostic_handler",
+                "set_acd_handler",
+            }:
+                method.args.args[-1].annotation = ast.BinOp(
+                    left=method.args.args[-1].annotation,
+                    op=ast.BitOr(),
+                    right=ast.Constant(value=None),
+                )
+            if node.name == "SessionHandle" and method.name == "set_advanced_handler":
+                method.args.args[-1].annotation = ast.parse(
+                    f"collections.abc.Callable[[{apdu_type}, "
+                    f"collections.abc.Callable[[{apdu_type} | Error], None]], "
+                    "collections.abc.Callable[[], None] | None] | None",
+                    mode="eval",
+                ).body
+            if node.name == "ProxyProvider" and method.name == "async_request":
+                method.args.args[-1].annotation = ast.parse(
+                    f"collections.abc.Callable[[{apdu_type} | Error], None]", mode="eval"
+                ).body
+                method.returns = ast.parse(
+                    "collections.abc.Callable[[], None] | None", mode="eval"
+                ).body
             if method.name == "__eq__" and node.name in {"Data", "Oad", "Omd"}:
                 method.args.args[-1].annotation = ast.Name(id="object", ctx=ast.Load())
             if method.name == "__init__" and method.args.kwarg is not None:
@@ -144,12 +226,26 @@ def generate() -> str:
             "decode_data",
             "decode_frame",
             "decode_security",
+            "decode_fragment",
         }:
             node.args.args[0].annotation = ast.parse(
                 "bytes | bytearray | memoryview", mode="eval"
             ).body
+        if isinstance(node, ast.FunctionDef) and node.name == "async_probe_points":
+            node.args.args[-1].annotation = ast.parse(
+                "collections.abc.Callable[[builtins.list[PointResult] | Error], None]", mode="eval"
+            ).body
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
+            # 角色枚举按名称排在 Engine 后；stub 的默认值不可引用尚未声明的类。
+            node.args.defaults = [
+                ast.Constant(value=Ellipsis)
+                if isinstance(default, ast.Attribute)
+                and isinstance(default.value, ast.Name)
+                and default.value.id == "Role"
+                else default
+                for default in node.args.defaults
+            ]
             args = node.args.posonlyargs + node.args.args
             for arg, default in zip(
                 args[len(args) - len(node.args.defaults) :], node.args.defaults, strict=True

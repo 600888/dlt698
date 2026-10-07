@@ -7,6 +7,15 @@ from .._native import (
     SessionHandle,
     SessionOptions,
     SessionState,
+    validate_session_options,
 )
 
-__all__ = ["Completion", "Engine", "Role", "SessionHandle", "SessionOptions", "SessionState"]
+__all__ = [
+    "Completion",
+    "Engine",
+    "Role",
+    "SessionHandle",
+    "SessionOptions",
+    "SessionState",
+    "validate_session_options",
+]

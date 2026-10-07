@@ -4,6 +4,7 @@
 #include <dlt698/standard/records.hpp>
 
 #include "bindings.hpp"
+#include "options_callbacks.hpp"
 
 namespace dlt698::python {
 void bind_options(py::module_& module) {
@@ -41,6 +42,7 @@ void bind_options(py::module_& module) {
                                   &transport::SerialLinkOptions::max_pending_write_bytes);
     value_SerialLinkOptions.field("max_pending_writes",
                                   &transport::SerialLinkOptions::max_pending_writes);
+    serial_callbacks(value_SerialLinkOptions);
     value_SerialLinkOptions.finish();
     value_ServerAddress.field("type", &protocol::link::ServerAddress::type);
     value_ServerAddress.field("logical", &protocol::link::ServerAddress::logical);
@@ -58,6 +60,8 @@ void bind_options(py::module_& module) {
     value_SessionOptions.field("parameters", &session::SessionOptions::parameters);
     value_SessionOptions.field("factory", &session::SessionOptions::factory);
     value_SessionOptions.field("security_backend", &session::SessionOptions::security_backend);
+    value_SessionOptions.field("security_backend_factory",
+                               &session::SessionOptions::security_backend_factory);
     value_SessionOptions.field("protect_application",
                                &session::SessionOptions::protect_application);
     value_SessionOptions.field("request_timeout", &session::SessionOptions::request_timeout);
@@ -72,6 +76,7 @@ void bind_options(py::module_& module) {
     value_SessionOptions.field("fragment_retries", &session::SessionOptions::fragment_retries);
     value_SessionOptions.field("report_retries", &session::SessionOptions::report_retries);
     value_SessionOptions.field("prefer_get_blocks", &session::SessionOptions::prefer_get_blocks);
+    value_SessionOptions.field("calendar_clock", &session::SessionOptions::calendar_clock);
     value_SessionOptions.finish();
     value_ClientOptions.field("protocol", &app::ClientOptions::protocol);
     value_ClientOptions.field("transport_timeout", &app::ClientOptions::transport_timeout);

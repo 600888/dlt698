@@ -15,7 +15,8 @@ class PythonBackend : public security::IBackend, public py::trampoline_self_life
         if (!method) return Error{ErrorCode::unsupported_service, 0, name};
         try {
             if constexpr (std::is_void_v<T>) {
-                method(std::forward<Args>(args)...);
+                if (!method(std::forward<Args>(args)...).is_none())
+                    return Error{ErrorCode::invalid_value, 0, "security callback must return None"};
                 return {};
             } else
                 return py::cast<T>(method(std::forward<Args>(args)...));
@@ -78,12 +79,18 @@ class PythonBackend : public security::IBackend, public py::trampoline_self_life
 #else
         if (_Py_IsFinalizing()) return;
 #endif
+        py::gil_scoped_acquire acquire;
         try {
-            py::gil_scoped_acquire acquire;
             auto method = py::get_override(this, "reset");
-            if (method) method();
-        } catch (...) {
-        }  // 原生 reset 的 noexcept 合约不能被 Python 异常破坏。
+            if (method && !method().is_none())
+                throw py::type_error("SecurityBackend.reset must return None");
+        } catch (py::error_already_set& error) {
+            // 清理异常不能越过 noexcept 边界，但也不能静默掩盖密钥材料清理失败。
+            error.discard_as_unraisable("SecurityBackend.reset");
+        } catch (const std::exception& error) {
+            PyErr_SetString(PyExc_ValueError, error.what());
+            py::error_already_set().discard_as_unraisable("SecurityBackend.reset");
+        }
     }
 };
 

@@ -33,7 +33,7 @@
     "cpp/include/dlt698/service/service.hpp": "684a964f6dbc60692627d6858944f7c9e86672c7d8827e9ab1ac3b26883dc972",
     "cpp/include/dlt698/service/standard_object.hpp": "3dcea17f55649e9b68a70fc646a6e2e635f97cf951362bf2232097b21fa5d734",
     "cpp/include/dlt698/service/sync.hpp": "d8086b0804855049b06410eea624816cd27ab4eed938b715816b12b54d54f300",
-    "cpp/include/dlt698/session/session.hpp": "4f14959e174263ba42dbe3fb7d5aae2d6a9f8874a519f6b5954020fcc35465e4",
+    "cpp/include/dlt698/session/session.hpp": "57f91aab44c64afffa1cbb5be4d1e3d4fb109ce0e3ddd5bcc8c35a27f1445015",
     "cpp/include/dlt698/session/traffic.hpp": "6fb82fa1406f9fdb360d8745f5578bdc0a9264b498a340a93104fe43df2e6d39",
     "cpp/include/dlt698/standard/capabilities.hpp": "7e3e38b9f4b85824a7537e4a19a73c83af62323a03cd6286de72c809059dd40c",
     "cpp/include/dlt698/standard/catalog.hpp": "edbef8c116a90bf9bcbd6854ec0050d37b8cffffe1d8a730dd983e748925e286",
@@ -347,6 +347,90 @@
       ]
     },
     {
+      "cpp": "dlt698::IExecutor",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.IExecutor",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::IExecutor::is_current",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.IExecutor.is_current",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::IExecutor::now",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.IExecutor.now",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::IExecutor::post",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.IExecutor.post",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::IExecutor::schedule",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.IExecutor.schedule",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::ITimer",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.ITimer",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::ITimer::cancel",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.ITimer.cancel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::Limits",
       "header": "cpp/include/dlt698/common/bytes.hpp",
       "python": "dlt698._native.Limits",
@@ -417,6 +501,245 @@
         "python/tests/model/test_values.py",
         "python/tests/service/test_expert.py"
       ]
+    },
+    {
+      "cpp": "dlt698::ManualExecutor",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.ManualExecutor",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::ManualExecutor::advance",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.ManualExecutor.advance",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::ManualExecutor::is_current",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.ManualExecutor.is_current",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::ManualExecutor::now",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.ManualExecutor.now",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::ManualExecutor::post",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.ManualExecutor.post",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::ManualExecutor::run_ready",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.ManualExecutor.run_ready",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::ManualExecutor::schedule",
+      "header": "cpp/include/dlt698/common/executor.hpp",
+      "python": "dlt698._native.ManualExecutor.schedule",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::app::Client",
+      "header": "cpp/include/dlt698/app/client.hpp",
+      "python": "dlt698._native.NativeClient",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::app::Client::action",
+      "python": "dlt698._native.NativeClient.action",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::action_list",
+      "python": "dlt698._native.NativeClient.action_list",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::connect_tcp",
+      "python": "dlt698._native.NativeClient.connect_tcp",
+      "status": "exposed",
+      "phase": "P1",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::disconnect",
+      "python": "dlt698._native.NativeClient.disconnect",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::get",
+      "python": "dlt698._native.NativeClient.get",
+      "status": "exposed",
+      "phase": "P1",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::get_list",
+      "python": "dlt698._native.NativeClient.get_list",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::get_record",
+      "python": "dlt698._native.NativeClient.get_record",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::get_record_list",
+      "python": "dlt698._native.NativeClient.get_record_list",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::open_serial",
+      "python": "dlt698._native.NativeClient.open_serial",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::request_disconnect",
+      "python": "dlt698._native.NativeClient.request_disconnect",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::set",
+      "python": "dlt698._native.NativeClient.set",
+      "status": "exposed",
+      "phase": "P1",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::set_list",
+      "python": "dlt698._native.NativeClient.set_list",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Client::state",
+      "python": "dlt698._native.NativeClient.state",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/client.hpp"
     },
     {
       "cpp": "dlt698::app::ClientOptions",
@@ -585,6 +908,117 @@
         "python/tests/model/test_values.py",
         "python/tests/service/test_expert.py"
       ]
+    },
+    {
+      "cpp": "dlt698::app::Server",
+      "header": "cpp/include/dlt698/app/server.hpp",
+      "python": "dlt698._native.NativeServer",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::app::Server::connections",
+      "python": "dlt698._native.NativeServer.connections",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/server.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Server::device",
+      "python": "dlt698._native.NativeServer.device",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/server.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Server::local_port",
+      "python": "dlt698._native.NativeServer.local_port",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/server.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Server::request_stop",
+      "python": "dlt698._native.NativeServer.request_stop",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/server.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Server::set",
+      "python": "dlt698._native.NativeServer.set",
+      "status": "exposed",
+      "phase": "P1",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/server.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Server::start_serial",
+      "python": "dlt698._native.NativeServer.start_serial",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/server.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Server::start_tcp",
+      "python": "dlt698._native.NativeServer.start_tcp",
+      "status": "exposed",
+      "phase": "P1",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/server.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Server::state",
+      "python": "dlt698._native.NativeServer.state",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/server.hpp"
+    },
+    {
+      "cpp": "dlt698::app::Server::stop",
+      "python": "dlt698._native.NativeServer.stop",
+      "status": "exposed",
+      "phase": "P2",
+      "contract": "same core; Result failures translated, DAR preserved",
+      "tests": [
+        "python/tests/app/test_application.py"
+      ],
+      "header": "cpp/include/dlt698/app/server.hpp"
     },
     {
       "cpp": "dlt698::app::ServerOptions",
@@ -3431,6 +3865,42 @@
       ]
     },
     {
+      "cpp": "dlt698::protocol::apdu::GetBlockTransfer",
+      "header": "cpp/include/dlt698/protocol/apdu/get_block.hpp",
+      "python": "dlt698._native.GetBlockTransfer",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::apdu::GetBlockTransfer::accept",
+      "header": "cpp/include/dlt698/protocol/apdu/get_block.hpp",
+      "python": "dlt698._native.GetBlockTransfer.accept",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::apdu::GetBlockTransfer::split",
+      "header": "cpp/include/dlt698/protocol/apdu/get_block.hpp",
+      "python": "dlt698._native.GetBlockTransfer.split",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::protocol::apdu::GetMd5Request",
       "header": "cpp/include/dlt698/protocol/apdu/get.hpp",
       "python": "dlt698._native.GetMd5Request",
@@ -5687,6 +6157,114 @@
       ]
     },
     {
+      "cpp": "dlt698::protocol::link::Fragment",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.Fragment",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::Fragment::data",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.Fragment.data",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::Fragment::sequence",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.Fragment.sequence",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::Fragment::type",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.Fragment.type",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::FragmentType",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.FragmentType",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::FragmentType::acknowledgement",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.FragmentType.acknowledgement",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::FragmentType::first",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.FragmentType.first",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::FragmentType::last",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.FragmentType.last",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::FragmentType::middle",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.FragmentType.middle",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::protocol::link::Frame",
       "header": "cpp/include/dlt698/protocol/link/frame.hpp",
       "python": "dlt698._native.Frame",
@@ -5795,6 +6373,138 @@
       ]
     },
     {
+      "cpp": "dlt698::protocol::link::LinkFragmenter",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.LinkFragmenter",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::LinkFragmenter::acknowledge",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.LinkFragmenter.acknowledge",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::LinkFragmenter::current",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.LinkFragmenter.current",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::LinkReassembler",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.LinkReassembler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::LinkReassembler::accept",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.LinkReassembler.accept",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::LinkReassembler::active",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.LinkReassembler.active",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::LinkReassembler::reset",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.LinkReassembler.reset",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::Reassembly",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.Reassembly",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::Reassembly::acknowledge",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.Reassembly.acknowledge",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::Reassembly::apdu",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.Reassembly.apdu",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::Reassembly::duplicate",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.Reassembly.duplicate",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::protocol::link::ServerAddress",
       "header": "cpp/include/dlt698/protocol/link/frame.hpp",
       "python": "dlt698._native.ServerAddress",
@@ -5855,9 +6565,33 @@
       ]
     },
     {
+      "cpp": "dlt698::protocol::link::decode_fragment",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.decode_fragment",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::protocol::link::decode_frame",
       "header": "cpp/include/dlt698/protocol/link/frame.hpp",
       "python": "dlt698._native.decode_frame",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::protocol::link::encode_fragment",
+      "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
+      "python": "dlt698._native.encode_fragment",
       "status": "exposed",
       "phase": "P2-P3",
       "contract": "native owning value/Result adapter",
@@ -6283,9 +7017,57 @@
       ]
     },
     {
+      "cpp": "dlt698::service::IProxyProvider",
+      "header": "cpp/include/dlt698/service/advanced.hpp",
+      "python": "dlt698._native.ProxyProvider",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::IProxyProvider::async_request",
+      "header": "cpp/include/dlt698/service/advanced.hpp",
+      "python": "dlt698._native.ProxyProvider.async_request",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::service::MemoryObject",
       "header": "cpp/include/dlt698/service/object.hpp",
       "python": "dlt698._native.MemoryObject",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::MemoryObject::bind_method",
+      "header": "cpp/include/dlt698/service/object.hpp",
+      "python": "dlt698._native.MemoryObject.bind_method",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::MemoryObject::bind_record",
+      "header": "cpp/include/dlt698/service/object.hpp",
+      "python": "dlt698._native.MemoryObject.bind_record",
       "status": "exposed",
       "phase": "P2-P3",
       "contract": "native owning value/Result adapter",
@@ -6607,9 +7389,129 @@
       ]
     },
     {
+      "cpp": "dlt698::service::PointResult",
+      "header": "cpp/include/dlt698/service/point_probe.hpp",
+      "python": "dlt698._native.PointResult",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::PointResult::attribute",
+      "header": "cpp/include/dlt698/service/point_probe.hpp",
+      "python": "dlt698._native.PointResult.attribute",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::PointResult::outcome",
+      "header": "cpp/include/dlt698/service/point_probe.hpp",
+      "python": "dlt698._native.PointResult.outcome",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::PointResult::schema_checked",
+      "header": "cpp/include/dlt698/service/point_probe.hpp",
+      "python": "dlt698._native.PointResult.schema_checked",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::PointResult::validation_error",
+      "header": "cpp/include/dlt698/service/point_probe.hpp",
+      "python": "dlt698._native.PointResult.validation_error",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::ProbeOptions",
+      "header": "cpp/include/dlt698/service/point_probe.hpp",
+      "python": "dlt698._native.ProbeOptions",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::ProbeOptions::batch_size",
+      "header": "cpp/include/dlt698/service/point_probe.hpp",
+      "python": "dlt698._native.ProbeOptions.batch_size",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::ProbeOptions::layout",
+      "header": "cpp/include/dlt698/service/point_probe.hpp",
+      "python": "dlt698._native.ProbeOptions.layout",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::ProbeOptions::limits",
+      "header": "cpp/include/dlt698/service/point_probe.hpp",
+      "python": "dlt698._native.ProbeOptions.limits",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::service::ProxyRouter",
       "header": "cpp/include/dlt698/service/advanced.hpp",
       "python": "dlt698._native.ProxyRouter",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::service::ProxyRouter::async_request",
+      "header": "cpp/include/dlt698/service/advanced.hpp",
+      "python": "dlt698._native.ProxyRouter.async_request",
       "status": "exposed",
       "phase": "P2-P3",
       "contract": "native owning value/Result adapter",
@@ -6691,6 +7593,18 @@
       ]
     },
     {
+      "cpp": "dlt698::service::async_probe_points",
+      "header": "cpp/include/dlt698/service/point_probe.hpp",
+      "python": "dlt698._native.async_probe_points",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::service::make_object_schema",
       "header": "cpp/include/dlt698/service/standard_object.hpp",
       "python": "dlt698._native.make_object_schema",
@@ -6763,6 +7677,102 @@
       ]
     },
     {
+      "cpp": "dlt698::session::Session::async_action",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.async_action",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::async_connect",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.async_connect",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::async_exchange",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.async_exchange",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::async_get",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.async_get",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::async_get_record",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.async_get_record",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::async_link",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.async_link",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::async_release",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.async_release",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::async_set",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.async_set",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::session::Session::cancel",
       "header": "cpp/include/dlt698/session/session.hpp",
       "python": "dlt698._native.SessionHandle.cancel",
@@ -6775,9 +7785,177 @@
       ]
     },
     {
+      "cpp": "dlt698::session::Session::in_executor_thread",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.in_executor_thread",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::session::Session::set_access_demand",
       "header": "cpp/include/dlt698/session/session.hpp",
       "python": "dlt698._native.SessionHandle.set_access_demand",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_acd_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_acd_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_action_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_action_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_advanced_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_advanced_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_close_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_close_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_diagnostic_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_diagnostic_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_follow_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_follow_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_record_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_record_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_report_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_report_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_request_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_request_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_set_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_set_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_state_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_state_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::set_traffic_handler",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.set_traffic_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::Session::start",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionHandle.start",
       "status": "exposed",
       "phase": "P2-P3",
       "contract": "native owning value/Result adapter",
@@ -6802,6 +7980,18 @@
       "cpp": "dlt698::session::SessionOptions",
       "header": "cpp/include/dlt698/session/session.hpp",
       "python": "dlt698._native.SessionOptions",
+      "status": "exposed",
+      "phase": "options",
+      "contract": "owning native value; native defaults preserved",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/app/test_application.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::SessionOptions::calendar_clock",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionOptions.calendar_clock",
       "status": "exposed",
       "phase": "options",
       "contract": "owning native value; native defaults preserved",
@@ -7030,6 +8220,18 @@
       "cpp": "dlt698::session::SessionOptions::security_backend",
       "header": "cpp/include/dlt698/session/session.hpp",
       "python": "dlt698._native.SessionOptions.security_backend",
+      "status": "exposed",
+      "phase": "options",
+      "contract": "owning native value; native defaults preserved",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/app/test_application.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::SessionOptions::security_backend_factory",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionOptions.security_backend_factory",
       "status": "exposed",
       "phase": "options",
       "contract": "owning native value; native defaults preserved",
@@ -7387,6 +8589,66 @@
       ]
     },
     {
+      "cpp": "dlt698::standard::CandidatePoint",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.CandidatePoint",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::CandidatePoint::attribute",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.CandidatePoint.attribute",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::CandidatePoint::hint",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.CandidatePoint.hint",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::Capabilities",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.Capabilities",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::Capabilities::negotiated",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.Capabilities.negotiated",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::standard::DemandValue",
       "header": "cpp/include/dlt698/standard/catalog.hpp",
       "python": "dlt698._native.DemandValue",
@@ -7627,6 +8889,102 @@
       ]
     },
     {
+      "cpp": "dlt698::standard::ReadBatch",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.ReadBatch",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::ReadBatch::attributes",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.ReadBatch.attributes",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::ReadBatch::list",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.ReadBatch.list",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::ReadService",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.ReadService",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::ReadService::list",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.ReadService.list",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::ReadService::next",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.ReadService.next",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::ReadService::normal",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.ReadService.normal",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::ReadService::record",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.ReadService.record",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::standard::RecordDefinition",
       "header": "cpp/include/dlt698/standard/records.hpp",
       "python": "dlt698._native.RecordDefinition",
@@ -7726,6 +9084,54 @@
       "cpp": "dlt698::standard::ScaledNumber::scaling",
       "header": "cpp/include/dlt698/standard/catalog.hpp",
       "python": "dlt698._native.ScaledNumber.scaling",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::Support",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.Support",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::Support::no",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.Support.no",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::Support::unknown",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.Support.unknown",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::Support::yes",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.Support.yes",
       "status": "exposed",
       "phase": "P2-P3",
       "contract": "native owning value/Result adapter",
@@ -7870,6 +9276,30 @@
       "cpp": "dlt698::standard::approximate_value",
       "header": "cpp/include/dlt698/standard/catalog.hpp",
       "python": "dlt698._native.approximate_value",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::candidate_points",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.candidate_points",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::capabilities_from_connect",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.capabilities_from_connect",
       "status": "exposed",
       "phase": "P2-P3",
       "contract": "native owning value/Result adapter",
@@ -8035,6 +9465,30 @@
       ]
     },
     {
+      "cpp": "dlt698::standard::plan_reads",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.plan_reads",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::point_support",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.point_support",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::standard::record_at",
       "header": "cpp/include/dlt698/standard/records.hpp",
       "python": "dlt698._native.record_at",
@@ -8062,6 +9516,30 @@
       "cpp": "dlt698::standard::record_sequences",
       "header": "cpp/include/dlt698/standard/records.hpp",
       "python": "dlt698._native.record_sequences",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::require_record_service",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.require_record_service",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::service_support",
+      "header": "cpp/include/dlt698/standard/capabilities.hpp",
+      "python": "dlt698._native.service_support",
       "status": "exposed",
       "phase": "P2-P3",
       "contract": "native owning value/Result adapter",
@@ -8110,6 +9588,54 @@
       "cpp": "dlt698::standard::validate_oad",
       "header": "cpp/include/dlt698/standard/catalog.hpp",
       "python": "dlt698._native.validate_oad",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::validate_record_cell",
+      "header": "cpp/include/dlt698/standard/records.hpp",
+      "python": "dlt698._native.validate_record_cell",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::validate_record_query",
+      "header": "cpp/include/dlt698/standard/records.hpp",
+      "python": "dlt698._native.validate_record_query",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::validate_record_result",
+      "header": "cpp/include/dlt698/standard/records.hpp",
+      "python": "dlt698._native.validate_record_result",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::standard::validate_record_time",
+      "header": "cpp/include/dlt698/standard/records.hpp",
+      "python": "dlt698._native.validate_record_time",
       "status": "exposed",
       "phase": "P2-P3",
       "contract": "native owning value/Result adapter",
@@ -8179,6 +9705,294 @@
       ]
     },
     {
+      "cpp": "dlt698::transport::IChannel",
+      "header": "cpp/include/dlt698/transport/channel.hpp",
+      "python": "dlt698._native.IChannel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::IChannel::async_read",
+      "header": "cpp/include/dlt698/transport/channel.hpp",
+      "python": "dlt698._native.IChannel.async_read",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::IChannel::async_write",
+      "header": "cpp/include/dlt698/transport/channel.hpp",
+      "python": "dlt698._native.IChannel.async_write",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::IChannel::close",
+      "header": "cpp/include/dlt698/transport/channel.hpp",
+      "python": "dlt698._native.IChannel.close",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::IoRuntime",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.IoRuntime",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::IoRuntime::executor",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.IoRuntime.executor",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::IoRuntime::finish",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.IoRuntime.finish",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::IoRuntime::restart",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.IoRuntime.restart",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::IoRuntime::run_for",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.IoRuntime.run_for",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::IoRuntime::stop",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.IoRuntime.stop",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::MemoryChannel",
+      "header": "cpp/include/dlt698/transport/memory.hpp",
+      "python": "dlt698._native.MemoryChannel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::MemoryChannel::async_read",
+      "header": "cpp/include/dlt698/transport/memory.hpp",
+      "python": "dlt698._native.MemoryChannel.async_read",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::MemoryChannel::async_write",
+      "header": "cpp/include/dlt698/transport/memory.hpp",
+      "python": "dlt698._native.MemoryChannel.async_write",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::MemoryChannel::close",
+      "header": "cpp/include/dlt698/transport/memory.hpp",
+      "python": "dlt698._native.MemoryChannel.close",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::MemoryChannel::pair",
+      "header": "cpp/include/dlt698/transport/memory.hpp",
+      "python": "dlt698._native.MemoryChannel.pair",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::MemoryOptions",
+      "header": "cpp/include/dlt698/transport/memory.hpp",
+      "python": "dlt698._native.MemoryOptions",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::MemoryOptions::max_buffer_bytes",
+      "header": "cpp/include/dlt698/transport/memory.hpp",
+      "python": "dlt698._native.MemoryOptions.max_buffer_bytes",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::MemoryOptions::max_pending_writes",
+      "header": "cpp/include/dlt698/transport/memory.hpp",
+      "python": "dlt698._native.MemoryOptions.max_pending_writes",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::MemoryOptions::read_chunk_bytes",
+      "header": "cpp/include/dlt698/transport/memory.hpp",
+      "python": "dlt698._native.MemoryOptions.read_chunk_bytes",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialChannel",
+      "header": "cpp/include/dlt698/transport/serial.hpp",
+      "python": "dlt698._native.SerialChannel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialChannel::async_read",
+      "header": "cpp/include/dlt698/transport/serial.hpp",
+      "python": "dlt698._native.SerialChannel.async_read",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialChannel::async_write",
+      "header": "cpp/include/dlt698/transport/serial.hpp",
+      "python": "dlt698._native.SerialChannel.async_write",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialChannel::close",
+      "header": "cpp/include/dlt698/transport/serial.hpp",
+      "python": "dlt698._native.SerialChannel.close",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialChannel::open",
+      "header": "cpp/include/dlt698/transport/serial.hpp",
+      "python": "dlt698._native.SerialChannel.open",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::transport::SerialFlowControl",
       "header": "cpp/include/dlt698/transport/serial.hpp",
       "python": "dlt698._native.SerialFlowControl",
@@ -8227,6 +10041,66 @@
       ]
     },
     {
+      "cpp": "dlt698::transport::SerialLinkChannel",
+      "header": "cpp/include/dlt698/transport/serial_link.hpp",
+      "python": "dlt698._native.SerialLinkChannel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialLinkChannel::async_read",
+      "header": "cpp/include/dlt698/transport/serial_link.hpp",
+      "python": "dlt698._native.SerialLinkChannel.async_read",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialLinkChannel::async_write",
+      "header": "cpp/include/dlt698/transport/serial_link.hpp",
+      "python": "dlt698._native.SerialLinkChannel.async_write",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialLinkChannel::close",
+      "header": "cpp/include/dlt698/transport/serial_link.hpp",
+      "python": "dlt698._native.SerialLinkChannel.close",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialLinkChannel::wrap",
+      "header": "cpp/include/dlt698/transport/serial_link.hpp",
+      "python": "dlt698._native.SerialLinkChannel.wrap",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
+    },
+    {
       "cpp": "dlt698::transport::SerialLinkOptions",
       "header": "cpp/include/dlt698/transport/serial_link.hpp",
       "python": "dlt698._native.SerialLinkOptions",
@@ -8236,6 +10110,18 @@
       "tests": [
         "python/tests/model/test_values.py",
         "python/tests/app/test_application.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialLinkOptions::async_drain",
+      "header": "cpp/include/dlt698/transport/serial_link.hpp",
+      "python": "dlt698._native.SerialLinkOptions.async_drain",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
       ]
     },
     {
@@ -8284,6 +10170,18 @@
       "tests": [
         "python/tests/model/test_values.py",
         "python/tests/app/test_application.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::transport::SerialLinkOptions::set_transmit",
+      "header": "cpp/include/dlt698/transport/serial_link.hpp",
+      "python": "dlt698._native.SerialLinkOptions.set_transmit",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
       ]
     },
     {
@@ -8467,246 +10365,124 @@
       ]
     },
     {
-      "cpp": "dlt698::app::Client::connect_tcp",
-      "python": "dlt698._native.NativeClient.connect_tcp",
+      "cpp": "dlt698::transport::TcpChannel",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.TcpChannel",
       "status": "exposed",
-      "phase": "P1",
-      "contract": "same core; Result failures translated, DAR preserved",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
       "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
-      "cpp": "dlt698::app::Client::open_serial",
-      "python": "dlt698._native.NativeClient.open_serial",
+      "cpp": "dlt698::transport::TcpChannel::async_read",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.TcpChannel.async_read",
       "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
       "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
-      "cpp": "dlt698::app::Client::get",
-      "python": "dlt698._native.NativeClient.get",
+      "cpp": "dlt698::transport::TcpChannel::async_write",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.TcpChannel.async_write",
       "status": "exposed",
-      "phase": "P1",
-      "contract": "same core; Result failures translated, DAR preserved",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
       "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
-      "cpp": "dlt698::app::Client::get_list",
-      "python": "dlt698._native.NativeClient.get_list",
+      "cpp": "dlt698::transport::TcpChannel::close",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.TcpChannel.close",
       "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
       "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
-      "cpp": "dlt698::app::Client::get_record",
-      "python": "dlt698._native.NativeClient.get_record",
+      "cpp": "dlt698::transport::TcpChannel::connect",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.TcpChannel.connect",
       "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
       "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
-      "cpp": "dlt698::app::Client::get_record_list",
-      "python": "dlt698._native.NativeClient.get_record_list",
+      "cpp": "dlt698::transport::TcpListener",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.TcpListener",
       "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
       "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
-      "cpp": "dlt698::app::Client::set",
-      "python": "dlt698._native.NativeClient.set",
+      "cpp": "dlt698::transport::TcpListener::async_accept",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.TcpListener.async_accept",
       "status": "exposed",
-      "phase": "P1",
-      "contract": "same core; Result failures translated, DAR preserved",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
       "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
-      "cpp": "dlt698::app::Client::set_list",
-      "python": "dlt698._native.NativeClient.set_list",
+      "cpp": "dlt698::transport::TcpListener::close",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.TcpListener.close",
       "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
       "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
-      "cpp": "dlt698::app::Client::action",
-      "python": "dlt698._native.NativeClient.action",
+      "cpp": "dlt698::transport::TcpListener::listen",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.TcpListener.listen",
       "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
       "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
-      "cpp": "dlt698::app::Client::action_list",
-      "python": "dlt698._native.NativeClient.action_list",
+      "cpp": "dlt698::transport::TcpListener::local_port",
+      "header": "cpp/include/dlt698/transport/tcp.hpp",
+      "python": "dlt698._native.TcpListener.local_port",
       "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
       "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Client::request_disconnect",
-      "python": "dlt698._native.NativeClient.request_disconnect",
-      "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Client::disconnect",
-      "python": "dlt698._native.NativeClient.disconnect",
-      "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Client::state",
-      "python": "dlt698._native.NativeClient.state",
-      "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/client.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Server::set",
-      "python": "dlt698._native.NativeServer.set",
-      "status": "exposed",
-      "phase": "P1",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/server.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Server::device",
-      "python": "dlt698._native.NativeServer.device",
-      "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/server.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Server::start_tcp",
-      "python": "dlt698._native.NativeServer.start_tcp",
-      "status": "exposed",
-      "phase": "P1",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/server.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Server::start_serial",
-      "python": "dlt698._native.NativeServer.start_serial",
-      "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/server.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Server::request_stop",
-      "python": "dlt698._native.NativeServer.request_stop",
-      "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/server.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Server::stop",
-      "python": "dlt698._native.NativeServer.stop",
-      "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/server.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Server::state",
-      "python": "dlt698._native.NativeServer.state",
-      "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/server.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Server::local_port",
-      "python": "dlt698._native.NativeServer.local_port",
-      "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/server.hpp"
-    },
-    {
-      "cpp": "dlt698::app::Server::connections",
-      "python": "dlt698._native.NativeServer.connections",
-      "status": "exposed",
-      "phase": "P2",
-      "contract": "same core; Result failures translated, DAR preserved",
-      "tests": [
-        "python/tests/app/test_application.py"
-      ],
-      "header": "cpp/include/dlt698/app/server.hpp"
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "header": "cpp/include/dlt698/app/client.hpp",
@@ -9063,6 +10839,17 @@
       "contract": "Engine transparent constructor bridges nonblocking native completion",
       "tests": [
         "python/tests/transport/test_transparent.py"
+      ]
+    },
+    {
+      "cpp": "dlt698::session::validate_options",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.validate_session_options",
+      "status": "exposed",
+      "phase": "P3",
+      "contract": "native preflight; no backend factory calls or reset side effects",
+      "tests": [
+        "python/tests/security/test_security.py"
       ]
     }
   ],
@@ -9542,8 +11329,14 @@
       "kind": "CLASS_DECL",
       "signature": "class DLT698_API IExecutor",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IExecutor",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::IExecutor::Clock",
@@ -9566,32 +11359,56 @@
       "kind": "CXX_METHOD",
       "signature": "virtual bool is_current ( ) const noexcept = 0",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IExecutor.is_current",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::IExecutor::now",
       "kind": "CXX_METHOD",
       "signature": "virtual Clock :: time_point now ( ) const noexcept = 0",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IExecutor.now",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::IExecutor::post",
       "kind": "CXX_METHOD",
       "signature": "virtual void post ( Task task ) = 0",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IExecutor.post",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::IExecutor::schedule",
       "kind": "CXX_METHOD",
       "signature": "virtual std :: shared_ptr < ITimer > schedule ( Clock :: duration delay , Task task ) = 0",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IExecutor.schedule",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::IExecutor::~IExecutor",
@@ -9606,16 +11423,28 @@
       "kind": "CLASS_DECL",
       "signature": "class DLT698_API ITimer",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ITimer",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::ITimer::cancel",
       "kind": "CXX_METHOD",
       "signature": "virtual void cancel ( ) = 0",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ITimer.cancel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::ITimer::~ITimer",
@@ -9714,8 +11543,14 @@
       "kind": "CLASS_DECL",
       "signature": "class ManualExecutor final : public IExecutor",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ManualExecutor",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::ManualExecutor::ManualExecutor",
@@ -9738,24 +11573,42 @@
       "kind": "CXX_METHOD",
       "signature": "void advance ( Clock :: duration elapsed )",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ManualExecutor.advance",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::ManualExecutor::is_current",
       "kind": "CXX_METHOD",
       "signature": "bool is_current ( ) const noexcept override",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ManualExecutor.is_current",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::ManualExecutor::now",
       "kind": "CXX_METHOD",
       "signature": "Clock :: time_point now ( ) const noexcept override",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ManualExecutor.now",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::ManualExecutor::operator=",
@@ -9770,24 +11623,42 @@
       "kind": "CXX_METHOD",
       "signature": "void post ( Task task ) override",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ManualExecutor.post",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::ManualExecutor::run_ready",
       "kind": "CXX_METHOD",
       "signature": "void run_ready ( )",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ManualExecutor.run_ready",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::ManualExecutor::schedule",
       "kind": "CXX_METHOD",
       "signature": "std :: shared_ptr < ITimer > schedule ( Clock :: duration delay , Task task ) override",
       "header": "cpp/include/dlt698/common/executor.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ManualExecutor.schedule",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::ManualExecutor::~ManualExecutor",
@@ -10010,8 +11881,14 @@
       "kind": "CLASS_DECL",
       "signature": "class Client",
       "header": "cpp/include/dlt698/app/client.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.NativeClient",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::app::Client::Client",
@@ -10444,8 +12321,14 @@
       "kind": "CLASS_DECL",
       "signature": "class Server",
       "header": "cpp/include/dlt698/app/server.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.NativeServer",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::app::Server::Server",
@@ -14572,8 +16455,14 @@
       "kind": "CLASS_DECL",
       "signature": "class GetBlockTransfer",
       "header": "cpp/include/dlt698/protocol/apdu/get_block.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.GetBlockTransfer",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::apdu::GetBlockTransfer::GetBlockTransfer",
@@ -14588,16 +16477,28 @@
       "kind": "CXX_METHOD",
       "signature": "Result < std :: optional < GetSnapshot >> accept ( const GetNextResponse & block )",
       "header": "cpp/include/dlt698/protocol/apdu/get_block.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.GetBlockTransfer.accept",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::apdu::GetBlockTransfer::split",
       "kind": "CXX_METHOD",
       "signature": "static Result < std :: vector < GetNextResponse >> split ( GetSnapshot snapshot , std :: size_t target_bytes , const Limits & limits )",
       "header": "cpp/include/dlt698/protocol/apdu/get_block.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.GetBlockTransfer.split",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::apdu::GetMd5Request",
@@ -17388,72 +19289,126 @@
       "kind": "STRUCT_DECL",
       "signature": "struct Fragment",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Fragment",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::Fragment::data",
       "kind": "FIELD_DECL",
       "signature": "Bytes data",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Fragment.data",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::Fragment::sequence",
       "kind": "FIELD_DECL",
       "signature": "std :: uint16_t sequence = 0",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Fragment.sequence",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::Fragment::type",
       "kind": "FIELD_DECL",
       "signature": "FragmentType type = FragmentType :: first",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Fragment.type",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::FragmentType",
       "kind": "ENUM_DECL",
       "signature": "enum class FragmentType : std :: uint8_t",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.FragmentType",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::FragmentType::acknowledgement",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "acknowledgement = 2",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.FragmentType.acknowledgement",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::FragmentType::first",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "first = 0",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.FragmentType.first",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::FragmentType::last",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "last = 1",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.FragmentType.last",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::FragmentType::middle",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "middle = 3",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.FragmentType.middle",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::Frame",
@@ -17634,8 +19589,14 @@
       "kind": "CLASS_DECL",
       "signature": "class LinkFragmenter",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.LinkFragmenter",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::LinkFragmenter::LinkFragmenter",
@@ -17650,24 +19611,42 @@
       "kind": "CXX_METHOD",
       "signature": "Result < void > acknowledge ( std :: uint16_t sequence )",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.LinkFragmenter.acknowledge",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::LinkFragmenter::current",
       "kind": "CXX_METHOD",
       "signature": "Fragment current ( ) const",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.LinkFragmenter.current",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::LinkReassembler",
       "kind": "CLASS_DECL",
       "signature": "class LinkReassembler",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.LinkReassembler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::LinkReassembler::LinkReassembler",
@@ -17682,56 +19661,98 @@
       "kind": "CXX_METHOD",
       "signature": "Result < Reassembly > accept ( const Fragment & fragment )",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.LinkReassembler.accept",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::LinkReassembler::active",
       "kind": "CXX_METHOD",
       "signature": "bool active ( ) const noexcept",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.LinkReassembler.active",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::LinkReassembler::reset",
       "kind": "CXX_METHOD",
       "signature": "void reset ( )",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.LinkReassembler.reset",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::Reassembly",
       "kind": "STRUCT_DECL",
       "signature": "struct Reassembly",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Reassembly",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::Reassembly::acknowledge",
       "kind": "FIELD_DECL",
       "signature": "std :: optional < std :: uint16_t > acknowledge",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Reassembly.acknowledge",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::Reassembly::apdu",
       "kind": "FIELD_DECL",
       "signature": "std :: optional < Bytes > apdu",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Reassembly.apdu",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::Reassembly::duplicate",
       "kind": "FIELD_DECL",
       "signature": "bool duplicate = false",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Reassembly.duplicate",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::ServerAddress",
@@ -17816,8 +19837,14 @@
       "kind": "FUNCTION_DECL",
       "signature": "Result < Fragment > decode_fragment ( ByteView payload )",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.decode_fragment",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::decode_frame",
@@ -17838,8 +19865,14 @@
       "kind": "FUNCTION_DECL",
       "signature": "Result < Bytes > encode_fragment ( const Fragment & fragment )",
       "header": "cpp/include/dlt698/protocol/link/fragment.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.encode_fragment",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::protocol::link::encode_frame",
@@ -18609,8 +20642,14 @@
       "kind": "CLASS_DECL",
       "signature": "class DLT698_SERVICE_API IProxyProvider",
       "header": "cpp/include/dlt698/service/advanced.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ProxyProvider",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::IProxyProvider::Cancel",
@@ -18641,8 +20680,14 @@
       "kind": "CXX_METHOD",
       "signature": "virtual Cancel async_request ( model :: Tsa server , protocol :: apdu :: Apdu request , Handler handler ) = 0",
       "header": "cpp/include/dlt698/service/advanced.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ProxyProvider.async_request",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::IProxyProvider::~IProxyProvider",
@@ -18687,16 +20732,28 @@
       "kind": "CXX_METHOD",
       "signature": "void bind_method ( std :: uint8_t number , std :: function < ActionValue ( const model :: Omd & , const model :: Data & ) > handler )",
       "header": "cpp/include/dlt698/service/object.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryObject.bind_method",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::MemoryObject::bind_record",
       "kind": "CXX_METHOD",
       "signature": "void bind_record ( std :: uint8_t attribute , std :: function < protocol :: apdu :: RecordResult ( const protocol :: apdu :: GetRecord & ) > handler )",
       "header": "cpp/include/dlt698/service/object.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryObject.bind_record",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::MemoryObject::invoke",
@@ -19131,72 +21188,126 @@
       "kind": "STRUCT_DECL",
       "signature": "struct PointResult",
       "header": "cpp/include/dlt698/service/point_probe.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.PointResult",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::PointResult::attribute",
       "kind": "FIELD_DECL",
       "signature": "model :: Oad attribute",
       "header": "cpp/include/dlt698/service/point_probe.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.PointResult.attribute",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::PointResult::outcome",
       "kind": "FIELD_DECL",
       "signature": "std :: variant < model :: Data , std :: uint8_t , Error > outcome",
       "header": "cpp/include/dlt698/service/point_probe.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.PointResult.outcome",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::PointResult::schema_checked",
       "kind": "FIELD_DECL",
       "signature": "bool schema_checked = false",
       "header": "cpp/include/dlt698/service/point_probe.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.PointResult.schema_checked",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::PointResult::validation_error",
       "kind": "FIELD_DECL",
       "signature": "std :: optional < Error > validation_error",
       "header": "cpp/include/dlt698/service/point_probe.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.PointResult.validation_error",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::ProbeOptions",
       "kind": "STRUCT_DECL",
       "signature": "struct ProbeOptions",
       "header": "cpp/include/dlt698/service/point_probe.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ProbeOptions",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::ProbeOptions::batch_size",
       "kind": "FIELD_DECL",
       "signature": "std :: size_t batch_size = 16",
       "header": "cpp/include/dlt698/service/point_probe.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ProbeOptions.batch_size",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::ProbeOptions::layout",
       "kind": "FIELD_DECL",
       "signature": "standard :: DeviceLayout layout",
       "header": "cpp/include/dlt698/service/point_probe.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ProbeOptions.layout",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::ProbeOptions::limits",
       "kind": "FIELD_DECL",
       "signature": "Limits limits",
       "header": "cpp/include/dlt698/service/point_probe.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ProbeOptions.limits",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::ProxyRouter",
@@ -19233,8 +21344,14 @@
       "kind": "CXX_METHOD",
       "signature": "Cancel async_request ( model :: Tsa server , protocol :: apdu :: Apdu request , Handler handler ) override",
       "header": "cpp/include/dlt698/service/advanced.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ProxyRouter.async_request",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::ProxyRouter::bind",
@@ -19485,8 +21602,14 @@
       "kind": "FUNCTION_DECL",
       "signature": "void async_probe_points ( std :: shared_ptr < session :: Session > session , standard :: Capabilities capabilities , std :: vector < model :: Oad > attributes , ProbeOptions options , std :: function < void ( Result < std :: vector < PointResult >> ) > handler )",
       "header": "cpp/include/dlt698/service/point_probe.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.async_probe_points",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::service::make_object_schema",
@@ -19745,64 +21868,112 @@
       "kind": "CXX_METHOD",
       "signature": "void async_action ( std :: vector < protocol :: apdu :: ActionMethod > methods , bool list , ActionHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.async_action",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::async_connect",
       "kind": "CXX_METHOD",
       "signature": "void async_connect ( ConnectHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.async_connect",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::async_exchange",
       "kind": "CXX_METHOD",
       "signature": "void async_exchange ( protocol :: apdu :: Apdu request , ExchangeHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.async_exchange",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::async_get",
       "kind": "CXX_METHOD",
       "signature": "void async_get ( std :: vector < model :: Oad > attributes , bool list , GetHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.async_get",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::async_get_record",
       "kind": "CXX_METHOD",
       "signature": "void async_get_record ( std :: vector < protocol :: apdu :: GetRecord > records , bool list , RecordHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.async_get_record",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::async_link",
       "kind": "CXX_METHOD",
       "signature": "void async_link ( protocol :: apdu :: LinkRequestType type , std :: uint16_t heartbeat_seconds , LinkHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.async_link",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::async_release",
       "kind": "CXX_METHOD",
       "signature": "void async_release ( ReleaseHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.async_release",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::async_set",
       "kind": "CXX_METHOD",
       "signature": "void async_set ( std :: vector < protocol :: apdu :: SetAttribute > attributes , bool list , SetHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.async_set",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::cancel",
@@ -19831,8 +22002,14 @@
       "kind": "CXX_METHOD",
       "signature": "bool in_executor_thread ( ) const noexcept",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.in_executor_thread",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::operator=",
@@ -19861,104 +22038,182 @@
       "kind": "CXX_METHOD",
       "signature": "void set_acd_handler ( std :: function < void ( ) > handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_acd_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_action_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_action_handler ( ActionRequestHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_action_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_advanced_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_advanced_handler ( AdvancedRequestHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_advanced_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_close_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_close_handler ( CloseHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_close_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_diagnostic_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_diagnostic_handler ( DiagnosticHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_diagnostic_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_follow_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_follow_handler ( FollowHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_follow_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_record_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_record_handler ( RecordRequestHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_record_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_report_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_report_handler ( ReportHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_report_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_request_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_request_handler ( RequestHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_request_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_set_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_set_handler ( SetRequestHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_set_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_state_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_state_handler ( StateHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_state_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::set_traffic_handler",
       "kind": "CXX_METHOD",
       "signature": "void set_traffic_handler ( TrafficHandler handler )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.set_traffic_handler",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::start",
       "kind": "CXX_METHOD",
       "signature": "void start ( )",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionHandle.start",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::session::Session::state",
@@ -20001,8 +22256,14 @@
       "kind": "FIELD_DECL",
       "signature": "std :: function < model :: DateTime ( ) > calendar_clock",
       "header": "cpp/include/dlt698/session/session.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SessionOptions.calendar_clock",
+      "status": "exposed",
+      "phase": "options",
+      "contract": "owning native value; native defaults preserved",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/app/test_application.py"
+      ]
     },
     {
       "cpp": "dlt698::session::SessionOptions::client_address",
@@ -20271,6 +22532,20 @@
       ]
     },
     {
+      "cpp": "dlt698::session::SessionOptions::security_backend_factory",
+      "kind": "FIELD_DECL",
+      "signature": "std :: function < std :: shared_ptr < security :: IBackend > ( ) > security_backend_factory",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.SessionOptions.security_backend_factory",
+      "status": "exposed",
+      "phase": "options",
+      "contract": "owning native value; native defaults preserved",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/app/test_application.py"
+      ]
+    },
+    {
       "cpp": "dlt698::session::SessionOptions::server",
       "kind": "FIELD_DECL",
       "signature": "protocol :: link :: ServerAddress server",
@@ -20453,6 +22728,19 @@
       "header": "cpp/include/dlt698/session/traffic.hpp",
       "status": "deferred",
       "reason": "Low-level surface not exported; use the mapped application/Engine API."
+    },
+    {
+      "cpp": "dlt698::session::validate_options",
+      "kind": "FUNCTION_DECL",
+      "signature": "Result < void > validate_options ( const SessionOptions & options )",
+      "header": "cpp/include/dlt698/session/session.hpp",
+      "python": "dlt698._native.validate_session_options",
+      "status": "exposed",
+      "phase": "P3",
+      "contract": "native preflight; no backend factory calls or reset side effects",
+      "tests": [
+        "python/tests/security/test_security.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::ArrayLayout",
@@ -20753,40 +23041,70 @@
       "kind": "STRUCT_DECL",
       "signature": "struct CandidatePoint",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.CandidatePoint",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::CandidatePoint::attribute",
       "kind": "FIELD_DECL",
       "signature": "model :: Oad attribute",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.CandidatePoint.attribute",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::CandidatePoint::hint",
       "kind": "FIELD_DECL",
       "signature": "Support hint = Support :: unknown",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.CandidatePoint.hint",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::Capabilities",
       "kind": "STRUCT_DECL",
       "signature": "struct Capabilities",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Capabilities",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::Capabilities::negotiated",
       "kind": "FIELD_DECL",
       "signature": "std :: optional < protocol :: apdu :: AssociationParameters > negotiated",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Capabilities.negotiated",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::DemandValue",
@@ -21073,64 +23391,112 @@
       "kind": "STRUCT_DECL",
       "signature": "struct ReadBatch",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ReadBatch",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::ReadBatch::attributes",
       "kind": "FIELD_DECL",
       "signature": "std :: vector < model :: Oad > attributes",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ReadBatch.attributes",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::ReadBatch::list",
       "kind": "FIELD_DECL",
       "signature": "bool list = false",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ReadBatch.list",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::ReadService",
       "kind": "ENUM_DECL",
       "signature": "enum class ReadService : std :: uint8_t",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ReadService",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::ReadService::list",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "list = 2",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ReadService.list",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::ReadService::next",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "next = 6",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ReadService.next",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::ReadService::normal",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "normal = 1",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ReadService.normal",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::ReadService::record",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "record = 3",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.ReadService.record",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::RecordDefinition",
@@ -21263,32 +23629,56 @@
       "kind": "ENUM_DECL",
       "signature": "enum class Support",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Support",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::Support::no",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "no",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Support.no",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::Support::unknown",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "unknown",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Support.unknown",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::Support::yes",
       "kind": "ENUM_CONSTANT_DECL",
       "signature": "yes",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.Support.yes",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::ValueDefinition",
@@ -21463,16 +23853,28 @@
       "kind": "FUNCTION_DECL",
       "signature": "std :: vector < CandidatePoint > candidate_points ( const Capabilities & capabilities , const std :: vector < model :: Oad > & attributes , bool discard_negative = false )",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.candidate_points",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::capabilities_from_connect",
       "kind": "FUNCTION_DECL",
       "signature": "Result < Capabilities > capabilities_from_connect ( const protocol :: apdu :: ConnectResponse & response )",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.capabilities_from_connect",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::decimal_text",
@@ -22717,16 +25119,28 @@
       "kind": "FUNCTION_DECL",
       "signature": "Result < std :: vector < ReadBatch >> plan_reads ( const Capabilities & capabilities , const std :: vector < model :: Oad > & attributes , std :: size_t batch_size = 16 , const Limits & limits = { } )",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.plan_reads",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::point_support",
       "kind": "FUNCTION_DECL",
       "signature": "Support point_support ( const Capabilities & capabilities , const model :: Oad & attribute )",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.point_support",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::record_at",
@@ -22775,16 +25189,28 @@
       "kind": "FUNCTION_DECL",
       "signature": "Result < void > require_record_service ( const Capabilities & capabilities )",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.require_record_service",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::service_support",
       "kind": "FUNCTION_DECL",
       "signature": "Support service_support ( const Capabilities & capabilities , ReadService service )",
       "header": "cpp/include/dlt698/standard/capabilities.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.service_support",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::tariff_oad",
@@ -22847,32 +25273,56 @@
       "kind": "FUNCTION_DECL",
       "signature": "Result < void > validate_record_cell ( std :: uint16_t oi , const model :: Oad & column , const model :: Data & value , const DeviceLayout & layout = { } , const Limits & limits = { } )",
       "header": "cpp/include/dlt698/standard/records.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.validate_record_cell",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::validate_record_query",
       "kind": "FUNCTION_DECL",
       "signature": "Result < void > validate_record_query ( const protocol :: apdu :: GetRecord & query , const DeviceLayout & layout = { } , const Limits & limits = { } )",
       "header": "cpp/include/dlt698/standard/records.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.validate_record_query",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::validate_record_result",
       "kind": "FUNCTION_DECL",
       "signature": "Result < void > validate_record_result ( const protocol :: apdu :: GetRecord & query , const protocol :: apdu :: RecordResult & result , const DeviceLayout & layout = { } , const Limits & limits = { } )",
       "header": "cpp/include/dlt698/standard/records.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.validate_record_result",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::validate_record_time",
       "kind": "FUNCTION_DECL",
       "signature": "Result < void > validate_record_time ( const model :: DateTimeS & time )",
       "header": "cpp/include/dlt698/standard/records.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.validate_record_time",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::standard::validate_value",
@@ -22957,8 +25407,14 @@
       "kind": "CLASS_DECL",
       "signature": "class DLT698_API IChannel",
       "header": "cpp/include/dlt698/transport/channel.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IChannel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::IChannel::ReadHandler",
@@ -22981,24 +25437,42 @@
       "kind": "CXX_METHOD",
       "signature": "virtual void async_read ( ReadHandler handler ) = 0",
       "header": "cpp/include/dlt698/transport/channel.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IChannel.async_read",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::IChannel::async_write",
       "kind": "CXX_METHOD",
       "signature": "virtual void async_write ( Bytes bytes , WriteHandler handler ) = 0",
       "header": "cpp/include/dlt698/transport/channel.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IChannel.async_write",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::IChannel::close",
       "kind": "CXX_METHOD",
       "signature": "virtual void close ( ) = 0",
       "header": "cpp/include/dlt698/transport/channel.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IChannel.close",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::IChannel::~IChannel",
@@ -23013,8 +25487,14 @@
       "kind": "CLASS_DECL",
       "signature": "class IoRuntime",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IoRuntime",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::IoRuntime::IoRuntime",
@@ -23037,16 +25517,28 @@
       "kind": "CXX_METHOD",
       "signature": "std :: shared_ptr < IExecutor > executor ( )",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IoRuntime.executor",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::IoRuntime::finish",
       "kind": "CXX_METHOD",
       "signature": "void finish ( )",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IoRuntime.finish",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::IoRuntime::operator=",
@@ -23061,8 +25553,14 @@
       "kind": "CXX_METHOD",
       "signature": "void restart ( )",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IoRuntime.restart",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::IoRuntime::run",
@@ -23077,16 +25575,28 @@
       "kind": "CXX_METHOD",
       "signature": "void run_for ( std :: chrono :: milliseconds duration )",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IoRuntime.run_for",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::IoRuntime::stop",
       "kind": "CXX_METHOD",
       "signature": "void stop ( )",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.IoRuntime.stop",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::IoRuntime::~IoRuntime",
@@ -23101,8 +25611,14 @@
       "kind": "CLASS_DECL",
       "signature": "class MemoryChannel final : public IChannel",
       "header": "cpp/include/dlt698/transport/memory.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryChannel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::MemoryChannel::MemoryChannel",
@@ -23117,24 +25633,42 @@
       "kind": "CXX_METHOD",
       "signature": "void async_read ( ReadHandler handler ) override",
       "header": "cpp/include/dlt698/transport/memory.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryChannel.async_read",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::MemoryChannel::async_write",
       "kind": "CXX_METHOD",
       "signature": "void async_write ( Bytes bytes , WriteHandler handler ) override",
       "header": "cpp/include/dlt698/transport/memory.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryChannel.async_write",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::MemoryChannel::close",
       "kind": "CXX_METHOD",
       "signature": "void close ( ) override",
       "header": "cpp/include/dlt698/transport/memory.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryChannel.close",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::MemoryChannel::operator=",
@@ -23149,8 +25683,14 @@
       "kind": "CXX_METHOD",
       "signature": "static std :: pair < std :: shared_ptr < MemoryChannel > , std :: shared_ptr < MemoryChannel >> pair ( std :: shared_ptr < IExecutor > executor , MemoryOptions options = { } )",
       "header": "cpp/include/dlt698/transport/memory.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryChannel.pair",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::MemoryChannel::~MemoryChannel",
@@ -23165,40 +25705,70 @@
       "kind": "STRUCT_DECL",
       "signature": "struct MemoryOptions",
       "header": "cpp/include/dlt698/transport/memory.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryOptions",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::MemoryOptions::max_buffer_bytes",
       "kind": "FIELD_DECL",
       "signature": "std :: size_t max_buffer_bytes = 1024 * 1024",
       "header": "cpp/include/dlt698/transport/memory.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryOptions.max_buffer_bytes",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::MemoryOptions::max_pending_writes",
       "kind": "FIELD_DECL",
       "signature": "std :: size_t max_pending_writes = 128",
       "header": "cpp/include/dlt698/transport/memory.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryOptions.max_pending_writes",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::MemoryOptions::read_chunk_bytes",
       "kind": "FIELD_DECL",
       "signature": "std :: size_t read_chunk_bytes = 4096",
       "header": "cpp/include/dlt698/transport/memory.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.MemoryOptions.read_chunk_bytes",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialChannel",
       "kind": "CLASS_DECL",
       "signature": "class SerialChannel final : public IChannel",
       "header": "cpp/include/dlt698/transport/serial.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialChannel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialChannel::SerialChannel",
@@ -23213,32 +25783,56 @@
       "kind": "CXX_METHOD",
       "signature": "void async_read ( ReadHandler handler ) override",
       "header": "cpp/include/dlt698/transport/serial.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialChannel.async_read",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialChannel::async_write",
       "kind": "CXX_METHOD",
       "signature": "void async_write ( Bytes bytes , WriteHandler handler ) override",
       "header": "cpp/include/dlt698/transport/serial.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialChannel.async_write",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialChannel::close",
       "kind": "CXX_METHOD",
       "signature": "void close ( ) override",
       "header": "cpp/include/dlt698/transport/serial.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialChannel.close",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialChannel::open",
       "kind": "CXX_METHOD",
       "signature": "static Result < std :: shared_ptr < SerialChannel >> open ( std :: shared_ptr < IoRuntime > runtime , const std :: string & device , SerialOptions options = { } )",
       "header": "cpp/include/dlt698/transport/serial.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialChannel.open",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialChannel::operator=",
@@ -23317,8 +25911,14 @@
       "kind": "CLASS_DECL",
       "signature": "class SerialLinkChannel final : public IChannel",
       "header": "cpp/include/dlt698/transport/serial_link.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialLinkChannel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialLinkChannel::SerialLinkChannel",
@@ -23333,24 +25933,42 @@
       "kind": "CXX_METHOD",
       "signature": "void async_read ( ReadHandler handler ) override",
       "header": "cpp/include/dlt698/transport/serial_link.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialLinkChannel.async_read",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialLinkChannel::async_write",
       "kind": "CXX_METHOD",
       "signature": "void async_write ( Bytes bytes , WriteHandler handler ) override",
       "header": "cpp/include/dlt698/transport/serial_link.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialLinkChannel.async_write",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialLinkChannel::close",
       "kind": "CXX_METHOD",
       "signature": "void close ( ) override",
       "header": "cpp/include/dlt698/transport/serial_link.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialLinkChannel.close",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialLinkChannel::operator=",
@@ -23365,8 +25983,14 @@
       "kind": "CXX_METHOD",
       "signature": "static std :: shared_ptr < SerialLinkChannel > wrap ( std :: shared_ptr < IChannel > raw , std :: shared_ptr < IExecutor > executor , SerialLinkOptions options = { } )",
       "header": "cpp/include/dlt698/transport/serial_link.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialLinkChannel.wrap",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialLinkChannel::~SerialLinkChannel",
@@ -23395,8 +26019,14 @@
       "kind": "FIELD_DECL",
       "signature": "std :: function < void ( IChannel :: WriteHandler ) > async_drain",
       "header": "cpp/include/dlt698/transport/serial_link.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialLinkOptions.async_drain",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialLinkOptions::baud_rate",
@@ -23459,8 +26089,14 @@
       "kind": "FIELD_DECL",
       "signature": "std :: function < Result < void > ( bool ) > set_transmit",
       "header": "cpp/include/dlt698/transport/serial_link.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.SerialLinkOptions.set_transmit",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::SerialOptions",
@@ -23677,8 +26313,14 @@
       "kind": "CLASS_DECL",
       "signature": "class TcpChannel final : public IChannel",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpChannel",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpChannel::ConnectHandler",
@@ -23701,32 +26343,56 @@
       "kind": "CXX_METHOD",
       "signature": "void async_read ( ReadHandler handler ) override",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpChannel.async_read",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpChannel::async_write",
       "kind": "CXX_METHOD",
       "signature": "void async_write ( Bytes bytes , WriteHandler handler ) override",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpChannel.async_write",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpChannel::close",
       "kind": "CXX_METHOD",
       "signature": "void close ( ) override",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpChannel.close",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpChannel::connect",
       "kind": "CXX_METHOD",
       "signature": "static std :: shared_ptr < TcpChannel > connect ( std :: shared_ptr < IoRuntime > runtime , std :: string host , std :: uint16_t port , ConnectHandler handler , ChannelOptions options = { } )",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpChannel.connect",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpChannel::operator=",
@@ -23749,8 +26415,14 @@
       "kind": "CLASS_DECL",
       "signature": "class TcpListener",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpListener",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpListener::AcceptHandler",
@@ -23773,40 +26445,70 @@
       "kind": "CXX_METHOD",
       "signature": "void async_accept ( AcceptHandler handler )",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpListener.async_accept",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpListener::close",
       "kind": "CXX_METHOD",
       "signature": "void close ( )",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpListener.close",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpListener::listen",
       "kind": "CXX_METHOD",
       "signature": "static Result < std :: shared_ptr < TcpListener >> listen ( std :: shared_ptr < IoRuntime > runtime , const std :: string & bind_address , std :: uint16_t port , ChannelOptions options , bool exclusive_address )",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpListener.listen",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpListener::listen",
       "kind": "CXX_METHOD",
       "signature": "static Result < std :: shared_ptr < TcpListener >> listen ( std :: shared_ptr < IoRuntime > runtime , const std :: string & bind_address , std :: uint16_t port , ChannelOptions options = { } )",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpListener.listen",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpListener::local_port",
       "kind": "CXX_METHOD",
       "signature": "std :: uint16_t local_port ( ) const noexcept",
       "header": "cpp/include/dlt698/transport/tcp.hpp",
-      "status": "deferred",
-      "reason": "Low-level surface not exported; use the mapped application/Engine API."
+      "python": "dlt698._native.TcpListener.local_port",
+      "status": "exposed",
+      "phase": "P2-P3",
+      "contract": "native owning value/Result adapter",
+      "tests": [
+        "python/tests/model/test_values.py",
+        "python/tests/service/test_expert.py"
+      ]
     },
     {
       "cpp": "dlt698::transport::TcpListener::operator=",

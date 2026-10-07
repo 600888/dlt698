@@ -166,6 +166,21 @@ class Struct {
         }));
     }
 
+    /** @brief 注册需要结果适配的回调属性，同时支持关键字构造。
+     * @tparam Getter 属性读取器类型。
+     * @tparam Setter 属性写入器类型。
+     * @param[in] name 属性名称。
+     * @param[in] getter 返回 Python 可调用对象的读取器。
+     * @param[in] setter 校验并保存回调的写入器。
+     * @return 当前注册器。
+     */
+    template <class Getter, class Setter>
+    Struct& property(const char* name, Getter getter, Setter setter) {
+        setters[name] = setter;
+        cls.def_property(name, std::move(getter), std::move(setter));
+        return *this;
+    }
+
     py::class_<T> cls;
 
    private:
@@ -232,4 +247,12 @@ void bind_app(py::module_& module);
  * @param[in,out] module 扩展模块。
  */
 void bind_expert(py::module_& module);
+/** @brief 注册独立分帧、重组与 GET 分块工具。
+ * @param[in,out] module 扩展模块。
+ */
+void bind_fragments(py::module_& module);
+/** @brief 注册调用线程驱动的执行器、通道和会话组合接口。
+ * @param[in,out] module 扩展模块。
+ */
+void bind_channels(py::module_& module);
 }  // namespace dlt698::python

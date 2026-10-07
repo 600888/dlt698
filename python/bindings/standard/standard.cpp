@@ -1,3 +1,4 @@
+#include <dlt698/standard/capabilities.hpp>
 #include <dlt698/standard/records.hpp>
 
 #include "bindings.hpp"
@@ -27,6 +28,75 @@ void bind_standard_enums(py::module_& module) {
 }
 
 void bind_standard(py::module_& module) {
+    py::enum_<s::Support>(module, "Support")
+        .value("unknown", s::Support::unknown)
+        .value("no", s::Support::no)
+        .value("yes", s::Support::yes);
+    py::enum_<s::ReadService>(module, "ReadService")
+        .value("normal", s::ReadService::normal)
+        .value("list", s::ReadService::list)
+        .value("record", s::ReadService::record)
+        .value("next", s::ReadService::next);
+    Struct<s::Capabilities>(module, "Capabilities")
+        .field("negotiated", &s::Capabilities::negotiated)
+        .finish();
+    Struct<s::ReadBatch>(module, "ReadBatch")
+        .field("list", &s::ReadBatch::list)
+        .field("attributes", &s::ReadBatch::attributes)
+        .finish();
+    Struct<s::CandidatePoint>(module, "CandidatePoint")
+        .field("attribute", &s::CandidatePoint::attribute)
+        .field("hint", &s::CandidatePoint::hint)
+        .finish();
+    module.def(
+        "capabilities_from_connect",
+        [](const protocol::apdu::ConnectResponse& response) {
+            return unwrap(s::capabilities_from_connect(response));
+        },
+        py::arg("response"));
+    module.def("service_support", &s::service_support, py::arg("capabilities"), py::arg("service"));
+    module.def("point_support", &s::point_support, py::arg("capabilities"), py::arg("attribute"));
+    module.def("candidate_points", &s::candidate_points, py::arg("capabilities"),
+               py::arg("attributes"), py::arg("discard_negative") = false);
+    module.def(
+        "plan_reads",
+        [](const s::Capabilities& capabilities, const std::vector<model::Oad>& attributes,
+           std::size_t batch_size, const Limits& limits) {
+            return unwrap(s::plan_reads(capabilities, attributes, batch_size, limits));
+        },
+        py::arg("capabilities"), py::arg("attributes"), py::arg("batch_size") = 16,
+        py::arg("limits") = Limits{});
+    module.def(
+        "require_record_service",
+        [](const s::Capabilities& capabilities) {
+            unwrap(s::require_record_service(capabilities));
+        },
+        py::arg("capabilities"));
+    module.def(
+        "validate_record_time",
+        [](const model::DateTimeS& time) { unwrap(s::validate_record_time(time)); },
+        py::arg("time"));
+    module.def(
+        "validate_record_query",
+        [](const protocol::apdu::GetRecord& query, const s::DeviceLayout& layout,
+           const Limits& limits) { unwrap(s::validate_record_query(query, layout, limits)); },
+        py::arg("query"), py::arg("layout") = s::DeviceLayout{}, py::arg("limits") = Limits{});
+    module.def(
+        "validate_record_cell",
+        [](std::uint16_t oi, const model::Oad& column, const model::Data& value,
+           const s::DeviceLayout& layout, const Limits& limits) {
+            unwrap(s::validate_record_cell(oi, column, value, layout, limits));
+        },
+        py::arg("oi"), py::arg("column"), py::arg("value"), py::arg("layout") = s::DeviceLayout{},
+        py::arg("limits") = Limits{});
+    module.def(
+        "validate_record_result",
+        [](const protocol::apdu::GetRecord& query, const protocol::apdu::RecordResult& result,
+           const s::DeviceLayout& layout, const Limits& limits) {
+            unwrap(s::validate_record_result(query, result, layout, limits));
+        },
+        py::arg("query"), py::arg("result"), py::arg("layout") = s::DeviceLayout{},
+        py::arg("limits") = Limits{});
     py::class_<s::ValueDefinition>(module, "ValueDefinition")
         .def_readonly("name", &s::ValueDefinition::name)
         .def_readonly("type", &s::ValueDefinition::type)

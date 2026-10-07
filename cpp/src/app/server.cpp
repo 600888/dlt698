@@ -39,9 +39,8 @@ struct Run : std::enable_shared_from_this<Run> {
         protocol.preset_association = profile == ConnectionProfile::local_preset;
         protocol.heartbeat_seconds = protocol.require_login ? options.heartbeat_seconds : 0;
         // 在绑定 socket 前复用 Session 的完整配置校验，失败不启动线程或留下监听。
-        auto executor = std::make_shared<ManualExecutor>();
-        auto channels = transport::MemoryChannel::pair(executor);
-        session::Session validation(channels.first, executor, protocol);
+        auto valid = session::validate_options(protocol);
+        if (!valid) throw std::invalid_argument(valid.error().context);
     }
 
     ~Run() {
