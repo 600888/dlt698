@@ -8,7 +8,9 @@
 #include <memory>
 
 namespace dlt698 {
-class ITimer {
+// 必须整类导出：跨动态库派生类需要基类的 typeinfo 和 vtable，
+// 只导出成员函数时这两个符号在 ELF/Mach-O 上仍是隐藏的，链接会失败。
+class DLT698_API ITimer {
    public:
     /** @brief 释放计时器句柄；释放本身不等同于取消。 */
     virtual ~ITimer() = default;
@@ -17,7 +19,7 @@ class ITimer {
 };
 
 /** @brief 串行执行会话任务的执行器，不得在 post/schedule 内同步执行用户任务。 */
-class IExecutor {
+class DLT698_API IExecutor {
    public:
     using Task = std::function<void()>;
     using Clock = std::chrono::steady_clock;

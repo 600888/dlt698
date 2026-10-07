@@ -4,11 +4,14 @@
  */
 #pragma once
 #include <dlt698/common/bytes.hpp>
+#include <dlt698/export.hpp>
 #include <functional>
 
 namespace dlt698::transport {
 /// 异步字节流通道；读取的字节块不保证与协议帧边界一致。
-class IChannel {
+// 必须整类导出：跨动态库派生类需要基类的 typeinfo 和 vtable，
+// 只导出成员函数时这两个符号在 ELF/Mach-O 上仍是隐藏的，链接会失败。
+class DLT698_API IChannel {
    public:
     using ReadHandler = std::function<void(Result<Bytes>)>;  ///< 读取完成，成功值拥有缓冲区。
     using WriteHandler = std::function<void(Result<void>)>;  ///< 整个写操作完成或失败。

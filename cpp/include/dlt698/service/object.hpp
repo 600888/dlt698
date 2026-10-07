@@ -37,7 +37,9 @@ struct ObjectSchema {
     std::vector<MethodSchema> methods{};
 };
 
-class IObjectProvider {
+// 必须整类导出：跨动态库派生类需要基类的 typeinfo 和 vtable，
+// 只导出成员函数时这两个符号在 ELF/Mach-O 上仍是隐藏的，链接会失败。
+class DLT698_SERVICE_API IObjectProvider {
    public:
     /** @brief 通过接口释放 provider。 */
     virtual ~IObjectProvider() = default;
