@@ -7,6 +7,7 @@
 #include <dlt698/protocol/link/fragment.hpp>
 #include <dlt698/protocol/link/frame.hpp>
 #include <dlt698/security/backend.hpp>
+#include <dlt698/session/traffic.hpp>
 #include <dlt698/session_export.hpp>
 #include <dlt698/transport/channel.hpp>
 
@@ -151,6 +152,15 @@ class Session {
      * @param[in] handler 接收损坏帧、不匹配地址/方向、迟到响应等诊断。
      */
     DLT698_SESSION_API void set_diagnostic_handler(DiagnosticHandler handler);
+    /** @brief 注册通道收发观察器，不改变协议处理与事务匹配。
+     * @param[in] handler 在会话执行器内借用事件和字节；空值移除，异常被隔离。
+     * @note 注册异步生效，建议在 start 前调用；RX 使用处理时的观察器，TX 使用提交时的观察器。
+     * 已提交的 TX 即使关闭、注销或销毁会话仍通知原观察器，须继续驱动执行器。
+     * 写入成功不代表对端收到或处理；编码失败未提交通道时没有 TX 事件。
+     * 不得阻塞或同步等待本执行器；跨回调保存数据须复制，不应强引用会话形成环。
+     * 未注册时不为发送观察复制缓冲区；注册后每个在途写入额外保留一份完整帧。
+     */
+    DLT698_SESSION_API void set_traffic_handler(TrafficHandler handler);
     /** @brief 由协议客户机发起公共 CONNECT。
      * @param[in] handler 返回协商响应或本地错误，远端拒绝原码保存在响应 result 中。
      */

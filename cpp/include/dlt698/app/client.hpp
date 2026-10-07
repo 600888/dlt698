@@ -17,6 +17,7 @@ struct ClientOptions {
     std::chrono::milliseconds login_timeout{5000};      ///< remote_public 等待服务器 LINK 的时限。
     transport::ChannelOptions channel;                  ///< TCP 与简单串口的资源预算。
     std::function<void(const Error&)> diagnostic;       ///< 工作线程回调，异常被隔离，不得阻塞。
+    session::TrafficHandler traffic;  ///< 可选收发观察器；工作线程借用事件，不得阻塞，异常被隔离。
 };
 
 /** @brief 托管同步客户机，每次连接拥有一个运行线程，调用方无需驱动事件循环。

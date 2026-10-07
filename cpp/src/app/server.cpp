@@ -67,6 +67,12 @@ struct Run : std::enable_shared_from_this<Run> {
             sessions.emplace(id, session);
             status->connections = sessions.size();
             const std::weak_ptr<Run> weak = shared_from_this();
+            // 每个会话捕获独立 ID；观察器不持有 Run，避免回调与托管线程互相保活。
+            if (options.traffic)
+                session->set_traffic_handler(
+                    [handler = options.traffic, id](const session::TrafficEvent& event) {
+                        handler(id, event);
+                    });
             session->set_close_handler([weak, id](const Error& reason) {
                 if (const auto self = weak.lock())
                     self->manager->post([weak, id, reason] {

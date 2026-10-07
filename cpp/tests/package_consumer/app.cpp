@@ -4,8 +4,12 @@
 #include <dlt698/app.hpp>
 
 int main() {
-    dlt698::app::Server server;
-    dlt698::app::Client client;
+    dlt698::app::ServerOptions server_options;
+    server_options.traffic = [](std::uint64_t, const dlt698::session::TrafficEvent&) {};
+    dlt698::app::ClientOptions client_options;
+    client_options.traffic = [](const dlt698::session::TrafficEvent&) {};
+    dlt698::app::Server server(server_options);
+    dlt698::app::Client client(client_options);
     if (client.connect_tcp("", 6980) || !client.disconnect()) return 5;
     if (client.get({0x200F, 2, 0}).error().code != dlt698::ErrorCode::not_associated) return 6;
     if (!server.set({0x200F, 2, 0}, dlt698::model::UInt16{5000})) return 1;

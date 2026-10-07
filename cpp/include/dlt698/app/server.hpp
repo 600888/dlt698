@@ -19,6 +19,9 @@ struct ServerOptions {
     std::uint16_t heartbeat_seconds = 5;  ///< remote_public 登录后的周期心跳，零关闭。
     transport::ChannelOptions channel;  ///< TCP 及简单串口的通道预算；完整重载使用 serial.channel。
     std::function<void(std::uint64_t, const Error&)> diagnostic;  ///< 连接标识及错误；0 为监听器。
+    /// 可选收发观察器；非零连接 ID 在一次运行内唯一，重启后重新编号，与 diagnostic 共用 ID。
+    /// 工作线程借用事件和字节，不得阻塞或强引用服务器；异常被隔离，保存数据须复制。
+    std::function<void(std::uint64_t, const session::TrafficEvent&)> traffic;
 };
 
 /** @brief 托管服务器，默认持有空设备，可在启动前后直接设置数据。

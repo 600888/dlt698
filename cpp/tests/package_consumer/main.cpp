@@ -112,6 +112,10 @@ int main() {
     dlt698::service::ProxyRouter proxy_router;
     if (!proxy_router.bind({{0, 1}}, client)) return 21;
     dlt698::service::ClientService client_api(client);
+    unsigned traffic_count = 0;
+    client->set_traffic_handler([&](const dlt698::session::TrafficEvent& event) {
+        if (event.result && !event.bytes.empty()) ++traffic_count;
+    });
     client->start();
     server->start();
     bool probe_ok = false;
@@ -157,6 +161,7 @@ int main() {
     server->close();
     executor->run_ready();
     if (!read_ok) return 3;
+    if (!traffic_count) return 24;
     auto serial_pair = dlt698::transport::MemoryChannel::pair(executor);
     auto serial_link = dlt698::transport::SerialLinkChannel::wrap(serial_pair.first, executor);
     serial_link->close();

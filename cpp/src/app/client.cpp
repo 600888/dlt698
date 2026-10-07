@@ -150,6 +150,7 @@ struct ClientRun : std::enable_shared_from_this<ClientRun> {
             session = std::make_shared<session::Session>(channel, runtime->executor(), protocol);
             service = std::make_unique<service::SyncClientService>(session);
             const std::weak_ptr<ClientRun> weak = shared_from_this();
+            if (options.traffic) session->set_traffic_handler(options.traffic);
             session->set_close_handler([weak](const Error& error) {
                 if (const auto self = weak.lock()) {
                     self->startup.complete(error);

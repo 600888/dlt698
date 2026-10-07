@@ -135,6 +135,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
     SetRequestHandler set_handler;
     ActionRequestHandler action_handler;
     DiagnosticHandler diagnostic;
+    TrafficHandler traffic;
     CloseHandler close_handler;
     StateHandler state_handler;
     std::optional<Error> close_error;
@@ -387,9 +388,19 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             return;
         }
         const std::weak_ptr<Impl> weak = shared_from_this();
-        channel->async_write(std::move(bytes).value(), [weak, finish](Result<void> result) {
-            if (const auto self = weak.lock())
-                self->executor->post([weak, finish, result = std::move(result)] {
+        // 通道接管原缓冲区，只有启用观察时才保留副本；快照观察器使关闭后的写完成仍可记录。
+        auto observed = traffic ? std::make_shared<Bytes>(bytes.value()) : nullptr;
+        channel->async_write(
+            std::move(bytes).value(), [weak, finish, observer = traffic, observed,
+                                       ex = executor](Result<void> result) mutable {
+                const auto timestamp = std::chrono::system_clock::now();
+                if (!observer && weak.expired()) return;
+                ex->post([weak, finish, observer = std::move(observer), observed, timestamp,
+                          result = std::move(result)]() mutable {
+                    // 观察回调不保活会话，也不抢占写错误的原有关闭路径。
+                    if (observer)
+                        deliver(std::move(observer),
+                                TrafficEvent{TrafficDirection::send, timestamp, *observed, result});
                     if (const auto self = weak.lock()) {
                         if (!result) {
                             self->shutdown(result.error());
@@ -401,7 +412,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                         }
                     }
                 });
-        });
+            });
     }
 
     void send_fragment() {
@@ -909,10 +920,21 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         const std::weak_ptr<Impl> weak = shared_from_this();
         // 跨通道回调只移交拥有内存的 Bytes，再投递到会话执行器；不跨回调保留 ByteView。
         channel->async_read([weak](Result<Bytes> result) {
+            const auto timestamp = std::chrono::system_clock::now();
             if (const auto self = weak.lock())
-                self->executor->post([weak, result = std::move(result)]() mutable {
+                self->executor->post([weak, timestamp, result = std::move(result)]() mutable {
                     const auto self = weak.lock();
-                    if (!self || self->state == State::closed) return;
+                    if (!self) return;
+                    // 在解析和状态过滤前观察实际读块，损坏字节不会因校验失败从日志消失。
+                    if (result) {
+                        try {
+                            if (self->traffic)
+                                self->traffic({TrafficDirection::receive, timestamp, result.value(),
+                                               Result<void>{}});
+                        } catch (...) {
+                        }
+                    }
+                    if (self->state == State::closed) return;
                     if (!result) {
                         self->shutdown(result.error());
                         return;
@@ -1727,6 +1749,13 @@ void Session::set_diagnostic_handler(DiagnosticHandler handler) {
     const std::weak_ptr<Impl> weak = impl_;
     impl_->executor->post([weak, handler = std::move(handler)]() mutable {
         if (const auto self = weak.lock()) self->diagnostic = std::move(handler);
+    });
+}
+
+void Session::set_traffic_handler(TrafficHandler handler) {
+    const std::weak_ptr<Impl> weak = impl_;
+    impl_->executor->post([weak, handler = std::move(handler)]() mutable {
+        if (const auto self = weak.lock()) self->traffic = std::move(handler);
     });
 }
 
