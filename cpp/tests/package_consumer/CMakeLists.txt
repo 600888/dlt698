@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(dlt698_consumer LANGUAGES CXX)
-find_package(dlt698 0.1 CONFIG REQUIRED)
+# 与被测库共用版本来源，升级主版本后仍校验本次安装包的精确版本。
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../../VERSION" DLT698_CONSUMER_VERSION LIMIT_COUNT 1)
+find_package(dlt698 ${DLT698_CONSUMER_VERSION} EXACT CONFIG REQUIRED)
 add_executable(consumer main.cpp)
 target_link_libraries(consumer PRIVATE dlt698::dlt698)
 if(TARGET dlt698::transport)

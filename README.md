@@ -168,14 +168,14 @@ transport 目标统一启用 Asio 线程支持，已修复 MinGW 因头文件包
 | Windows（Windows Server 2022 构建） | x64 / MSVC v143、Release `/MD` | 静态 `.lib`、动态 `.dll` + 导入 `.lib`，分别打包为 `.zip` |
 | macOS（macOS 15 构建，部署目标 11.0） | Intel x64、Apple Silicon ARM64 / AppleClang | 静态 `.a`、动态 `.dylib`，分别打包为 `.tar.gz` |
 
-文件名例如 `dlt698-0.1.0-windows-x64-msvc-shared.zip`。每个包均含全部五个库组件、公开头文件（包括生成的导出头）、CMake 配置、项目与 Asio 许可证、`VERSION` 和 README；不含测试和示例程序。静态与动态包各有独立安装前缀，不能混合覆盖。Unix 解压请保留共享库符号链接。
+文件名例如 `dlt698-1.0.0-windows-x64-msvc-shared.zip`。每个包均含全部五个库组件、公开头文件（包括生成的导出头）、CMake 配置、项目与 Asio 许可证、`VERSION` 和 README；不含测试和示例程序。静态与动态包各有独立安装前缀，不能混合覆盖。Unix 解压请保留共享库符号链接。
 
 解压后将包根目录加入 `CMAKE_PREFIX_PATH`，再使用下面的 `find_package` / `target_link_libraries`。Windows 需兼容的 MSVC 工具链和运行库，动态包的 `bin/` 中 DLL 需放在程序旁边或加入 `PATH`。Linux 需兼容构建环境的 glibc、libstdc++；各系统的 C++ ABI 不保证跨工具链兼容。`SHA256SUMS` 可用于校验下载的压缩包。
 
 发布流程与本地打包命令见 [Release CI](docs/releasing.md)。
 
 ```cmake
-find_package(dlt698 0.1 CONFIG REQUIRED)
+find_package(dlt698 1.0 CONFIG REQUIRED)
 target_link_libraries(your_app PRIVATE dlt698::dlt698)
 ```
 

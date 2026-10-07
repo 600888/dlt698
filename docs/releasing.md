@@ -44,7 +44,7 @@ README.md
 
 ```sh
 sha256sum --check --ignore-missing SHA256SUMS
-cmake -S your-app -B your-app/build -DCMAKE_PREFIX_PATH=/absolute/path/to/dlt698-0.1.0-linux-x64-gcc-static
+cmake -S your-app -B your-app/build -DCMAKE_PREFIX_PATH=/absolute/path/to/dlt698-1.0.0-linux-x64-gcc-static
 ```
 
 macOS 可用 `shasum -a 256 -c SHA256SUMS`，Windows 可用 PowerShell `Get-FileHash <包路径> -Algorithm SHA256` 比对对应条目。消费方通过 `find_package(dlt698 CONFIG REQUIRED)` 和 `dlt698::dlt698`（或细分组件）链接。工具链、运行库和 ABI 要求见 [README](../README.md#预编译发布包)。

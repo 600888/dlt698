@@ -45,13 +45,15 @@ async def test_failed_connection_can_be_retried():
     with socket.socket() as reserved:
         reserved.bind(("127.0.0.1", 0))
         unused = reserved.getsockname()[1]
-        async with d.AsyncClient() as client:
-            with pytest.raises(d.Dlt698Error):
-                await client.connect_tcp("127.0.0.1", unused)
-            with d.Server() as server:
-                server.start_tcp("127.0.0.1", 0)
-                await client.connect_tcp("127.0.0.1", server.local_port)
-                assert (await client.get(d.Oad(oi=0xFFFF, attribute=2))).dar == 4
+    # macOS 对已绑定但未监听的端口会等待超时；先关闭占位 socket 才能触发连接拒绝。
+    async with d.AsyncClient() as client:
+        with pytest.raises(d.Dlt698Error) as failure:
+            await client.connect_tcp("127.0.0.1", unused)
+        assert failure.value.code == d.ErrorCode.io_error
+        with d.Server() as server:
+            server.start_tcp("127.0.0.1", 0)
+            await client.connect_tcp("127.0.0.1", server.local_port)
+            assert (await client.get(d.Oad(oi=0xFFFF, attribute=2))).dar == 4
 
 
 @pytest.mark.asyncio

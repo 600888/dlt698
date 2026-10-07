@@ -226,7 +226,7 @@ dlt698_terminal serial device baud [lifetime-seconds]
 安装后引用最方便：
 
 ```cmake
-find_package(dlt698 0.1 CONFIG REQUIRED)
+find_package(dlt698 1.0 CONFIG REQUIRED)
 target_link_libraries(your_app PRIVATE dlt698::dlt698)
 ```
 

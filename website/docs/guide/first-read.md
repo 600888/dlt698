@@ -23,7 +23,7 @@ Visual Studio 等多配置生成器必须带 `--config Release`，`-DCMAKE_BUILD
 在你的项目里引用：
 
 ```cmake
-find_package(dlt698 0.1 CONFIG REQUIRED)
+find_package(dlt698 1.0 CONFIG REQUIRED)
 target_link_libraries(your_app PRIVATE dlt698::app)
 ```
 

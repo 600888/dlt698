@@ -31,7 +31,7 @@ int main() {
 `200F/属性2/索引0` 是频率原始值，`5000` 表示 `50.00 Hz`。等待 Enter 只用于让应用保持运行，不需要手动驱动事件循环。串口把启动行换成 `server.start_serial("COM3", 9600)`；运行中继续 `server.set(...)` 即可更新或首次发布其他属性。
 
 ```cmake
-find_package(dlt698 0.1 CONFIG REQUIRED)
+find_package(dlt698 1.0 CONFIG REQUIRED)
 target_link_libraries(your_app PRIVATE dlt698::app)
 ```
 
