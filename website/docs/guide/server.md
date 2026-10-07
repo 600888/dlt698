@@ -113,7 +113,7 @@ if (started) std::cout << "port = " << server.local_port() << '\n';
 详见[TCP 连接](./tcp.md)。
 
 :::tip 服务端和客户端的模式要配对
-服务端用 `local_public` 时客户端也要用 `local_public`（单方面配对会失败）。角色由 `SessionOptions::role` 决定，拨号方向由传输层决定，两者相互独立 —— 详见[常见概念](../core/concepts.md)。
+服务端用 `local_public` 时客户端也要用 `local_public`（单方面配对会失败）。角色由 `SessionOptions::role` 决定，拨号方向由传输层决定，两者相互独立 —— 详见[协议角色与拨号方向](../transport/tcp.md#协议角色与拨号方向独立)。
 :::
 
 ### 定期更新数据
