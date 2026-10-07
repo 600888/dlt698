@@ -87,7 +87,7 @@ cmake --install build --config Release --prefix ./build/stage
 | `-DBUILD_SHARED_LIBS=ON` | 构建共享库 |
 | `-DDLT698_WARNINGS_AS_ERRORS=ON` | 严格警告检查 |
 
-也支持 `cmake -S cpp -B build-core` 只构建核心。需要 C++17、CMake 3.20+ 和匹配的 C++ 编译器，不依赖 Python。
+也支持 `cmake -S cpp -B build/core` 只构建核心。需要 C++17、CMake 3.20+ 和匹配的 C++ 编译器，不依赖 Python。所有构建树都在 `build/` 下，`build/core` 只编核心、`build/shared` 编共享库，CI 默认用 `build/`。
 
 ### 单元测试
 

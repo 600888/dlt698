@@ -33,8 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Configure CMake (transport OFF)
-        run: cmake -S cpp -B build-core -DCMAKE_BUILD_TYPE=Release -DDLT698_BUILD_TRANSPORT=OFF -DDLT698_WARNINGS_AS_ERRORS=OFF
+        run: cmake -S cpp -B build/core -DCMAKE_BUILD_TYPE=Release -DDLT698_BUILD_TRANSPORT=OFF -DDLT698_WARNINGS_AS_ERRORS=OFF
       - name: Build
-        run: cmake --build build-core --parallel 2
+        run: cmake --build build/core --parallel 2
       - name: Test
-        run: ctest --test-dir build-core --output-on-failure
+        run: ctest --test-dir build/core --output-on-failure
