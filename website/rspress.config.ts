@@ -2,6 +2,38 @@ import { defineConfig } from '@rspress/core';
 
 const sections = [
   {
+    text: '使用指南',
+    path: 'guide',
+    articles: [
+      ['index', '指南首页'],
+      ['first-read', '第一次读取'],
+      ['tcp', 'TCP 连接'],
+      ['serial', '串口连接'],
+      ['addressing', '看懂数据地址'],
+      ['configuration', '配置速查'],
+      ['energy', '电能读取'],
+      ['demand', '需量读取'],
+      ['voltage', '电压读取'],
+      ['current', '电流读取'],
+      ['power', '功率读取'],
+      ['power-factor', '功率因数读取'],
+      ['frequency-temperature', '频率与温度读取'],
+      ['harmonics', '谐波与波形失真度'],
+      ['status', '状态字读取'],
+      ['clock', '日期时间与校时'],
+      ['device-info', '设备信息读取'],
+      ['meter-parameters', '电表参数读取与设置'],
+      ['daily-freeze', '日冻结查询'],
+      ['monthly-freeze', '月冻结查询'],
+      ['events', '事件记录查询'],
+      ['batch-read', '一次读取多个数据'],
+      ['write-action', '写参数与执行方法'],
+      ['server', '对外提供设备数据'],
+      ['packet-debug', '调试助手使用'],
+      ['troubleshooting', '常见问题排查'],
+    ],
+  },
+  {
     text: '快速开始',
     path: 'getting-started',
     articles: [
@@ -39,8 +71,8 @@ const sections = [
     text: '会话与服务',
     path: 'session',
     articles: [
-        ['server', '托管服务器与设备数据'],
-        ['client', '托管客户端'],
+      ['server', '托管服务器与设备数据'],
+      ['client', '托管客户端'],
       ['session', 'Session 会话'],
       ['service', 'Client/ServerService'],
       ['object', '对象目录与 Provider'],
@@ -75,7 +107,7 @@ export default defineConfig({
   siteOrigin: 'https://600888.github.io',
   title: 'dlt698 接口文档',
   description:
-    'DL/T 698.45 协议库的对外 C++ 接口文档：核心类型、协议编解码、会话与对象服务、TCP 与串口传输。',
+    'DL/T 698.45 协议库的对外 C++ 接口文档：使用指南、核心类型、协议编解码、会话与对象服务、TCP 与串口传输。',
   lang: 'zh',
   icon: '/logo.svg',
   logo: '/logo.svg',
@@ -95,7 +127,7 @@ export default defineConfig({
         { text: '文档首页', link: '/' },
         { text: '关于本文档', link: '/about' },
         { dividerType: 'solid' },
-        { sectionHeaderText: '接口模块' },
+        { sectionHeaderText: '文档模块' },
         ...sections.map(({ text, path }) => ({ text, link: `/${path}/` })),
       ],
       ...Object.fromEntries(
@@ -110,10 +142,13 @@ export default defineConfig({
               text: '接口说明',
               collapsible: true,
               collapsed: false,
-              items: articles.map(([slug, label]) => ({
-                text: label,
-                link: `/${path}/${slug}`,
-              })),
+              // index 与「模块导读」指向同一页，重复列出会产生两条相同链接
+              items: articles
+                .filter(([slug]) => slug !== 'index')
+                .map(([slug, label]) => ({
+                  text: label,
+                  link: `/${path}/${slug}`,
+                })),
             },
           ],
         ]),
