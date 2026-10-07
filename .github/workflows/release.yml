@@ -10,6 +10,11 @@ on:
       - VERSION
       - .github/workflows/release.yml
       - cmake/release-package.cmake
+      - pyproject.toml
+      - python/**
+      - cpp/**
+      - tests/vectors/**
+      - third/pybind11/**
   # 手动运行只构建和上传 Actions 产物，便于正式发布前验证。
   workflow_dispatch:
 
@@ -21,14 +26,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verification:
+    uses: ./.github/workflows/python-ci.yml
   version:
     runs-on: ubuntu-22.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
       commit: ${{ steps.version.outputs.commit }}
+      cpp_matrix: ${{ steps.matrix.outputs.cpp_matrix }}
+      wheel_matrix: ${{ steps.matrix.outputs.wheel_matrix }}
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Read frozen joint matrix
+        id: matrix
+        shell: bash
+        run: |
+          echo "cpp_matrix=$(python python/tools/release_matrix.py cpp)" >> "$GITHUB_OUTPUT"
+          echo "wheel_matrix=$(python python/tools/release_matrix.py wheel)" >> "$GITHUB_OUTPUT"
       - name: Validate release version
         id: version
         shell: bash
@@ -57,34 +75,7 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      matrix:
-        platform:
-          - linux-x64-gcc
-          - linux-arm64-gcc
-          - windows-x64-msvc
-          - macos-x64-appleclang
-          - macos-arm64-appleclang
-        linkage: [static, shared]
-        include:
-          - linkage: static
-            shared: 'OFF'
-          - linkage: shared
-            shared: 'ON'
-          - platform: linux-x64-gcc
-            os: ubuntu-22.04
-            cmake_args: ''
-          - platform: linux-arm64-gcc
-            os: ubuntu-22.04-arm
-            cmake_args: ''
-          - platform: windows-x64-msvc
-            os: windows-2022
-            cmake_args: '-A x64 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL'
-          - platform: macos-x64-appleclang
-            os: macos-15-intel
-            cmake_args: '-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0'
-          - platform: macos-arm64-appleclang
-            os: macos-15
-            cmake_args: '-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0'
+      matrix: ${{ fromJSON(needs.version.outputs.cpp_matrix) }}
     steps:
       - uses: actions/checkout@v6
       - name: Configure Release libraries and tests
@@ -109,6 +100,13 @@ jobs:
           -DPLATFORM=${{ matrix.platform }}
           -DLINKAGE=${{ matrix.linkage }}
           -P cmake/release-package.cmake
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Record same-source C++ artifact identity
+        env:
+          DLT698_RELEASE_COMMIT: ${{ needs.version.outputs.commit }}
+        run: python python/tools/joint_manifest.py build/release/packages --cpp-record
       - name: Upload release package
         uses: actions/upload-artifact@v7
         with:
@@ -118,9 +116,56 @@ jobs:
           compression-level: 0
           retention-days: 14
 
+  python-sdist:
+    needs: version
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - run: python -m pip install build==1.5.0
+      - name: Freeze one source archive for every wheel
+        env:
+          DLT698_RELEASE_COMMIT: ${{ needs.version.outputs.commit }}
+        run: python -m build --sdist
+      - run: python python/tools/artifact_check.py dist/*.tar.gz
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dlt698-${{ needs.version.outputs.version }}-sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+
+  python-wheels:
+    needs: [version, python-sdist]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.version.outputs.wheel_matrix) }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dlt698-${{ needs.version.outputs.version }}-sdist
+          path: source
+      - name: Build, repair and test wheels from the frozen sdist
+        uses: pypa/cibuildwheel@v3.4.0
+        with:
+          package-dir: source/dlt698-${{ needs.version.outputs.version }}.tar.gz
+          output-dir: wheelhouse
+        env:
+          CIBW_ARCHS: ${{ matrix.arch }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dlt698-${{ needs.version.outputs.version }}-wheels-${{ matrix.platform }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+          compression-level: 0
+
   publish:
     if: github.event_name == 'push'
-    needs: [version, package]
+    needs: [version, verification, package, python-sdist, python-wheels]
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -137,18 +182,16 @@ jobs:
           pattern: dlt698-${{ needs.version.outputs.version }}-*
           path: release-assets
           merge-multiple: true
-      - name: Verify all packages and collect checksums
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Verify complete same-version joint artifacts and collect checksums
         shell: bash
-        working-directory: release-assets
         run: |
-          shopt -s nullglob
-          archives=(*.tar.gz *.zip)
-          checksums=(*.sha256)
-          if [[ ${#archives[@]} -ne 10 || ${#checksums[@]} -ne 10 ]]; then
-            echo '::error::Expected ten packages and ten checksum files.'
-            exit 1
-          fi
-          cat "${checksums[@]}" | sort > SHA256SUMS
+          python python/tools/joint_manifest.py release-assets \
+            --version '${{ needs.version.outputs.version }}' \
+            --commit '${{ needs.version.outputs.commit }}'
+          cd release-assets
           sha256sum --check SHA256SUMS
       - name: Publish GitHub Release
         shell: bash
@@ -182,5 +225,6 @@ jobs:
           fi
           # 先上传至草稿，全部成功后再公开；失败后重跑可继续上传。
           gh release upload "$RELEASE_TAG" release-assets/*.tar.gz \
-            release-assets/*.zip release-assets/SHA256SUMS --clobber
+            release-assets/*.zip release-assets/*.whl \
+            release-assets/release-manifest.json release-assets/SHA256SUMS --clobber
           gh release edit "$RELEASE_TAG" --draft=false
