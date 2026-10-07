@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="zh">
+  <head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>配置速查 - dlt698 接口文档</title>
+<script>{;const saved = localStorage.getItem('rspress-theme-appearance');const preferDark = window.matchMedia('(prefers-color-scheme: dark)').matches;const defaultTheme = 'light';const theme = saved === 'light' || saved === 'dark' || saved === 'auto' ? saved : defaultTheme;const isDark = theme === 'auto' ? preferDark : theme === 'dark';document.documentElement.classList.toggle('dark', isDark);document.documentElement.classList.toggle('rp-dark', isDark);document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';}</script>
+<link href="/dlt698/static/css/styles.3c463aa6ae.css" rel="stylesheet">
+<link rel="preload" href="/dlt698/static/js/async/route-c111d19bd549.881637b3ce.js" as="script">
+<script defer src="/dlt698/static/js/styles.adb2360bf9.js"></script>
+<script defer src="/dlt698/static/js/lib-react.9d08e2b0f2.js"></script>
+<script defer src="/dlt698/static/js/lib-router.407dc95d37.js"></script>
+<script defer src="/dlt698/static/js/m.1ed921d589.js"></script>
+<script defer src="/dlt698/static/js/index.ed51711772.js"></script>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="generator" content="Rspress v2.0.21">
+<link rel="icon" href="/dlt698/logo.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="配置速查 - dlt698 接口文档">
+<meta name="description" content="参数名称、用途、默认值、范围、设置代码和适用场景，明确区分库连接参数与电表内部参数。">
+<meta property="og:description" content="参数名称、用途、默认值、范围、设置代码和适用场景，明确区分库连接参数与电表内部参数。"></head>
+
+  <body>
+    <div id="__rspress_root"><link rel="preload" as="image" href="/dlt698/logo.svg"/><header class="rp-nav"><div class="rp-nav__left"><div class="rp-nav__title"><a href="/dlt698/" class="rp-nav__title__link rp-link"><div class="rp-nav__title__logo"><img src="/dlt698/logo.svg" alt="logo" id="logo" class="rspress-logo rp-nav__title__logo-image"/></div><span>dlt698</span></a></div><ul class="rp-nav-menu rp-nav-menu--left"><li class="rp-nav-menu__item rp-nav-menu__item--active"><a href="/dlt698/guide/" class="rp-nav-menu__item__container rp-link">使用指南</a></li><li class="rp-nav-menu__item"><a href="/dlt698/getting-started/" class="rp-nav-menu__item__container rp-link">快速开始</a></li><li class="rp-nav-menu__item"><a href="/dlt698/core/" class="rp-nav-menu__item__container rp-link">核心类型</a></li><li class="rp-nav-menu__item"><a href="/dlt698/protocol/" class="rp-nav-menu__item__container rp-link">协议层</a></li><li class="rp-nav-menu__item"><a href="/dlt698/session/" class="rp-nav-menu__item__container rp-link">会话与服务</a></li><li class="rp-nav-menu__item"><a href="/dlt698/transport/" class="rp-nav-menu__item__container rp-link">传输层</a></li><li class="rp-nav-menu__item"><a href="/dlt698/appendix/" class="rp-nav-menu__item__container rp-link">附录</a></li></ul></div><div class="rp-nav__right"><button class="rp-search-button"><div class="rp-search-button__content"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 20 21" class="rp-search-button__icon"><path fill="currentColor" d="M8.333 1.913A6.667 6.667 0 0 1 15 8.58c0 1.54-.525 2.957-1.402 4.085l4.49 4.492a.834.834 0 0 1-1.177 1.178l-4.491-4.49a6.64 6.64 0 0 1-4.087 1.402 6.667 6.667 0 0 1 0-13.334m0 1.667a5 5 0 1 0 0 10 5 5 0 0 0 0-10"></path></svg><span class="rp-search-button__word">搜索</span></div><div class="rp-search-button__hotkey" style="opacity:0"><span></span><span>K</span></div></button><div class="rp-search-button--mobile"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 20 21"><path fill="currentColor" d="M8.333 1.913A6.667 6.667 0 0 1 15 8.58c0 1.54-.525 2.957-1.402 4.085l4.49 4.492a.834.834 0 0 1-1.177 1.178l-4.491-4.49a6.64 6.64 0 0 1-4.087 1.402 6.667 6.667 0 0 1 0-13.334m0 1.667a5 5 0 1 0 0 10 5 5 0 0 0 0-10"></path></svg></div><div class="rp-nav__others"><div class="rp-nav-menu__divider"></div><div class="rp-switch-appearance"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" class="rp-switch-appearance__icon rp-switch-appearance__icon--sun"><path fill="currentColor" d="m7.001 15.848-1.226 1.226a.58.58 0 0 0 0 .818.58.58 0 0 0 .818 0l1.226-1.226a.58.58 0 0 0 0-.818.58.58 0 0 0-.818 0m-.352-8.735a.584.584 0 0 0 .825-.825L6.237 5.051a.584.584 0 0 0-.825.825zM5.011 11.07h-1.75a.584.584 0 0 0 0 1.167h1.75c.324 0 .584-.26.584-.583a.585.585 0 0 0-.584-.584m7.003-5.835c.324 0 .584-.26.584-.584V2.9a.58.58 0 0 0-.584-.584.58.58 0 0 0-.583.583V4.65c0 .323.262.584.583.584m5.616 1.621 1.226-1.225a.58.58 0 0 0 0-.818.58.58 0 0 0-.818 0l-1.226 1.225a.58.58 0 0 0 0 .818.576.576 0 0 0 .818 0m3.138 4.214h-1.75a.58.58 0 0 0-.584.584c0 .324.26.584.583.584h1.751a.584.584 0 1 0 0-1.167m-3.389 5.124a.584.584 0 0 0-.825.825l1.238 1.238a.584.584 0 0 0 .825-.826zm-5.365-9.795a5.256 5.256 0 0 0-5.257 5.258 5.256 5.256 0 0 0 5.257 5.257 5.256 5.256 0 0 0 5.257-5.257 5.256 5.256 0 0 0-5.257-5.258m0 11.675a.58.58 0 0 0-.583.583v1.751a.582.582 0 1 0 1.167 0v-1.75a.584.584 0 0 0-.584-.584"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" fill="currentColor" viewBox="0 0 19 19" class="rp-switch-appearance__icon rp-switch-appearance__icon--moon"><path fill="currentColor" d="M9.166 0a9.2 9.2 0 0 1 1.857.188.834.834 0 0 1 .042 1.623 4.47 4.47 0 1 0 5.457 5.457l.048-.135a.834.834 0 0 1 1.575.177q.186.902.188 1.856A9.168 9.168 0 1 1 9.166 0"></path></svg></div><div class="rp-social-links"><a href="https://github.com/600888/dlt698" target="_blank" rel="noopener noreferrer" class="rp-social-links__item"><div class="rp-social-links__icon"><div class="rp-social-links__icon"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div></div></a><ul class="rp-hover-group rp-hover-group--hidden rp-hover-group--right"></ul></div></div><button aria-label="mobile hamburger" class="rp-nav-hamburger rp-nav-hamburger__sm"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 21 21"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.667" d="M3.645 5.225h13.333M3.645 10.225h13.333M3.645 15.225h13.333"></path></svg></button><button aria-label="mobile hamburger" class="rp-nav-hamburger rp-nav-hamburger__md"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 21 21"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.667" d="M3.645 5.225h13.333M3.645 10.225h13.333M3.645 15.225h13.333"></path></svg><ul class="rp-hover-group rp-hover-group--hidden rp-hover-group--right"><div class="rp-nav-menu__others-mobile__container"><div class="rp-nav-hamburger__md__hover-group"><div class="rp-nav-screen-appearance"><div class="rp-nav-screen-appearance__left">主题</div><div class="rp-nav-screen-appearance__right"></div></div><div class="rp-nav-screen-divider"></div><div class="rp-social-links"><a href="https://github.com/600888/dlt698" target="_blank" rel="noopener noreferrer" class="rp-social-links__item"><div class="rp-social-links__icon"><div class="rp-social-links__icon"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div></div></a><ul class="rp-hover-group rp-hover-group--hidden rp-hover-group--right"></ul></div></div></div></ul></button></div></header><div class="rp-doc-layout__menu"><div class="rp-sidebar-menu"><button type="button" class="rp-sidebar-menu__left"><svg width="1em" height="1em" viewBox="0 0 32 32"><path fill="currentColor" d="M4 6h24v2H4zm0 18h24v2H4zm0-12h24v2H4zm0 6h24v2H4z"></path></svg><span>菜单</span></button><button type="button" class="rp-sidebar-menu__right"><span class="rp-sidebar-menu__right__text">目录</span><svg width="14" height="14" class="rp-progress-circle"><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-divider-light)" stroke-width="2"></circle><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-brand)" stroke-width="2" stroke-dasharray="37.69911184307752" stroke-dashoffset="37.69911184307752" transform="rotate(-90 7 7)" style="transition:stroke-dashoffset 0.3s"></circle></svg><svg width="1em" height="1em" viewBox="0 0 32 32" class="rp-sidebar-menu__right__icon" style="transform:rotate(0deg);transition:transform 0.2s ease-out"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg></button></div></div><div class="rp-doc-layout__container"><aside class="rp-doc-layout__sidebar rp-scrollbar"><a href="/dlt698/" class="rp-sidebar-item rp-link" style="padding-left:12px" data-depth="0"><div class="rp-sidebar-item__left"><span class="rp-doc">返回文档首页</span></div><div class="rp-sidebar-item__right"></div></a><div class="rp-sidebar-divider" style="padding-left:12px"></div><div class="rp-sidebar-section-header"><div class="rp-sidebar-section-header__left"><span>使用指南</span></div><div class="rp-sidebar-section-header__right"></div></div><a href="/dlt698/guide/" class="rp-sidebar-item rp-link" style="padding-left:12px" data-depth="0"><div class="rp-sidebar-item__left"><span class="rp-doc">模块导读</span></div><div class="rp-sidebar-item__right"></div></a><div class="rp-sidebar-item rp-sidebar-group" style="padding-left:12px" data-depth="0"><div class="rp-sidebar-item__left"><span class="rp-doc">接口说明</span></div><div class="rp-sidebar-item__right"><div style="cursor:pointer;transition:transform 0.2s ease-out;transform:rotate(90deg)"><svg width="1em" height="1em" viewBox="0 0 32 32"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg></div></div></div><div style="display:grid;grid-template-rows:1fr;transition:grid-template-rows 0.2s ease-out"><div style="overflow:hidden"><a href="/dlt698/guide/first-read" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">第一次读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/tcp" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">TCP 连接</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/serial" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">串口连接</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/addressing" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">看懂数据地址</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/configuration" class="rp-sidebar-item rp-sidebar-item--active rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">配置速查</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/energy" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">电能读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/demand" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">需量读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/voltage" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">电压读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/current" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">电流读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/power" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">功率读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/power-factor" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">功率因数读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/frequency-temperature" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">频率与温度读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/harmonics" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">谐波与波形失真度</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/status" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">状态字读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/clock" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">日期时间与校时</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/device-info" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">设备信息读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/meter-parameters" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">电表参数读取与设置</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/daily-freeze" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">日冻结查询</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/monthly-freeze" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">月冻结查询</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/events" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">事件记录查询</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/batch-read" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">一次读取多个数据</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/write-action" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">写参数与执行方法</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/server" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">对外提供设备数据</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/packet-debug" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">调试助手使用</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/troubleshooting" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">常见问题排查</span></div><div class="rp-sidebar-item__right"></div></a></div></div></aside><div class="rp-doc-layout__doc"><main class="rp-doc-layout__doc-container"><div class="rp-doc rspress-doc"><!--$--><h1 class="rp-toc-include" id="配置速查"><a href="#配置速查" class="rp-header-anchor rp-link" aria-hidden="true">#</a>配置速查<!-- --> </h1>
+<div class="rp-callout rp-callout--warning"><div class="rp-callout__title">先分清两类参数</div><div class="rp-callout__content"><p>
+这一页列出两类完全不同的参数：</p><ul>
+<li><strong>库的连接参数</strong> —— 配置在本机程序里，控制通信行为。超时、重试、地址、预算都属于这一类。</li>
+<li><strong>电表内部参数</strong> —— 配置在电表内部，通过协议读写。最大需量周期、费率数、阶梯数属于这一类。</li>
+</ul><p><strong>电表的最大需量周期不是本库的请求超时。</strong> 前者是表计的计量算法参数，存在电表里；后者是网络往返等待时间，存在你的程序里。两者没有任何联动。</p></div></div>
+<h2 class="rp-toc-include" id="库的连接参数"><a href="#库的连接参数" class="rp-header-anchor rp-link" aria-hidden="true">#</a>库的连接参数</h2>
+<h3 class="rp-toc-include" id="clientoptions"><a href="#clientoptions" class="rp-header-anchor rp-link" aria-hidden="true">#</a>ClientOptions</h3>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-token-keyword)">#include</span><span style="color:var(--shiki-token-string-expression)"> &lt;dlt698/app.hpp&gt;</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">dlt698</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">app</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">ClientOptions options;</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>参数</th><th>类型</th><th>默认值</th><th>用途</th><th>适用场景</th></tr></thead><tbody><tr><td><code>protocol</code></td><td><code>SessionOptions</code></td><td>—</td><td>地址、能力、超时、预算</td><td>几乎总要配置 SA/CA</td></tr><tr><td><code>transport_timeout</code></td><td><code>milliseconds</code></td><td>5000</td><td>DNS 加 TCP 建连的合计时限</td><td>内网可调小；跨公网放宽</td></tr><tr><td><code>login_timeout</code></td><td><code>milliseconds</code></td><td>5000</td><td>等待远程服务器 LINK 的阶段时限</td><td>对端登录慢时放宽</td></tr><tr><td><code>channel</code></td><td><code>ChannelOptions</code></td><td>见下</td><td>读写缓冲和队列预算</td><td>高频采集或大报文</td></tr><tr><td><code>diagnostic</code></td><td><code>function&lt;void(const Error&amp;)&gt;</code></td><td>空</td><td>工作线程上的错误回调</td><td>排查连接问题</td></tr></tbody></table></div>
+<p><code>transport_timeout</code> <strong>不控制串口</strong>。<code>open_serial</code> 是同步调用，操作系统打开端口的耗时不受它约束。</p>
+<h3 class="rp-toc-include" id="serveroptions"><a href="#serveroptions" class="rp-header-anchor rp-link" aria-hidden="true">#</a>ServerOptions</h3>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-foreground)">dlt698</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">app</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">ServerOptions options;</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>参数</th><th>类型</th><th>默认值</th><th>用途</th><th>适用场景</th></tr></thead><tbody><tr><td><code>protocol</code></td><td><code>SessionOptions</code></td><td>—</td><td>地址、能力、超时</td><td>同客户端</td></tr><tr><td><code>max_connections</code></td><td><code>size_t</code></td><td>16</td><td>TCP 活动连接上限</td><td>集中器后挂多主站时放宽</td></tr><tr><td><code>heartbeat_seconds</code></td><td><code>uint16_t</code></td><td>5</td><td>登录后的自动心跳周期，0 关闭</td><td>设为 0 只关心跳，<strong>不取消初始登录</strong></td></tr><tr><td><code>channel</code></td><td><code>ChannelOptions</code></td><td>见下</td><td>通道预算</td><td>多连接场景</td></tr><tr><td><code>diagnostic</code></td><td><code>function&lt;void(uint64_t, const Error&amp;)&gt;</code></td><td>空</td><td>连接标识及错误，0 为监听器</td><td>生产环境建议配</td></tr></tbody></table></div>
+<h3 class="rp-toc-include" id="sessionoptions地址能力超时预算"><a href="#sessionoptions地址能力超时预算" class="rp-header-anchor rp-link" aria-hidden="true">#</a>SessionOptions：地址、能力、超时、预算</h3>
+<p>客户端和服务端共用。地址由两端匹配决定，超时和预算各自独立。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>参数</th><th>类型</th><th>默认值</th><th>用途</th><th>适用场景</th></tr></thead><tbody><tr><td><code>role</code></td><td><code>Role</code></td><td><code>client</code></td><td>协议角色</td><td>监听端也可以是协议服务器</td></tr><tr><td><code>server</code></td><td><code>ServerAddress</code></td><td>单地址 <code>{0}</code>、逻辑 0</td><td>服务器地址</td><td><strong>必须按实际配置，含长度</strong></td></tr><tr><td><code>client_address</code></td><td><code>uint8_t</code></td><td>0</td><td>CA 客户端地址</td><td>两端必须一致</td></tr><tr><td><code>parameters</code></td><td><code>AssociationParameters</code></td><td>见下</td><td>CONNECT 协商内容</td><td>协商尺寸和能力</td></tr><tr><td><code>request_timeout</code></td><td><code>milliseconds</code></td><td>5000</td><td>单个事务：CONNECT、请求、RELEASE</td><td>大记录、串口要放宽</td></tr><tr><td><code>id_reuse_delay</code></td><td><code>milliseconds</code></td><td>120000</td><td>成功事务的序号隔离期</td><td>须覆盖对端最大响应寿命</td></tr><tr><td><code>require_login</code></td><td><code>bool</code></td><td>false</td><td>要求先由协议服务器发 LINK</td><td>远程场景</td></tr><tr><td><code>preset_association</code></td><td><code>bool</code></td><td>false</td><td>显式启用本地预设关联</td><td>预设连接</td></tr><tr><td><code>clock_trusted</code></td><td><code>bool</code></td><td>false</td><td>本机时钟可信</td><td>校时相关</td></tr><tr><td><code>heartbeat_seconds</code></td><td><code>uint16_t</code></td><td>0</td><td>服务器自动心跳周期</td><td>已由 <code>ServerOptions</code> 覆盖</td></tr><tr><td><code>request_time_tag</code></td><td><code>optional&lt;Ti&gt;</code></td><td>空</td><td>客户机请求自动加时间标签</td><td>对端要求时启用</td></tr><tr><td><code>fragment_timeout</code></td><td><code>milliseconds</code></td><td>1000</td><td>单片确认超时</td><td>弱链路放宽</td></tr><tr><td><code>reassembly_timeout</code></td><td><code>milliseconds</code></td><td>5000</td><td>重组无进展超时</td><td>弱链路放宽</td></tr><tr><td><code>fragment_retries</code></td><td><code>unsigned</code></td><td>2</td><td>0～16，仅重发未确认片段</td><td>丢包严重时放宽</td></tr><tr><td><code>prefer_get_blocks</code></td><td><code>bool</code></td><td>true</td><td>超长 GET 优先按属性/记录行分块</td><td>大记录</td></tr><tr><td><code>calendar_clock</code></td><td><code>function&lt;DateTime()&gt;</code></td><td>空</td><td>注入日历时钟，空用 UTC</td><td>需要本地时间</td></tr><tr><td><code>limits</code></td><td><code>Limits</code></td><td>见下</td><td>资源预算</td><td>防异常输入</td></tr></tbody></table></div>
+<p><code>role</code> 只决定协议角色，<strong>和 TCP 谁拨号无关</strong>。监听端可以主动发 LINK，拨号方也可以是被动接受的。</p>
+<h3 class="rp-toc-include" id="associationparametersconnect-协商内容"><a href="#associationparametersconnect-协商内容" class="rp-header-anchor rp-link" aria-hidden="true">#</a>AssociationParameters：CONNECT 协商内容</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>参数</th><th>默认值</th><th>用途</th></tr></thead><tbody><tr><td><code>protocol_version</code></td><td><code>0x0010</code></td><td>协议版本</td></tr><tr><td><code>conformance</code></td><td><code>{0xF3, 0x8C, 0x08}</code></td><td>一致性位</td></tr><tr><td><code>client_title</code></td><td><code>{}</code></td><td>厂商信息</td></tr><tr><td><code>apdu_bytes</code></td><td>1024</td><td>协商的最大 APDU 长度</td></tr><tr><td><code>receive_buffer_bytes</code></td><td>1024</td><td>协商的接收缓冲</td></tr><tr><td><code>window_size</code></td><td>1</td><td>流控窗口</td></tr><tr><td><code>max_apdu_function</code></td><td>1024</td><td>单 APDU 上限</td></tr><tr><td><code>timeout_seconds</code></td><td>100</td><td>应用关联空闲超时，写在线上</td></tr></tbody></table></div>
+<p><code>apdu_bytes</code> 直接决定记录响应是否会分块。<strong>响应超过这个值时会自动走 GET Next 分块</strong>，需要多次往返，总耗时可能远超 <code>request_timeout</code>。串口或低速设备上建议显式设置一个与设备实际能力匹配的值，而不是盲目接受默认。</p>
+<p><code>parameters.function</code> 默认全零。<strong>全零会让协商结果没有业务含义</strong>，应用应显式配置自己实际支持的 C.2 功能位：</p>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-token-constant)">options</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">protocol</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">parameters</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">function[</span><span style="color:var(--shiki-token-constant)">0</span><span style="color:var(--shiki-foreground)">] </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-keyword)"> 0x</span><span style="color:var(--shiki-token-constant)">80</span><span style="color:var(--shiki-foreground)">;</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<h3 class="rp-toc-include" id="limits资源预算"><a href="#limits资源预算" class="rp-header-anchor rp-link" aria-hidden="true">#</a>Limits：资源预算</h3>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-token-constant)">options</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">protocol</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">limits</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">max_data_bytes </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> 65536</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">options</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">protocol</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">limits</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">max_frame_bytes </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> 16385</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">options</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">protocol</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">limits</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">max_elements </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> 65536</span><span style="color:var(--shiki-foreground)">;</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>参数</th><th>默认值</th><th>含义</th></tr></thead><tbody><tr><td><code>max_data_bytes</code></td><td>—</td><td>单个 Data 树和 APDU 的字节上限</td></tr><tr><td><code>max_frame_bytes</code></td><td>—</td><td>完整链路帧字节上限，帧长须在 12～16385</td></tr><tr><td><code>max_elements</code></td><td>65536</td><td>单个 Data 树节点总数、GET 属性数、记录行列乘积</td></tr><tr><td><code>max_depth</code></td><td>—</td><td>Data 树递归深度，从根的 0 开始</td></tr></tbody></table></div>
+<p>这些都是<strong>防御外部输入</strong>的上限。调大之前先确认对端可信。</p>
+<h3 class="rp-toc-include" id="channeloptions通道预算"><a href="#channeloptions通道预算" class="rp-header-anchor rp-link" aria-hidden="true">#</a>ChannelOptions：通道预算</h3>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-foreground)">transport</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">ChannelOptions channel;</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">channel</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">read_chunk_bytes </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> 4096</span><span style="color:var(--shiki-foreground)">;</span><span style="color:var(--shiki-token-comment)">          // 1～1 MiB</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">channel</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">max_pending_write_bytes </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> 1024</span><span style="color:var(--shiki-token-keyword)"> *</span><span style="color:var(--shiki-token-constant)"> 1024</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">channel</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">max_pending_writes </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> 128</span><span style="color:var(--shiki-foreground)">;</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<p><code>read_chunk_bytes</code> 是接收缓冲大小，<strong>和协议帧长度无关</strong>。一帧可能被拆成多次读取，也可能一次读到多帧。</p>
+<p>写入预算是背压。发送快于对端响应时队列满，返回 <code>resource_limit</code>。</p>
+<h3 class="rp-toc-include" id="serialoptions--seriallinkoptions"><a href="#serialoptions--seriallinkoptions" class="rp-header-anchor rp-link" aria-hidden="true">#</a>SerialOptions / SerialLinkOptions</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>参数</th><th>默认值</th><th>用途</th></tr></thead><tbody><tr><td><code>SerialOptions::baud_rate</code></td><td>9600</td><td>波特率</td></tr><tr><td><code>SerialOptions::data_bits</code></td><td>8</td><td>数据位</td></tr><tr><td><code>SerialOptions::parity</code></td><td><code>even</code></td><td>校验位</td></tr><tr><td><code>SerialOptions::stop_bits</code></td><td><code>one</code></td><td>停止位，<strong>不接受 1.5</strong></td></tr><tr><td><code>SerialOptions::flow_control</code></td><td><code>none</code></td><td>流控</td></tr><tr><td><code>SerialLinkOptions::bits_per_character</code></td><td>11</td><td>含起始/数据/校验/停止，必须与实际一致</td></tr><tr><td><code>SerialLinkOptions::set_transmit</code></td><td>空</td><td>RS-485 方向切换钩子</td></tr><tr><td><code>SerialLinkOptions::async_drain</code></td><td>空</td><td><strong>真实排空</strong>；配了方向切换就必须提供</td></tr></tbody></table></div>
+<p>细节和 RS-485 时序要求见<a href="/dlt698/guide/serial" class="rp-link">串口连接</a>。</p>
+<h3 class="rp-toc-include" id="devicelayout本地数组布局"><a href="#devicelayout本地数组布局" class="rp-header-anchor rp-link" aria-hidden="true">#</a>DeviceLayout：本地数组布局</h3>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-foreground)">dlt698</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">service</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">DeviceOptions device_options;</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">device_options</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">layout </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">DeviceLayout{</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">Wiring</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">three_phase</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-comment)">  // 或 single_phase</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">    4</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-comment)">    // 费率数 0～254</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">    21</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-comment)">   // 最高谐波次数 2～255</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">};</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<p><strong>这三个值必须与设备实际一致</strong>，它们决定数组长度校验和相别可用性。读参数不会自动修改本地布局，配置和设备不一致时读取会失败。</p>
+<h2 class="rp-toc-include" id="电表内部参数"><a href="#电表内部参数" class="rp-header-anchor rp-link" aria-hidden="true">#</a>电表内部参数</h2>
+<p>这些参数存在电表里，通过 GET/SET 读写。<strong>它们由设备解释，本库只做编解码和标准定义校验，不执行业务规则。</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>OI</th><th>名称</th><th>类型</th><th>倍率/单位</th><th>标准写入能力</th><th>何时需要关心</th></tr></thead><tbody><tr><td>4000</td><td>日期时间</td><td><code>DateTimeS</code></td><td>无</td><td>可写</td><td>读取表计时钟</td></tr><tr><td>4000</td><td>校时模式</td><td><code>Enum{0,1,2,255}</code></td><td>无</td><td>可写</td><td>不允许现场改时钟时设为不调整</td></tr><tr><td>4000</td><td>精准校时参数</td><td><code>Structure&lt;5×UInt8&gt;</code></td><td>延时阈值单位 s</td><td>可写</td><td>对时精度要求高</td></tr><tr><td>4001</td><td>通信地址</td><td><code>OctetString</code></td><td>—</td><td>可写</td><td>现场改表地址</td></tr><tr><td>4002</td><td>表号</td><td><code>OctetString</code></td><td>—</td><td>可写</td><td>表计台账</td></tr><tr><td>4003</td><td>客户编号</td><td><code>OctetString</code></td><td>—</td><td>可写</td><td>用户识别</td></tr><tr><td>4006</td><td>时钟源</td><td><code>Structure{Enum{0～4}, Enum{0,1}}</code></td><td>无</td><td>只读</td><td>判断时钟来源</td></tr><tr><td>400C</td><td>时区时段数</td><td><code>Structure&lt;5×UInt8&gt;</code></td><td>年时区≤14、日表≤8、日时段≤14、费率≤63、假日≤254</td><td>可写</td><td><strong>费率数在这里，读电能前先读它</strong></td></tr><tr><td>400D</td><td>阶梯数</td><td><code>UInt8</code></td><td>无</td><td>可写</td><td>判断有无阶梯</td></tr><tr><td>400E</td><td>谐波分析次数</td><td><code>UInt8</code></td><td>无</td><td>可写</td><td><strong>决定谐波数组长度，须同步到本地布局</strong></td></tr><tr><td>4010</td><td>计量元件数</td><td><code>UInt8{1,2,3}</code></td><td>无</td><td>只读</td><td>判断接线方式</td></tr><tr><td>4012</td><td>周休日特征字</td><td><code>BitString(8)</code></td><td>—</td><td>可写</td><td>费率时段业务</td></tr><tr><td>4030</td><td>电压合格率参数</td><td><code>Structure&lt;4×UInt16&gt;</code></td><td>-1 V</td><td>可写</td><td>电压合格范围统计</td></tr><tr><td>4100</td><td>最大需量周期</td><td><code>UInt8</code></td><td>倍率 0，min</td><td>可写</td><td><strong>需量积算周期，1～n 分钟</strong></td></tr><tr><td>4101</td><td>滑差时间</td><td><code>UInt8</code></td><td>倍率 0，min</td><td>可写</td><td>需量更新步长</td></tr><tr><td>4103</td><td>资产管理编码</td><td><code>VisibleString(32)</code></td><td>—</td><td>可写</td><td>资产台账</td></tr><tr><td>4104</td><td>额定电压</td><td><code>VisibleString(6)</code></td><td>—</td><td>只读</td><td>铭牌参数</td></tr><tr><td>4105</td><td>额定电流/基本电流</td><td><code>VisibleString(6)</code></td><td>—</td><td>只读</td><td>铭牌参数</td></tr><tr><td>4106</td><td>最大电流</td><td><code>VisibleString(6)</code></td><td>—</td><td>只读</td><td>铭牌参数</td></tr><tr><td>4107</td><td>有功准确度等级</td><td><code>VisibleString(4)</code></td><td>—</td><td>只读</td><td>铭牌参数</td></tr><tr><td>4108</td><td>无功准确度等级</td><td><code>VisibleString(4)</code></td><td>—</td><td>只读</td><td>铭牌参数</td></tr><tr><td>410B</td><td>电能表型号</td><td><code>VisibleString(32)</code></td><td>—</td><td>只读</td><td>台账</td></tr></tbody></table></div>
+<p>各参数的读取方法和字段结构见<a href="/dlt698/guide/meter-parameters" class="rp-link">电表参数读取与设置</a>。</p>
+<h3 class="rp-toc-include" id="两个最该先读的参数"><a href="#两个最该先读的参数" class="rp-header-anchor rp-link" aria-hidden="true">#</a>两个最该先读的参数</h3>
+<p>现场对接时，<strong>先读这两个参数再决定本地布局</strong>，否则数组长度校验一定失败：</p>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-token-comment)">// 1. 费率数 → 决定电能数组长度</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">auto</span><span style="color:var(--shiki-foreground)"> counts </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">get</span><span style="color:var(--shiki-foreground)">({</span><span style="color:var(--shiki-token-keyword)">0x</span><span style="color:var(--shiki-token-constant)">400C</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 2</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-foreground)">});</span></span>
+<span class="line"><span style="color:var(--shiki-token-comment)">// Structure&lt;5×UInt8&gt;，第 4 个字段是费率数</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">const</span><span style="color:var(--shiki-token-keyword)"> auto&amp;</span><span style="color:var(--shiki-foreground)"> fields </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">get</span><span style="color:var(--shiki-foreground)">&lt;model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">Data</span><span style="color:var(--shiki-foreground)">&gt;(</span><span style="color:var(--shiki-token-constant)">counts</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">())</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">as</span><span style="color:var(--shiki-token-keyword)">&lt;</span><span style="color:var(--shiki-foreground)">model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">Structure</span><span style="color:var(--shiki-token-keyword)">&gt;</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">value;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">const</span><span style="color:var(--shiki-foreground)"> std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-keyword)">size_t</span><span style="color:var(--shiki-foreground)"> tariff_count </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> fields</span><span style="color:var(--shiki-foreground)">[</span><span style="color:var(--shiki-token-constant)">3</span><span style="color:var(--shiki-foreground)">]</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">as</span><span style="color:var(--shiki-token-keyword)">&lt;</span><span style="color:var(--shiki-foreground)">model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">UInt8</span><span style="color:var(--shiki-token-keyword)">&gt;</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">value;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--shiki-token-comment)">// 2. 谐波分析次数 → 决定谐波数组长度</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">auto</span><span style="color:var(--shiki-foreground)"> harmonic </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">get</span><span style="color:var(--shiki-foreground)">({</span><span style="color:var(--shiki-token-keyword)">0x</span><span style="color:var(--shiki-token-constant)">400E</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 2</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-foreground)">});</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">const</span><span style="color:var(--shiki-foreground)"> std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-keyword)">size_t</span><span style="color:var(--shiki-foreground)"> harmonic_order </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">get</span><span style="color:var(--shiki-foreground)">&lt;model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">Data</span><span style="color:var(--shiki-foreground)">&gt;(</span><span style="color:var(--shiki-token-constant)">harmonic</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">())</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">as</span><span style="color:var(--shiki-token-keyword)">&lt;</span><span style="color:var(--shiki-foreground)">model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">UInt8</span><span style="color:var(--shiki-token-keyword)">&gt;</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">value;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--shiki-token-comment)">// 然后用实际值构造布局</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">const</span><span style="color:var(--shiki-foreground)"> standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">DeviceLayout</span><span style="color:var(--shiki-token-constant)"> layout</span><span style="color:var(--shiki-foreground)">{standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">Wiring</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">three_phase</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> tariff_count</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> harmonic_order};</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<p><strong>读取参数不会自动修改本地布局。</strong> 必须由你读取、判断并显式配置 <code>DeviceLayout</code>，这一点没有捷径。</p>
+<h3 class="rp-toc-include" id="写入权限的两层含义"><a href="#写入权限的两层含义" class="rp-header-anchor rp-link" aria-hidden="true">#</a>写入权限的两层含义</h3>
+<p><strong>标准元数据标注可写</strong>，只表示 DL/T 698.45 允许写这个属性。<strong>运行时是否真能写，取决于设备的权限和配置。</strong> 很多表计出厂时锁定参数，写入返回 DAR=3。</p>
+<p>托管服务器本地发布的属性<strong>默认只读</strong>，远端 SET 返回 DAR=3。需要可写属性和方法，仍要通过<a href="/dlt698/session/object" class="rp-link">高级分层接口</a>接入。</p>
+<h2 class="rp-toc-include" id="按场景速查"><a href="#按场景速查" class="rp-header-anchor rp-link" aria-hidden="true">#</a>按场景速查</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>我想…</th><th>调什么</th></tr></thead><tbody><tr><td>内网快速连接</td><td><code>transport_timeout</code> 调到 2000</td></tr><tr><td>跨公网或链路慢</td><td><code>transport_timeout</code> 10000，<code>request_timeout</code> 15000</td></tr><tr><td>串口/低速设备读记录</td><td><code>request_timeout</code> 15000 以上</td></tr><tr><td>记录响应被分块导致超时</td><td><code>parameters.apdu_bytes</code> 与设备能力对齐，放宽 <code>request_timeout</code></td></tr><tr><td>丢包严重</td><td><code>fragment_timeout</code> 3000，<code>fragment_retries</code> 4</td></tr><tr><td>对端要求时间标签</td><td><code>request_time_tag</code> 配置</td></tr><tr><td>大量并发读</td><td><code>max_connections</code>、<code>max_pending_writes</code> 放宽</td></tr><tr><td>处理不可信输入</td><td>收紧 <code>max_data_bytes</code> 和 <code>max_elements</code></td></tr><tr><td>表计费率数不是 4</td><td>读 <code>400C/2/0</code>，按实际值设 <code>DeviceLayout.tariff_count</code></td></tr><tr><td>表计不是 21 次谐波</td><td>读 <code>400E/2/0</code>，按实际值设 <code>DeviceLayout.harmonic_order</code></td></tr><tr><td>RS-485 时序不稳</td><td>提供真实 <code>async_drain</code>，或改用自动方向适配器</td></tr><tr><td>单相表</td><td><code>Wiring::single_phase</code>，只查 total 和 A</td></tr></tbody></table></div>
+<h2 class="rp-toc-include" id="下一步"><a href="#下一步" class="rp-header-anchor rp-link" aria-hidden="true">#</a>下一步</h2>
+<ul>
+<li>逐参数读取方法：<a href="/dlt698/guide/meter-parameters" class="rp-link">电表参数读取与设置</a></li>
+<li>连接与关联：<a href="/dlt698/guide/tcp" class="rp-link">TCP 连接</a>、<a href="/dlt698/guide/serial" class="rp-link">串口连接</a></li>
+<li>完整结构体定义：<a href="/dlt698/session/client" class="rp-link">托管客户端</a>、<a href="/dlt698/session/session" class="rp-link">Session 会话</a></li>
+</ul><!--/$--></div><footer class="rp-doc-footer"><div class="rp-doc-footer__edit"><a href="https://github.com/600888/dlt698/tree/main/website/docs/guide/configuration.md" target="_blank" rel="noopener noreferrer" class="rp-edit-link rp-link">编辑此页面</a><div class="rp-last-updated"><p>最后更新于<!-- -->: <span>2026/10/7 07:21:28</span></p></div></div><div class="rp-doc-footer__divider"></div><div class="rp-prev-next-page"><a href="/dlt698/guide/addressing" class="rp-prev-next-page__item rp-prev-next-page__prev rp-link"><span class="rp-prev-next-page__item__desc">上一页</span><span class="rp-prev-next-page__item__title"><svg width="1em" height="1em" viewBox="0 0 32 32" class="rp-prev-next-page__icon rp-prev-next-page__rotate_180"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg><span>看懂数据地址</span></span></a><a href="/dlt698/guide/energy" class="rp-prev-next-page__item rp-prev-next-page__next rp-link"><span class="rp-prev-next-page__item__desc">下一页</span><span class="rp-prev-next-page__item__title"><span>电能读取</span><svg width="1em" height="1em" viewBox="0 0 32 32" class="rp-prev-next-page__icon"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg></span></a></div></footer></main></div><aside class="rp-doc-layout__outline rp-scrollbar"><div class="rp-outline"><div class="rp-outline__title">目录<svg width="14" height="14" class="rp-progress-circle"><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-divider-light)" stroke-width="2"></circle><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-brand)" stroke-width="2" stroke-dasharray="37.69911184307752" stroke-dashoffset="37.69911184307752" transform="rotate(-90 7 7)" style="transition:stroke-dashoffset 0.3s"></circle></svg></div><nav class="rp-outline__toc rp-scrollbar"><a href="#库的连接参数" class="rp-toc-item rp-link" title="库的连接参数" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">库的连接参数</span></a><a href="#clientoptions" class="rp-toc-item rp-link" title="ClientOptions" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">ClientOptions</span></a><a href="#serveroptions" class="rp-toc-item rp-link" title="ServerOptions" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">ServerOptions</span></a><a href="#sessionoptions地址能力超时预算" class="rp-toc-item rp-link" title="SessionOptions：地址、能力、超时、预算" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">SessionOptions：地址、能力、超时、预算</span></a><a href="#associationparametersconnect-协商内容" class="rp-toc-item rp-link" title="AssociationParameters：CONNECT 协商内容" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">AssociationParameters：CONNECT 协商内容</span></a><a href="#limits资源预算" class="rp-toc-item rp-link" title="Limits：资源预算" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">Limits：资源预算</span></a><a href="#channeloptions通道预算" class="rp-toc-item rp-link" title="ChannelOptions：通道预算" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">ChannelOptions：通道预算</span></a><a href="#serialoptions--seriallinkoptions" class="rp-toc-item rp-link" title="SerialOptions / SerialLinkOptions" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">SerialOptions / SerialLinkOptions</span></a><a href="#devicelayout本地数组布局" class="rp-toc-item rp-link" title="DeviceLayout：本地数组布局" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">DeviceLayout：本地数组布局</span></a><a href="#电表内部参数" class="rp-toc-item rp-link" title="电表内部参数" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">电表内部参数</span></a><a href="#两个最该先读的参数" class="rp-toc-item rp-link" title="两个最该先读的参数" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">两个最该先读的参数</span></a><a href="#写入权限的两层含义" class="rp-toc-item rp-link" title="写入权限的两层含义" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">写入权限的两层含义</span></a><a href="#按场景速查" class="rp-toc-item rp-link" title="按场景速查" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">按场景速查</span></a><a href="#下一步" class="rp-toc-item rp-link" title="下一步" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">下一步</span></a></nav><div class="rp-outline__divider"></div><div class="rp-outline__bottom"><a href="https://github.com/600888/dlt698/tree/main/website/docs/guide/configuration.md" target="_blank" rel="noopener noreferrer" class="rp-outline__action-row rp-edit-link rp-link"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"></path></svg><span>编辑此页面</span></a></div></div></aside></div></div>
+    <div id="__rspress_modal_container"></div>
+  </body>
+</html>

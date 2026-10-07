@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="zh">
+  <head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>事件记录查询 - dlt698 接口文档</title>
+<script>{;const saved = localStorage.getItem('rspress-theme-appearance');const preferDark = window.matchMedia('(prefers-color-scheme: dark)').matches;const defaultTheme = 'light';const theme = saved === 'light' || saved === 'dark' || saved === 'auto' ? saved : defaultTheme;const isDark = theme === 'auto' ? preferDark : theme === 'dark';document.documentElement.classList.toggle('dark', isDark);document.documentElement.classList.toggle('rp-dark', isDark);document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';}</script>
+<link href="/dlt698/static/css/styles.3c463aa6ae.css" rel="stylesheet">
+<link rel="preload" href="/dlt698/static/js/async/route-bb5a1a565c2a.4d7a0efae7.js" as="script">
+<script defer src="/dlt698/static/js/styles.adb2360bf9.js"></script>
+<script defer src="/dlt698/static/js/lib-react.9d08e2b0f2.js"></script>
+<script defer src="/dlt698/static/js/lib-router.407dc95d37.js"></script>
+<script defer src="/dlt698/static/js/m.1ed921d589.js"></script>
+<script defer src="/dlt698/static/js/index.ed51711772.js"></script>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="generator" content="Rspress v2.0.21">
+<link rel="icon" href="/dlt698/logo.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="事件记录查询 - dlt698 接口文档">
+<meta name="description" content="查询掉电事件和终端初始化事件；四列结构、NULL 来源列的含义与限制。">
+<meta property="og:description" content="查询掉电事件和终端初始化事件；四列结构、NULL 来源列的含义与限制。"></head>
+
+  <body>
+    <div id="__rspress_root"><link rel="preload" as="image" href="/dlt698/logo.svg"/><header class="rp-nav"><div class="rp-nav__left"><div class="rp-nav__title"><a href="/dlt698/" class="rp-nav__title__link rp-link"><div class="rp-nav__title__logo"><img src="/dlt698/logo.svg" alt="logo" id="logo" class="rspress-logo rp-nav__title__logo-image"/></div><span>dlt698</span></a></div><ul class="rp-nav-menu rp-nav-menu--left"><li class="rp-nav-menu__item rp-nav-menu__item--active"><a href="/dlt698/guide/" class="rp-nav-menu__item__container rp-link">使用指南</a></li><li class="rp-nav-menu__item"><a href="/dlt698/getting-started/" class="rp-nav-menu__item__container rp-link">快速开始</a></li><li class="rp-nav-menu__item"><a href="/dlt698/core/" class="rp-nav-menu__item__container rp-link">核心类型</a></li><li class="rp-nav-menu__item"><a href="/dlt698/protocol/" class="rp-nav-menu__item__container rp-link">协议层</a></li><li class="rp-nav-menu__item"><a href="/dlt698/session/" class="rp-nav-menu__item__container rp-link">会话与服务</a></li><li class="rp-nav-menu__item"><a href="/dlt698/transport/" class="rp-nav-menu__item__container rp-link">传输层</a></li><li class="rp-nav-menu__item"><a href="/dlt698/appendix/" class="rp-nav-menu__item__container rp-link">附录</a></li></ul></div><div class="rp-nav__right"><button class="rp-search-button"><div class="rp-search-button__content"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 20 21" class="rp-search-button__icon"><path fill="currentColor" d="M8.333 1.913A6.667 6.667 0 0 1 15 8.58c0 1.54-.525 2.957-1.402 4.085l4.49 4.492a.834.834 0 0 1-1.177 1.178l-4.491-4.49a6.64 6.64 0 0 1-4.087 1.402 6.667 6.667 0 0 1 0-13.334m0 1.667a5 5 0 1 0 0 10 5 5 0 0 0 0-10"></path></svg><span class="rp-search-button__word">搜索</span></div><div class="rp-search-button__hotkey" style="opacity:0"><span></span><span>K</span></div></button><div class="rp-search-button--mobile"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 20 21"><path fill="currentColor" d="M8.333 1.913A6.667 6.667 0 0 1 15 8.58c0 1.54-.525 2.957-1.402 4.085l4.49 4.492a.834.834 0 0 1-1.177 1.178l-4.491-4.49a6.64 6.64 0 0 1-4.087 1.402 6.667 6.667 0 0 1 0-13.334m0 1.667a5 5 0 1 0 0 10 5 5 0 0 0 0-10"></path></svg></div><div class="rp-nav__others"><div class="rp-nav-menu__divider"></div><div class="rp-switch-appearance"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" class="rp-switch-appearance__icon rp-switch-appearance__icon--sun"><path fill="currentColor" d="m7.001 15.848-1.226 1.226a.58.58 0 0 0 0 .818.58.58 0 0 0 .818 0l1.226-1.226a.58.58 0 0 0 0-.818.58.58 0 0 0-.818 0m-.352-8.735a.584.584 0 0 0 .825-.825L6.237 5.051a.584.584 0 0 0-.825.825zM5.011 11.07h-1.75a.584.584 0 0 0 0 1.167h1.75c.324 0 .584-.26.584-.583a.585.585 0 0 0-.584-.584m7.003-5.835c.324 0 .584-.26.584-.584V2.9a.58.58 0 0 0-.584-.584.58.58 0 0 0-.583.583V4.65c0 .323.262.584.583.584m5.616 1.621 1.226-1.225a.58.58 0 0 0 0-.818.58.58 0 0 0-.818 0l-1.226 1.225a.58.58 0 0 0 0 .818.576.576 0 0 0 .818 0m3.138 4.214h-1.75a.58.58 0 0 0-.584.584c0 .324.26.584.583.584h1.751a.584.584 0 1 0 0-1.167m-3.389 5.124a.584.584 0 0 0-.825.825l1.238 1.238a.584.584 0 0 0 .825-.826zm-5.365-9.795a5.256 5.256 0 0 0-5.257 5.258 5.256 5.256 0 0 0 5.257 5.257 5.256 5.256 0 0 0 5.257-5.257 5.256 5.256 0 0 0-5.257-5.258m0 11.675a.58.58 0 0 0-.583.583v1.751a.582.582 0 1 0 1.167 0v-1.75a.584.584 0 0 0-.584-.584"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" fill="currentColor" viewBox="0 0 19 19" class="rp-switch-appearance__icon rp-switch-appearance__icon--moon"><path fill="currentColor" d="M9.166 0a9.2 9.2 0 0 1 1.857.188.834.834 0 0 1 .042 1.623 4.47 4.47 0 1 0 5.457 5.457l.048-.135a.834.834 0 0 1 1.575.177q.186.902.188 1.856A9.168 9.168 0 1 1 9.166 0"></path></svg></div><div class="rp-social-links"><a href="https://github.com/600888/dlt698" target="_blank" rel="noopener noreferrer" class="rp-social-links__item"><div class="rp-social-links__icon"><div class="rp-social-links__icon"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div></div></a><ul class="rp-hover-group rp-hover-group--hidden rp-hover-group--right"></ul></div></div><button aria-label="mobile hamburger" class="rp-nav-hamburger rp-nav-hamburger__sm"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 21 21"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.667" d="M3.645 5.225h13.333M3.645 10.225h13.333M3.645 15.225h13.333"></path></svg></button><button aria-label="mobile hamburger" class="rp-nav-hamburger rp-nav-hamburger__md"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 21 21"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.667" d="M3.645 5.225h13.333M3.645 10.225h13.333M3.645 15.225h13.333"></path></svg><ul class="rp-hover-group rp-hover-group--hidden rp-hover-group--right"><div class="rp-nav-menu__others-mobile__container"><div class="rp-nav-hamburger__md__hover-group"><div class="rp-nav-screen-appearance"><div class="rp-nav-screen-appearance__left">主题</div><div class="rp-nav-screen-appearance__right"></div></div><div class="rp-nav-screen-divider"></div><div class="rp-social-links"><a href="https://github.com/600888/dlt698" target="_blank" rel="noopener noreferrer" class="rp-social-links__item"><div class="rp-social-links__icon"><div class="rp-social-links__icon"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div></div></a><ul class="rp-hover-group rp-hover-group--hidden rp-hover-group--right"></ul></div></div></div></ul></button></div></header><div class="rp-doc-layout__menu"><div class="rp-sidebar-menu"><button type="button" class="rp-sidebar-menu__left"><svg width="1em" height="1em" viewBox="0 0 32 32"><path fill="currentColor" d="M4 6h24v2H4zm0 18h24v2H4zm0-12h24v2H4zm0 6h24v2H4z"></path></svg><span>菜单</span></button><button type="button" class="rp-sidebar-menu__right"><span class="rp-sidebar-menu__right__text">目录</span><svg width="14" height="14" class="rp-progress-circle"><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-divider-light)" stroke-width="2"></circle><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-brand)" stroke-width="2" stroke-dasharray="37.69911184307752" stroke-dashoffset="37.69911184307752" transform="rotate(-90 7 7)" style="transition:stroke-dashoffset 0.3s"></circle></svg><svg width="1em" height="1em" viewBox="0 0 32 32" class="rp-sidebar-menu__right__icon" style="transform:rotate(0deg);transition:transform 0.2s ease-out"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg></button></div></div><div class="rp-doc-layout__container"><aside class="rp-doc-layout__sidebar rp-scrollbar"><a href="/dlt698/" class="rp-sidebar-item rp-link" style="padding-left:12px" data-depth="0"><div class="rp-sidebar-item__left"><span class="rp-doc">返回文档首页</span></div><div class="rp-sidebar-item__right"></div></a><div class="rp-sidebar-divider" style="padding-left:12px"></div><div class="rp-sidebar-section-header"><div class="rp-sidebar-section-header__left"><span>使用指南</span></div><div class="rp-sidebar-section-header__right"></div></div><a href="/dlt698/guide/" class="rp-sidebar-item rp-link" style="padding-left:12px" data-depth="0"><div class="rp-sidebar-item__left"><span class="rp-doc">模块导读</span></div><div class="rp-sidebar-item__right"></div></a><div class="rp-sidebar-item rp-sidebar-group" style="padding-left:12px" data-depth="0"><div class="rp-sidebar-item__left"><span class="rp-doc">接口说明</span></div><div class="rp-sidebar-item__right"><div style="cursor:pointer;transition:transform 0.2s ease-out;transform:rotate(90deg)"><svg width="1em" height="1em" viewBox="0 0 32 32"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg></div></div></div><div style="display:grid;grid-template-rows:1fr;transition:grid-template-rows 0.2s ease-out"><div style="overflow:hidden"><a href="/dlt698/guide/first-read" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">第一次读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/tcp" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">TCP 连接</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/serial" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">串口连接</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/addressing" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">看懂数据地址</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/configuration" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">配置速查</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/energy" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">电能读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/demand" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">需量读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/voltage" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">电压读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/current" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">电流读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/power" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">功率读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/power-factor" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">功率因数读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/frequency-temperature" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">频率与温度读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/harmonics" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">谐波与波形失真度</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/status" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">状态字读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/clock" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">日期时间与校时</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/device-info" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">设备信息读取</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/meter-parameters" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">电表参数读取与设置</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/daily-freeze" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">日冻结查询</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/monthly-freeze" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">月冻结查询</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/events" class="rp-sidebar-item rp-sidebar-item--active rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">事件记录查询</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/batch-read" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">一次读取多个数据</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/write-action" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">写参数与执行方法</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/server" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">对外提供设备数据</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/packet-debug" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">调试助手使用</span></div><div class="rp-sidebar-item__right"></div></a><a href="/dlt698/guide/troubleshooting" class="rp-sidebar-item rp-sidebar-item--group-item rp-link" style="padding-left:calc(12px * 1 + 12px)" data-depth="1"><div class="rp-sidebar-item__left"><span class="rp-doc">常见问题排查</span></div><div class="rp-sidebar-item__right"></div></a></div></div></aside><div class="rp-doc-layout__doc"><main class="rp-doc-layout__doc-container"><div class="rp-doc rspress-doc"><!--$--><h1 class="rp-toc-include" id="事件记录查询"><a href="#事件记录查询" class="rp-header-anchor rp-link" aria-hidden="true">#</a>事件记录查询<!-- --> </h1>
+<h2 class="rp-toc-include" id="能读取什么"><a href="#能读取什么" class="rp-header-anchor rp-link" aria-hidden="true">#</a>能读取什么</h2>
+<p>事件记录描述<strong>设备侧发生过的离散事件</strong>，与<a href="/dlt698/guide/daily-freeze" class="rp-link">冻结</a>不同：冻结是周期性的数据快照，事件是不定时发生的动作记录。</p>
+<p>库为两类事件提供了记录模板：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>业务含义</th><th>OI</th><th>接口类</th><th>模板列数</th></tr></thead><tbody><tr><td>电能表掉电事件</td><td><code>3011</code></td><td>7（事件）</td><td>4</td></tr><tr><td>终端初始化事件</td><td><code>3100</code></td><td>7（事件）</td><td>3</td></tr></tbody></table></div>
+<div class="rp-callout rp-callout--warning"><div class="rp-callout__title">不是所有表都有事件记录</div><div class="rp-callout__content"><p>
+库定义了 <code>3011</code> 和 <code>3100</code>，不代表设备一定提供。事件类对象（接口类 7）是否实现、存储深度多大，由设备点表和配置决定。不支持的读取会得到 DAR=4。</p></div></div>
+<h2 class="rp-toc-include" id="数据地址表"><a href="#数据地址表" class="rp-header-anchor rp-link" aria-hidden="true">#</a>数据地址表</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>属性</th><th>名称</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td>1</td><td>逻辑名</td><td><code>OctetString</code></td><td>通常不读</td></tr><tr><td>2</td><td>事件记录表</td><td><code>Array\&lt;Structure\&gt;</code></td><td>记录型属性，必须用 GET-Record</td></tr></tbody></table></div>
+<p>事件的列结构与冻结不同，多了<strong>发生时间</strong>和<strong>来源</strong>：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>定位列</th><th>OI</th><th>类型</th><th>掉电事件</th><th>初始化事件</th></tr></thead><tbody><tr><td>事件记录序号</td><td><code>2022</code></td><td><code>UInt32</code></td><td>有</td><td>有</td></tr><tr><td>事件发生时间</td><td><code>201E</code></td><td><code>DateTimeS</code></td><td>有</td><td>有</td></tr><tr><td>事件结束时间</td><td><code>2020</code></td><td><code>DateTimeS</code></td><td>有</td><td>有</td></tr><tr><td>事件发生源</td><td><code>2024</code></td><td><code>Null</code></td><td>有</td><td>无</td></tr></tbody></table></div>
+<p><strong>事件发生源 <code>2024</code> 在本批实现中固定为 <code>Null</code></strong>，库会拒绝任何非 NULL 的值：</p>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-token-comment)">// 库里对 2024 列的校验逻辑（cpp/src/standard/records.cpp）</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">if</span><span style="color:var(--shiki-foreground)"> (column </span><span style="color:var(--shiki-token-keyword)">==</span><span style="color:var(--shiki-foreground)"> model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">Oad{oi</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">event_source</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 2</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-foreground)">}) {</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-constant)">value</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">type</span><span style="color:var(--shiki-foreground)">() </span><span style="color:var(--shiki-token-keyword)">!=</span><span style="color:var(--shiki-foreground)"> model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">DataType</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">null)</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">        return</span><span style="color:var(--shiki-foreground)"> Error{ErrorCode</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">invalid_value</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-string-expression)"> &quot;event NULL source&quot;</span><span style="color:var(--shiki-foreground)">};</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">}</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<p>这是因为标准里该字段的类型定义依赖具体事件类别，库不做猜测。<strong>不能据此推断其他事件的来源列类型</strong> —— 如果你的设备返回了非 NULL 的来源值，需要自己处理，且不要用 <code>validate_record_result</code> 去校验它。</p>
+<div class="rp-callout rp-callout--tip"><div class="rp-callout__title">终止事件没有结束时间吗</div><div class="rp-callout__content"><p>
+有。掉电事件的&quot;结束时间&quot;就是恢复供电的时刻。如果设备只填了发生时间、结束时间为 NULL，那是设备侧数据不完整，库不做补齐。</p></div></div>
+<h2 class="rp-toc-include" id="最小完整示例"><a href="#最小完整示例" class="rp-header-anchor rp-link" aria-hidden="true">#</a>最小完整示例</h2>
+<p>查询掉电事件：</p>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-token-keyword)">#include</span><span style="color:var(--shiki-token-string-expression)"> &lt;dlt698/app.hpp&gt;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">#include</span><span style="color:var(--shiki-token-string-expression)"> &lt;dlt698/standard/records.hpp&gt;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">#include</span><span style="color:var(--shiki-token-string-expression)"> &lt;iostream&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">int</span><span style="color:var(--shiki-token-function)"> main</span><span style="color:var(--shiki-foreground)">() {</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    using</span><span style="color:var(--shiki-token-keyword)"> namespace</span><span style="color:var(--shiki-foreground)"> dlt698;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    namespace</span><span style="color:var(--shiki-foreground)"> oi </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">oi;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    const</span><span style="color:var(--shiki-foreground)"> standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">DeviceLayout</span><span style="color:var(--shiki-token-constant)"> layout</span><span style="color:var(--shiki-foreground)">{standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">Wiring</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">three_phase</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 4</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 21</span><span style="color:var(--shiki-foreground)">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    app</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">ClientOptions</span><span style="color:var(--shiki-foreground)"> options;</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">    options</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">protocol</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">server</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">bytes </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> {</span><span style="color:var(--shiki-token-keyword)">0x</span><span style="color:var(--shiki-token-constant)">00</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-keyword)"> 0x</span><span style="color:var(--shiki-token-constant)">00</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-keyword)"> 0x</span><span style="color:var(--shiki-token-constant)">00</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-keyword)"> 0x</span><span style="color:var(--shiki-token-constant)">00</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-keyword)"> 0x</span><span style="color:var(--shiki-token-constant)">00</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-keyword)"> 0x</span><span style="color:var(--shiki-token-constant)">00</span><span style="color:var(--shiki-foreground)">};</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    app</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">Client</span><span style="color:var(--shiki-token-function)"> client</span><span style="color:var(--shiki-foreground)">(options);</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    auto</span><span style="color:var(--shiki-foreground)"> connected </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">connect_tcp</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-string-expression)">&quot;127.0.0.1&quot;</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 6980</span><span style="color:var(--shiki-foreground)">);</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">!</span><span style="color:var(--shiki-foreground)">connected) {</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">        std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">cerr </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-constant)"> connected</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">error</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">context </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27;\n&#x27;</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">        return</span><span style="color:var(--shiki-token-constant)"> 1</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--shiki-token-comment)">    // 序号区间 [1, 2)，用模板的四列</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    auto</span><span style="color:var(--shiki-foreground)"> query </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">record_sequences</span><span style="color:var(--shiki-foreground)">(oi</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">meter_power_down_event</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 1</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 2</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> {}</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> layout);</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">!</span><span style="color:var(--shiki-foreground)">query) {</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">        std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">cerr </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-constant)"> query</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">error</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">context </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27;\n&#x27;</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">        client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">disconnect</span><span style="color:var(--shiki-foreground)">();</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">        return</span><span style="color:var(--shiki-token-constant)"> 1</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    auto</span><span style="color:var(--shiki-foreground)"> result </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">get_record</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">query</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">());</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">!</span><span style="color:var(--shiki-foreground)">result) {</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">        std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">cerr </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-constant)"> result</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">error</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">context </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27;\n&#x27;</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">        client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">disconnect</span><span style="color:var(--shiki-foreground)">();</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">        return</span><span style="color:var(--shiki-token-constant)"> 1</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    }</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">const</span><span style="color:var(--shiki-token-keyword)"> auto</span><span style="color:var(--shiki-foreground)"> dar </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">get_if</span><span style="color:var(--shiki-foreground)">&lt;std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-keyword)">uint8_t</span><span style="color:var(--shiki-foreground)">&gt;(</span><span style="color:var(--shiki-token-keyword)">&amp;</span><span style="color:var(--shiki-token-constant)">result</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">result)) {</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">        std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">cerr </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &quot;event query failed, DAR=&quot;</span><span style="color:var(--shiki-token-keyword)"> &lt;&lt;</span><span style="color:var(--shiki-token-keyword)"> unsigned</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-keyword)">*</span><span style="color:var(--shiki-foreground)">dar) </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27;\n&#x27;</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">        client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">disconnect</span><span style="color:var(--shiki-foreground)">();</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">        return</span><span style="color:var(--shiki-token-constant)"> 1</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    const</span><span style="color:var(--shiki-token-keyword)"> auto&amp;</span><span style="color:var(--shiki-foreground)"> record </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> result</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">();</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    const</span><span style="color:var(--shiki-token-keyword)"> auto*</span><span style="color:var(--shiki-foreground)"> rows </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">get_if</span><span style="color:var(--shiki-foreground)">&lt;std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">vector</span><span style="color:var(--shiki-foreground)">&lt;protocol</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">apdu</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">RecordRow</span><span style="color:var(--shiki-foreground)">&gt;&gt;(</span><span style="color:var(--shiki-token-keyword)">&amp;</span><span style="color:var(--shiki-token-constant)">record</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">result);</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">!</span><span style="color:var(--shiki-foreground)">rows) {</span></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">        client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">disconnect</span><span style="color:var(--shiki-foreground)">();</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">        return</span><span style="color:var(--shiki-token-constant)"> 1</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    for</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">const</span><span style="color:var(--shiki-token-keyword)"> auto&amp;</span><span style="color:var(--shiki-token-constant)"> row</span><span style="color:var(--shiki-token-punctuation)"> :</span><span style="color:var(--shiki-token-keyword)"> *</span><span style="color:var(--shiki-foreground)">rows) {</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">        std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">cout </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &quot;event with &quot;</span><span style="color:var(--shiki-token-keyword)"> &lt;&lt;</span><span style="color:var(--shiki-token-constant)"> row</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">size</span><span style="color:var(--shiki-foreground)">() </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &quot; cells\n&quot;</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">        for</span><span style="color:var(--shiki-foreground)"> (std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-keyword)">size_t</span><span style="color:var(--shiki-foreground)"> i </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-foreground)">; i </span><span style="color:var(--shiki-token-keyword)">&lt;</span><span style="color:var(--shiki-token-constant)"> row</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">size</span><span style="color:var(--shiki-foreground)">() </span><span style="color:var(--shiki-token-keyword)">&amp;&amp;</span><span style="color:var(--shiki-foreground)"> i </span><span style="color:var(--shiki-token-keyword)">&lt;</span><span style="color:var(--shiki-token-constant)"> record</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-constant)">columns</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">size</span><span style="color:var(--shiki-foreground)">(); </span><span style="color:var(--shiki-token-keyword)">++</span><span style="color:var(--shiki-foreground)">i) {</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">            const</span><span style="color:var(--shiki-token-keyword)"> auto&amp;</span><span style="color:var(--shiki-foreground)"> column </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">get</span><span style="color:var(--shiki-foreground)">&lt;model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">Oad</span><span style="color:var(--shiki-foreground)">&gt;(</span><span style="color:var(--shiki-token-constant)">record</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">columns[i]);</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">            std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">cout </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &quot;  oi=&quot;</span><span style="color:var(--shiki-token-keyword)"> &lt;&lt;</span><span style="color:var(--shiki-foreground)"> std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">hex </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-constant)"> column</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">oi </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-foreground)"> std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">dec</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">                      &lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &quot; attr=&quot;</span><span style="color:var(--shiki-token-keyword)"> &lt;&lt;</span><span style="color:var(--shiki-token-keyword)"> unsigned</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">column</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">attribute) </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &quot; type=&quot;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">                      &lt;&lt;</span><span style="color:var(--shiki-token-keyword)"> unsigned</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">row</span><span style="color:var(--shiki-foreground)">[i]</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">type</span><span style="color:var(--shiki-foreground)">()) </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27;\n&#x27;</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-comment)">            // 时间列按下标取：t[0..1] 年(大端) t[2] 月 t[3] 日 t[4] 时 t[5] 分 t[6] 秒</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">            if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-constant)">row</span><span style="color:var(--shiki-foreground)">[i]</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">type</span><span style="color:var(--shiki-foreground)">() </span><span style="color:var(--shiki-token-keyword)">==</span><span style="color:var(--shiki-foreground)"> model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">DataType</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">date_time_s) {</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">                const</span><span style="color:var(--shiki-token-keyword)"> auto&amp;</span><span style="color:var(--shiki-foreground)"> t </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> row</span><span style="color:var(--shiki-foreground)">[i]</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">as</span><span style="color:var(--shiki-token-keyword)">&lt;</span><span style="color:var(--shiki-foreground)">model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">DateTimeS</span><span style="color:var(--shiki-token-keyword)">&gt;</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">value;</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">                std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">cout </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &quot;    &quot;</span><span style="color:var(--shiki-token-keyword)"> &lt;&lt;</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">unsigned</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">t</span><span style="color:var(--shiki-foreground)">[</span><span style="color:var(--shiki-token-constant)">0</span><span style="color:var(--shiki-foreground)">]) </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-constant)"> 8</span><span style="color:var(--shiki-token-keyword)"> |</span><span style="color:var(--shiki-token-constant)"> t</span><span style="color:var(--shiki-foreground)">[</span><span style="color:var(--shiki-token-constant)">1</span><span style="color:var(--shiki-foreground)">]) </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27;-&#x27;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">                          &lt;&lt;</span><span style="color:var(--shiki-token-keyword)"> unsigned</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">t</span><span style="color:var(--shiki-foreground)">[</span><span style="color:var(--shiki-token-constant)">2</span><span style="color:var(--shiki-foreground)">]) </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27;-&#x27;</span><span style="color:var(--shiki-token-keyword)"> &lt;&lt;</span><span style="color:var(--shiki-token-keyword)"> unsigned</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">t</span><span style="color:var(--shiki-foreground)">[</span><span style="color:var(--shiki-token-constant)">3</span><span style="color:var(--shiki-foreground)">]) </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27; &#x27;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">                          &lt;&lt;</span><span style="color:var(--shiki-token-keyword)"> unsigned</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">t</span><span style="color:var(--shiki-foreground)">[</span><span style="color:var(--shiki-token-constant)">4</span><span style="color:var(--shiki-foreground)">]) </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27;:&#x27;</span><span style="color:var(--shiki-token-keyword)"> &lt;&lt;</span><span style="color:var(--shiki-token-keyword)"> unsigned</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">t</span><span style="color:var(--shiki-foreground)">[</span><span style="color:var(--shiki-token-constant)">5</span><span style="color:var(--shiki-foreground)">]) </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27;\n&#x27;</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">            }</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">        }</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--shiki-token-constant)">    client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">disconnect</span><span style="color:var(--shiki-foreground)">();</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    return</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">}</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<h2 class="rp-toc-include" id="常用变体"><a href="#常用变体" class="rp-header-anchor rp-link" aria-hidden="true">#</a>常用变体</h2>
+<h3 class="rp-toc-include" id="只取发生时间"><a href="#只取发生时间" class="rp-header-anchor rp-link" aria-hidden="true">#</a>只取发生时间</h3>
+<p>不指定 <code>columns</code> 时用模板列。要精简就显式列出需要的列：</p>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-token-keyword)">auto</span><span style="color:var(--shiki-foreground)"> query </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">record_sequences</span><span style="color:var(--shiki-foreground)">(</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    oi</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">meter_power_down_event</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 1</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 10</span><span style="color:var(--shiki-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    {{oi</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">event_sequence</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 2</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-foreground)">}</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> {oi</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">event_start_time</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 2</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-foreground)">}}</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> layout);</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<p>注意<strong>定位列不必出现在数据列里</strong>。RSD 用 <code>2022</code>（序号）定位，RCSD 可以只要 <code>201E</code>（发生时间）。</p>
+<h3 class="rp-toc-include" id="按时间区间查事件"><a href="#按时间区间查事件" class="rp-header-anchor rp-link" aria-hidden="true">#</a>按时间区间查事件</h3>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-token-keyword)">auto</span><span style="color:var(--shiki-foreground)"> query </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">record_between</span><span style="color:var(--shiki-foreground)">(oi</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">terminal_initialization_event</span><span style="color:var(--shiki-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">                                      model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">DateTimeS{{</span><span style="color:var(--shiki-token-keyword)">0x</span><span style="color:var(--shiki-token-constant)">07</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-keyword)"> 0x</span><span style="color:var(--shiki-token-constant)">ea</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 10</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 1</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-foreground)">}}</span><span style="color:var(--shiki-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">                                      model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">DateTimeS{{</span><span style="color:var(--shiki-token-keyword)">0x</span><span style="color:var(--shiki-token-constant)">07</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-keyword)"> 0x</span><span style="color:var(--shiki-token-constant)">ea</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 10</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 8</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-foreground)">}}</span><span style="color:var(--shiki-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">                                      {}</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> layout);</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<p>定位列由模板决定：事件按 <code>201E</code>（发生时间）定位，冻结按 <code>2021</code>（冻结时间）定位。</p>
+<h3 class="rp-toc-include" id="拉取全部历史事件"><a href="#拉取全部历史事件" class="rp-header-anchor rp-link" aria-hidden="true">#</a>拉取全部历史事件</h3>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-foreground)">std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-keyword)">uint32_t</span><span style="color:var(--shiki-foreground)"> begin </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> 1</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">for</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">int</span><span style="color:var(--shiki-foreground)"> page </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> 0</span><span style="color:var(--shiki-foreground)">; page </span><span style="color:var(--shiki-token-keyword)">&lt;</span><span style="color:var(--shiki-token-constant)"> 100</span><span style="color:var(--shiki-foreground)">; </span><span style="color:var(--shiki-token-keyword)">++</span><span style="color:var(--shiki-foreground)">page) {</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    auto</span><span style="color:var(--shiki-foreground)"> query </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">record_sequences</span><span style="color:var(--shiki-foreground)">(oi</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">meter_power_down_event</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> begin</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> begin </span><span style="color:var(--shiki-token-keyword)">+</span><span style="color:var(--shiki-token-constant)"> 20</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> {}</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> layout);</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">!</span><span style="color:var(--shiki-foreground)">query) </span><span style="color:var(--shiki-token-keyword)">break</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    auto</span><span style="color:var(--shiki-foreground)"> result </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">get_record</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">query</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">());</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">!</span><span style="color:var(--shiki-foreground)">result </span><span style="color:var(--shiki-token-keyword)">||</span><span style="color:var(--shiki-foreground)"> std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">get_if</span><span style="color:var(--shiki-foreground)">&lt;std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-keyword)">uint8_t</span><span style="color:var(--shiki-foreground)">&gt;(</span><span style="color:var(--shiki-token-keyword)">&amp;</span><span style="color:var(--shiki-token-constant)">result</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">result)) </span><span style="color:var(--shiki-token-keyword)">break</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    const</span><span style="color:var(--shiki-token-keyword)"> auto*</span><span style="color:var(--shiki-foreground)"> rows </span><span style="color:var(--shiki-token-keyword)">=</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">        std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">get_if</span><span style="color:var(--shiki-foreground)">&lt;std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">vector</span><span style="color:var(--shiki-foreground)">&lt;protocol</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">apdu</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">RecordRow</span><span style="color:var(--shiki-foreground)">&gt;&gt;(</span><span style="color:var(--shiki-token-keyword)">&amp;</span><span style="color:var(--shiki-token-constant)">result</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">result);</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">!</span><span style="color:var(--shiki-foreground)">rows </span><span style="color:var(--shiki-token-keyword)">||</span><span style="color:var(--shiki-token-constant)"> rows</span><span style="color:var(--shiki-token-punctuation)">-&gt;</span><span style="color:var(--shiki-token-function)">empty</span><span style="color:var(--shiki-foreground)">()) </span><span style="color:var(--shiki-token-keyword)">break</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-token-comment)">    // ... 处理 rows ...</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">    begin </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> rows</span><span style="color:var(--shiki-token-punctuation)">-&gt;</span><span style="color:var(--shiki-token-function)">back</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">front</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">as</span><span style="color:var(--shiki-token-keyword)">&lt;</span><span style="color:var(--shiki-foreground)">model</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">UInt32</span><span style="color:var(--shiki-token-keyword)">&gt;</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">value </span><span style="color:var(--shiki-token-keyword)">+</span><span style="color:var(--shiki-token-constant)"> 1</span><span style="color:var(--shiki-foreground)">;</span><span style="color:var(--shiki-token-comment)">   // 第 0 列是序号</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">}</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<p><strong>事件序号同样可能跳变</strong>（设备重启、存储滚动），以响应里的实际序号推进。</p>
+<h3 class="rp-toc-include" id="严格校验"><a href="#严格校验" class="rp-header-anchor rp-link" aria-hidden="true">#</a>严格校验</h3>
+<div class="rp-codeblock language-cpp"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="cpp"><code><span class="line"><span style="color:var(--shiki-token-keyword)">auto</span><span style="color:var(--shiki-foreground)"> result </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-token-constant)"> client</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">get_record</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">query</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">());</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">if</span><span style="color:var(--shiki-foreground)"> (result </span><span style="color:var(--shiki-token-keyword)">&amp;&amp;</span><span style="color:var(--shiki-token-keyword)"> !</span><span style="color:var(--shiki-foreground)">std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">get_if</span><span style="color:var(--shiki-foreground)">&lt;std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-keyword)">uint8_t</span><span style="color:var(--shiki-foreground)">&gt;(</span><span style="color:var(--shiki-token-keyword)">&amp;</span><span style="color:var(--shiki-token-constant)">result</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">result)) {</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    auto</span><span style="color:var(--shiki-foreground)"> valid </span><span style="color:var(--shiki-token-keyword)">=</span><span style="color:var(--shiki-foreground)"> standard</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-token-function)">validate_record_result</span><span style="color:var(--shiki-foreground)">(</span><span style="color:var(--shiki-token-constant)">query</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-token-constant)"> result</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">value</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">,</span><span style="color:var(--shiki-foreground)"> layout);</span></span>
+<span class="line"><span style="color:var(--shiki-token-keyword)">    if</span><span style="color:var(--shiki-foreground)"> (</span><span style="color:var(--shiki-token-keyword)">!</span><span style="color:var(--shiki-foreground)">valid)</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">        std</span><span style="color:var(--shiki-token-punctuation)">::</span><span style="color:var(--shiki-foreground)">cerr </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &quot;invalid event record: &quot;</span><span style="color:var(--shiki-token-keyword)"> &lt;&lt;</span><span style="color:var(--shiki-token-constant)"> valid</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-token-function)">error</span><span style="color:var(--shiki-foreground)">()</span><span style="color:var(--shiki-token-punctuation)">.</span><span style="color:var(--shiki-foreground)">context </span><span style="color:var(--shiki-token-keyword)">&lt;&lt;</span><span style="color:var(--shiki-token-string-expression)"> &#x27;\n&#x27;</span><span style="color:var(--shiki-foreground)">;</span></span>
+<span class="line"><span style="color:var(--shiki-foreground)">}</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<p>校验内容：属性回显、列顺序、行宽、每列精确类型、编码资源上限。事件来源列 <code>2024</code> 必须是 <code>Null</code>，否则返回 <code>invalid_value</code>。</p>
+<h2 class="rp-toc-include" id="请求与响应报文"><a href="#请求与响应报文" class="rp-header-anchor rp-link" aria-hidden="true">#</a>请求与响应报文</h2>
+<p>以下示例固定：SA 六个 <code>00</code> 字节、逻辑地址 0、CA=0、PIID=0、控制域请求 <code>43</code>／响应 <code>C3</code>。</p>
+<p>响应的字节骨架见<a href="/dlt698/guide/daily-freeze#get-record-响应的固定骨架" class="rp-link">日冻结的骨架说明</a>：<code>85 03 | PIID-ACD | OAD | 列数 | 列 OAD | 结果选择子 | 行数 | 行数据</code>。</p>
+<h3 class="rp-toc-include" id="掉电事件四列"><a href="#掉电事件四列" class="rp-header-anchor rp-link" aria-hidden="true">#</a>掉电事件，四列</h3>
+<p>请求（序号 <code>[1, 2)</code>，显式四列）：</p>
+<div class="rp-codeblock language-text"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="text"><code><span class="line"><span>68 3C 00 43 05 00 00 00 00 00 00 00 E1 D9 05 03 00 30 11 02 00 02 20 22 02 00 06 00 00 00 01 06 00 00 00 02 00 04 00 20 22 02 00 00 20 1E 02 00 00 20 20 02 00 00 20 24 02 00 00 FE 37 16</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>字段</th><th>字节</th><th>含义</th></tr></thead><tbody><tr><td>长度域</td><td><code>3C 00</code></td><td>60 字节数据，完整帧 63 字节</td></tr><tr><td><code>05 03</code></td><td></td><td>服务 5（GET-Request），选择子 3（GET-Record）</td></tr><tr><td><code>00</code></td><td></td><td>PIID=0</td></tr><tr><td><code>30 11 02 00</code></td><td></td><td>OAD：掉电事件，属性 2，索引 0</td></tr><tr><td><code>02</code></td><td></td><td>RSD 类型 2（区间）</td></tr><tr><td><code>20 22 02 00</code></td><td></td><td>定位列：事件记录序号 <code>2022/2/0</code></td></tr><tr><td><code>06 00 00 00 01</code></td><td></td><td><code>UInt32</code> begin = 1</td></tr><tr><td><code>06 00 00 00 02</code></td><td></td><td><code>UInt32</code> end = 2</td></tr><tr><td><code>00</code></td><td></td><td>interval = NULL</td></tr><tr><td><code>04</code></td><td></td><td>RCSD：4 列</td></tr><tr><td><code>00 20 22 02 00</code></td><td></td><td>列 1：事件记录序号</td></tr><tr><td><code>00 20 1E 02 00</code></td><td></td><td>列 2：事件发生时间</td></tr><tr><td><code>00 20 20 02 00</code></td><td></td><td>列 3：事件结束时间</td></tr><tr><td><code>00 20 24 02 00</code></td><td></td><td>列 4：事件发生源</td></tr></tbody></table></div>
+<p>响应（一行，第四列为 <code>00</code> 即 <code>Null</code>）：</p>
+<div class="rp-codeblock language-text"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="text"><code><span class="line"><span>68 45 00 C3 05 00 00 00 00 00 00 00 C7 AA 85 03 00 30 11 02 00 04 00 20 22 02 00 00 20 1E 02 00 00 20 20 02 00 00 20 24 02 00 01 01 06 00 00 00 01 1C 07 EA 0A 05 08 00 00 1C 07 EA 0A 05 08 00 1E 00 00 00 DC A5 16</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>字段</th><th>字节</th><th>含义</th></tr></thead><tbody><tr><td><code>03</code></td><td></td><td>表头列数 = 4</td></tr><tr><td><code>00 20 22 02 00</code></td><td></td><td>列 1：事件记录序号</td></tr><tr><td><code>00 20 1E 02 00</code></td><td></td><td>列 2：事件发生时间</td></tr><tr><td><code>00 20 20 02 00</code></td><td></td><td>列 3：事件结束时间</td></tr><tr><td><code>00 20 24 02 00</code></td><td></td><td>列 4：事件发生源</td></tr><tr><td><code>01</code></td><td></td><td>结果选择子 1：记录</td></tr><tr><td><code>01</code></td><td></td><td>行数 = 1</td></tr><tr><td><code>06 00 00 00 01</code></td><td></td><td>单元 1：<code>UInt32</code> 序号 = 1</td></tr><tr><td><code>1C 07 EA 0A 05 08 00 00</code></td><td></td><td>单元 2：<code>DateTimeS</code> 2026-10-05 08:00:00.000</td></tr><tr><td><code>1C 07 EA 0A 05 08 00 1E</code></td><td></td><td>单元 3：<code>DateTimeS</code> 2026-10-05 08:00:00.<strong>30</strong>（毫秒 30）</td></tr><tr><td><code>00</code></td><td></td><td>单元 4：<strong><code>Null</code></strong>，一个字节，没有后续数据</td></tr></tbody></table></div>
+<p><code>DateTimeS</code> 的 <code>1C</code> 之后固定 7 字节：年（2 字节大端）月 日 时 分 秒 毫秒。单元 2 和 3 只差最后一个字节 <code>1E</code> = 30，即相差 30 毫秒 —— 掉电和恢复几乎同时。</p>
+<p><strong><code>Null</code> 只占一个字节 <code>00</code></strong>，不携带任何数据。</p>
+<h3 class="rp-toc-include" id="终端初始化事件三列"><a href="#终端初始化事件三列" class="rp-header-anchor rp-link" aria-hidden="true">#</a>终端初始化事件，三列</h3>
+<p>请求（序号 <code>[1, 2)</code>，<code>columns</code> 传空表示采用后端配置的全部列）：</p>
+<div class="rp-codeblock language-text"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="text"><code><span class="line"><span>68 28 00 43 05 00 00 00 00 00 00 00 F1 F6 05 03 00 31 00 02 00 02 20 22 02 00 06 00 00 00 01 06 00 00 00 02 00 00 00 68 C6 16</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+<p>末尾的 <code>00</code> 是 RCSD 列数 = 0，即&quot;采用后端配置的全部列&quot;。</p>
+<p>响应里设备<strong>回显了具体的三列</strong>：</p>
+<div class="rp-codeblock language-text"><div class="rp-codeblock__content"><div class="rp-codeblock__content__scroll-container rp-scrollbar rp-scrollbar--always"><pre class="shiki css-variables" style="background-color:var(--shiki-background);color:var(--shiki-foreground)" tabindex="0" data-lang="text"><code><span class="line"><span>68 3F 00 C3 05 00 00 00 00 00 00 00 85 E3 85 03 00 31 00 02 00 03 00 20 22 02 00 00 20 1E 02 00 00 20 20 02 00 01 01 06 00 00 00 01 1C 07 EA 0A 06 09 00 00 1C 07 EA 0A 06 09 00 05 00 00 3C 8C 16</span></span></code></pre></div><div class="rp-code-button-group"><button class="rp-code-button-group__button rp-code-wrap-button" title="切换代码换行" aria-label="切换代码换行"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrapped"><path fill="currentColor" d="M21 5H3v2h18zM3 19h7v-2H3zm0-6h15c1 0 2 .43 2 2s-1 2-2 2h-2v-2l-4 3 4 3v-2h2c2.95 0 4-1.27 4-4 0-2.72-1-4-4-4H3z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-button-group__icon--wrap"><path fill="currentColor" d="M16 7H3V5h13zM3 19h13v-2H3zm19-7-4-3v2H3v2h15v2z"></path></svg></button><button class="rp-code-button-group__button rp-code-copy-button" title="复制代码"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--copy"><path fill="currentColor" d="M20 8v12H8V8zm0-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2"></path><path fill="currentColor" d="M4 16H2V4a2 2 0 0 1 2-2h12v2H4Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="rp-code-button-group__icon rp-code-copy-button__icon rp-code-copy-button__icon--success"><path fill="currentColor" d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"></path></svg></button></div></div></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>字段</th><th>字节</th><th>含义</th></tr></thead><tbody><tr><td><code>03</code></td><td></td><td>表头列数 = 3（<strong>设备回显了具体列</strong>）</td></tr><tr><td><code>00 20 22 02 00</code></td><td></td><td>列 1：事件记录序号</td></tr><tr><td><code>00 20 1E 02 00</code></td><td></td><td>列 2：事件发生时间</td></tr><tr><td><code>00 20 20 02 00</code></td><td></td><td>列 3：事件结束时间</td></tr><tr><td><code>01</code></td><td></td><td>结果选择子 1：记录</td></tr><tr><td><code>01</code></td><td></td><td>行数 = 1</td></tr><tr><td><code>06 00 00 00 01</code></td><td></td><td>单元 1：序号 = 1</td></tr><tr><td><code>1C 07 EA 0A 06 09 00 00</code></td><td></td><td>单元 2：2026-10-06 09:00:00.000</td></tr><tr><td><code>1C 07 EA 0A 06 09 00 05</code></td><td></td><td>单元 3：2026-10-06 09:00:00.005（相差 5 毫秒）</td></tr></tbody></table></div>
+<p>初始化事件没有来源列，所以表头只有 3 列。<strong>请求列数为 0 不代表响应列数也是 0</strong> —— 空 columns 只表示&quot;采用后端配置&quot;，响应必须回显具体列，否则库返回 <code>resource_limit</code>。</p>
+<h2 class="rp-toc-include" id="相关配置"><a href="#相关配置" class="rp-header-anchor rp-link" aria-hidden="true">#</a>相关配置</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>配置</th><th>位置</th><th>说明</th></tr></thead><tbody><tr><td>设备事件存储深度</td><td>设备内部参数</td><td>决定可回溯多少条事件，库不感知</td></tr><tr><td><code>SessionOptions::limits.max_elements</code></td><td>库连接参数</td><td>限制行数和列数，防恶意响应</td></tr><tr><td><code>SessionOptions::request_timeout</code></td><td>库连接参数</td><td>事件多时响应可能较大</td></tr></tbody></table></div>
+<h2 class="rp-toc-include" id="常见失败"><a href="#常见失败" class="rp-header-anchor rp-link" aria-hidden="true">#</a>常见失败</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="rp-table-scroll-container rp-scrollbar"><table><thead><tr><th>现象</th><th>原因</th><th>处理</th></tr></thead><tbody><tr><td>DAR=4</td><td>设备不提供该事件对象</td><td>部分表只支持冻结不支持事件</td></tr><tr><td>DAR=3</td><td>设备拒绝该查询</td><td>事件未启用，或序号区间不被支持</td></tr><tr><td>DAR=5</td><td>属性不是记录型</td><td>用了普通 GET 而非 GET-Record</td></tr><tr><td><code>resource_limit</code></td><td>响应给了行数据但空表头</td><td>设备实现问题，库的保护性报错</td></tr><tr><td><code>invalid_value</code> on 来源列</td><td>来源列不是 <code>Null</code></td><td>本批只接受 <code>Null</code>，需自己处理非 NULL 值</td></tr><tr><td>事件条数比预期少</td><td>设备存储深度有限，旧的已被覆盖</td><td>及时拉取，不要长期累积</td></tr><tr><td>序号突然变小</td><td>设备重启或存储格式化</td><td>以响应实际序号为准，不要假定单调</td></tr><tr><td>结束时间等于 <code>Null</code> 或缺失</td><td>设备未记录该字段</td><td>库不补齐，按缺失处理</td></tr><tr><td>拿到的是 <code>4000</code> 时钟对象的时间</td><td>混淆了定位列</td><td>事件按 <code>201E</code> 定位，冻结按 <code>2021</code> 定位</td></tr></tbody></table></div><!--/$--></div><footer class="rp-doc-footer"><div class="rp-doc-footer__edit"><a href="https://github.com/600888/dlt698/tree/main/website/docs/guide/events.md" target="_blank" rel="noopener noreferrer" class="rp-edit-link rp-link">编辑此页面</a><div class="rp-last-updated"><p>最后更新于<!-- -->: <span>2026/10/7 07:21:28</span></p></div></div><div class="rp-doc-footer__divider"></div><div class="rp-prev-next-page"><a href="/dlt698/guide/monthly-freeze" class="rp-prev-next-page__item rp-prev-next-page__prev rp-link"><span class="rp-prev-next-page__item__desc">上一页</span><span class="rp-prev-next-page__item__title"><svg width="1em" height="1em" viewBox="0 0 32 32" class="rp-prev-next-page__icon rp-prev-next-page__rotate_180"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg><span>月冻结查询</span></span></a><a href="/dlt698/guide/batch-read" class="rp-prev-next-page__item rp-prev-next-page__next rp-link"><span class="rp-prev-next-page__item__desc">下一页</span><span class="rp-prev-next-page__item__title"><span>一次读取多个数据</span><svg width="1em" height="1em" viewBox="0 0 32 32" class="rp-prev-next-page__icon"><path fill="currentColor" d="M22 16 12 26l-1.4-1.4 8.6-8.6-8.6-8.6L12 6z"></path></svg></span></a></div></footer></main></div><aside class="rp-doc-layout__outline rp-scrollbar"><div class="rp-outline"><div class="rp-outline__title">目录<svg width="14" height="14" class="rp-progress-circle"><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-divider-light)" stroke-width="2"></circle><circle cx="7" cy="7" r="6" stroke-linecap="round" fill="none" stroke="var(--rp-c-brand)" stroke-width="2" stroke-dasharray="37.69911184307752" stroke-dashoffset="37.69911184307752" transform="rotate(-90 7 7)" style="transition:stroke-dashoffset 0.3s"></circle></svg></div><nav class="rp-outline__toc rp-scrollbar"><a href="#能读取什么" class="rp-toc-item rp-link" title="能读取什么" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">能读取什么</span></a><a href="#数据地址表" class="rp-toc-item rp-link" title="数据地址表" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">数据地址表</span></a><a href="#最小完整示例" class="rp-toc-item rp-link" title="最小完整示例" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">最小完整示例</span></a><a href="#常用变体" class="rp-toc-item rp-link" title="常用变体" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">常用变体</span></a><a href="#只取发生时间" class="rp-toc-item rp-link" title="只取发生时间" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">只取发生时间</span></a><a href="#按时间区间查事件" class="rp-toc-item rp-link" title="按时间区间查事件" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">按时间区间查事件</span></a><a href="#拉取全部历史事件" class="rp-toc-item rp-link" title="拉取全部历史事件" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">拉取全部历史事件</span></a><a href="#严格校验" class="rp-toc-item rp-link" title="严格校验" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">严格校验</span></a><a href="#请求与响应报文" class="rp-toc-item rp-link" title="请求与响应报文" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">请求与响应报文</span></a><a href="#掉电事件四列" class="rp-toc-item rp-link" title="掉电事件，四列" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">掉电事件，四列</span></a><a href="#终端初始化事件三列" class="rp-toc-item rp-link" title="终端初始化事件，三列" style="padding-left:12px" data-depth="1"><span class="rp-toc-item__text rp-doc">终端初始化事件，三列</span></a><a href="#相关配置" class="rp-toc-item rp-link" title="相关配置" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">相关配置</span></a><a href="#常见失败" class="rp-toc-item rp-link" title="常见失败" style="padding-left:0" data-depth="0"><span class="rp-toc-item__text rp-doc">常见失败</span></a></nav><div class="rp-outline__divider"></div><div class="rp-outline__bottom"><a href="https://github.com/600888/dlt698/tree/main/website/docs/guide/events.md" target="_blank" rel="noopener noreferrer" class="rp-outline__action-row rp-edit-link rp-link"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"></path></svg><span>编辑此页面</span></a></div></div></aside></div></div>
+    <div id="__rspress_modal_container"></div>
+  </body>
+</html>
