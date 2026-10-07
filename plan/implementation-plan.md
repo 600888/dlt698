@@ -6,6 +6,8 @@
 
 2026-10-07 补充：[应用接口与易用性开发计划](application-api-plan.md)明确普通用户的服务器启动、直接设置数据、运行时托管、连接生命周期及客户端入口。在现有内核上优先交付该计划的 P0 服务器接口，再推进高层客户端与绑定；现有分层接口继续保留。本计划第 3.4 节的公共入口属于早期草案，高层入口职责与交付顺序以补充计划为准，协议支持范围仍以支持矩阵为准。
 
+2026-10-07 Python 专项更新：[Python 版本开发计划](python-development-plan.md)确定同级目录与独立构建、统一版本及发布提交、接口对应清单和分阶段开放。Python 实施范围、工程规范和发布门槛以该专项计划为准；首个联合版本使用同一个 GitHub Release，PyPI 推广留待后续。
+
 ## 1. 现状、依据与范围
 
 ### 1.1 仓库现状
@@ -108,7 +110,7 @@ TCP 的连接发起方和协议客户机不是同一概念：采集终端可以�
 
 ```text
 dlt698/
-├── CMakeLists.txt                  # 仓库根入口，支持纯 C++ 和 wheel 构建
+├── CMakeLists.txt                  # 仓库根入口，默认保持独立 C++ 构建
 ├── CMakePresets.json
 ├── VERSION                        # C++/Python 共用版本来源
 ├── pyproject.toml                 # 根目录构建，sdist 可自然包含 cpp/
@@ -124,8 +126,9 @@ dlt698/
 │   ├── tests/                     # 单元、交互、传输、安装消费方
 │   ├── examples/                  # 解帧、主站、终端、串口、记录、上报
 │   └── fuzz/
-├── bindings/                      # 按 model/codec/protocol/service 分文件
 ├── python/
+│   ├── CMakeLists.txt              # Python 独立入口，复用 cpp 目标
+│   ├── bindings/                   # pybind11 胶水代码按能力拆分
 │   ├── src/dlt698/                 # __init__.py、包装、.pyi、py.typed
 │   ├── tests/
 │   └── examples/
@@ -335,58 +338,26 @@ M0 先确定可获得的 ESAM/主站安全模块、SDK、算法/profile 和授�
 
 ### M10–M11：Python 与分发
 
-- [ ] 绑定模型、codec、服务、配置、诊断和 capability 查询。
+- [ ] 按 Python 专项计划先绑定托管客户端/服务器、普通读取、模型和 codec，再分阶段开放写入、记录、诊断和高级能力。
 - [ ] 加入显式 `Data` 工厂、Python 异常、上下文管理器和 `.pyi/py.typed`。
 - [ ] 测试 GIL 释放/回调重入、关闭/GC/进程退出及对象存活期。
 - [ ] 配置根 `pyproject.toml`、scikit-build-core、cibuildwheel 和 wheel 安装测试。
 - [ ] 验证从 sdist、独立源码包及清洁机器构建；构建范围排除 plan PDF 和本地资料。
-- [ ] TestPyPI 安装验收、Trusted Publishing 配置、版本一致性及发布材料检查。
+- [ ] 首版执行 C++ / Python 联合版本及制品检查；TestPyPI 和 Trusted Publishing 在后续渠道推广阶段实施。
 - [ ] 发布阶段再使用实际确认的包名、版本和平台矩阵执行正式发布。
 
 ## 6. Python API 与包分发设计
 
-### 6.1 绑定方式
+本节于 2026-10-07 由 [Python 版本开发计划](python-development-plan.md)细化更新。旧方案中的根目录 bindings、首版上报回调、ClientService/ServerService 普通入口和预发布转换不再作为本轮实施要求。
 
-Python 包暂定 `dlt698`，扩展模块 `dlt698._native`。PyPI 项目名尚未确认可用性或账号归属；首次发布前核查，必要时使用不同 distribution name，仍可保留 `import dlt698`。
+- `python/` 与 `cpp/` 同级，绑定、包装、测试和工具均放在 `python/`；根 `pyproject.toml` 负责包含完整内核的 sdist。Python 独立 CMake 入口复用现有 C++ 目标，原有 C++ 构建默认不加载 Python 或 pybind11。
+- `VERSION` 是唯一版本源；metadata、原生模块、公开版本、标签、发布提交和源码摘要均须检查。所有正式版本沿用严格 `X.Y.Z`，Python 单独修复也提升共享版本并重建双方。
+- Python 首版提供 `app::Client` / `app::Server` 的托管入口、TCP/简单串口、普通 GET/列表、本地数据发布、Data codec 和标准目录查询。远端 SET/ACTION 与记录次之，Python 用户回调、REPORT/PROXY/安全和 asyncio 后续开放。
+- 已开放能力保持 C++ 精确类型、DAR、本地错误、资源限制与生命周期；未开放成员记录在接口对应清单中，不以分阶段开放为理由容忍已有绑定漂移。
+- 使用 pybind11、scikit-build-core、类型声明、上下文管理器和标准 Python 工具；首发 CPython 3.11–3.14 标准 GIL 构建，逐 minor 构建 wheel。详细 GIL/所有权、测试及平台门槛见专项计划。
+- 首个联合版本将 C++ 包、wheel 和 sdist 放在同一个 GitHub Release 草稿中，完整验证后一起公开。PyPI 是后续推广渠道，只分发已通过联合验证的同版本制品；不能承诺跨独立服务原子公开。
 
-采用 pybind11 + CMake + scikit-build-core。官方 pybind11 文档给出了该组合的构建入口；根目录打包让 sdist 同时包含 C++ 源码及绑定，避免依赖不存在的上级目录。[pybind11 构建说明](https://pybind11.readthedocs.io/en/stable/compiling.html)、[scikit-build-core 入门](https://scikit-build-core.readthedocs.io/en/latest/guide/getting_started.html)。
-
-绑定在 C++ 稳定后正式开展，但提前按以下约束设计 C++ API：
-
-- 公共 API 不暴露 Boost、裸指针、临时视图或内部 executor。
-- 同步等待 I/O 时释放 GIL，触及 Python 对象或回调时持有 GIL；避免持有 C++ 锁时进入 Python。
-- 后台回调投递到明确的分发器；`close()` 有确定语义，解释器退出前停止回调及线程。
-- 每个绑定对象明确 holder、所有权和存活期；返回 owning buffer，首版字节输出为 `bytes`。
-- 远端 DAR 保留为协议结果；输入错误、传输错误、超时、安全错误分别映射 Python 异常。
-- `Data.unsigned16(...)`、`Data.array(...)`、`Data.structure(...)` 等显式构造保留协议类型；便捷转换不丢掉类型/时间通配信息。
-- 提供 `with ClientService(...)`、`with ServerService(...)` 和 snake_case 公共接口。
-
-GIL 与回调处理按 [pybind11 线程及 GIL 文档](https://pybind11.readthedocs.io/en/stable/advanced/misc.html) 实施并验证。首版 Python 提供同步 API 和上报回调；`asyncio` 后续接同一 C++ 异步核心，桥接结果时使用 loop 的线程安全调度，取消语义单独验证。
-
-### 6.2 版本与构建
-
-- `VERSION` 为发布版本的单一来源，CMake、Python metadata、`__version__` 及原生 build info 读取同一值。
-- tag 暂定 `vX.Y.Z`，CI 检查 tag 与 VERSION；预发布按 PEP 440 明确转换为 `a/b/rc`，不依赖无 Git 历史的 sdist 推算版本。
-- 初始最低 Python 版本建议 3.11，首发测试 CPython 3.11–3.14 的标准 GIL 构建；发布时按实际稳定版及维护成本复核矩阵。
-- 每个 CPython minor 构建对应 wheel，首发不预设 abi3、PyPy 或 free-threaded 支持；任何新增 ABI 都需单独验证。
-- 构建依赖固定已验证版本范围，CI 工具固定版本；依赖策略必须支持从 sdist 构建，不能假设消费方有整个 Git checkout。
-- wheel 内核静态链接，内部符号隐藏。第三方及安全动态依赖逐平台审计，不能依赖开发机 PATH 或库目录。
-
-### 6.3 平台矩阵与发布链路
-
-| 平台 | C++ 交付 | 首批 Python wheel | 后续扩展 |
-| --- | --- | --- | --- |
-| Windows | MSVC x64 安装包 | win_amd64 | MinGW C++ 包、Windows arm64 |
-| Linux | GCC/Clang x64 安装包 | manylinux x86_64 | aarch64、musllinux、交叉编译 |
-| macOS | Clang x64/arm64 安装包 | x86_64、arm64 分别构建 | 按需要评估 universal2 |
-
-Linux glibc 基线、macOS deployment target、MSVC runtime 在 M0/M11 按设备部署范围和构建依赖确定，并写入兼容矩阵。串口真实硬件测试与平台无硬件单元测试分别记录。
-
-使用 cibuildwheel 构建并在 wheel 安装后的环境运行测试；Linux/macOS/Windows 分别检查 auditwheel/delocate/delvewheel 所需的修复。具体配置按工具版本确定。[cibuildwheel 官方说明](https://cibuildwheel.pypa.io/en/stable/)。
-
-发布流程：验证 tag/版本 → C++ 检查 → 构建 sdist → 从 sdist 构建/测试 wheel → 检查 metadata 与动态依赖 → 汇总同一次构建的制品 → TestPyPI 安装 → 正式 PyPI 发布。构建与发布 job 分离，采用 PyPI Trusted Publishing/OIDC；账号与 publisher 设置在实际发布准备阶段处理。[PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/)。
-
-sdist 包含编译所需源码、CMake、schemas 生成结果、绑定、许可证和必要测试；排除 build、日志、私有设备数据及 `plan/*.pdf`。安装文档说明：有匹配 wheel 时无需 C++ 编译环境；无 wheel 时需要编译器及明确的构建依赖。
+里程碑、首版验收、现代 Python 规范和联合发布流程统一以专项计划为准，协议实现与现场验证范围继续以 [支持矩阵](../docs/protocol-coverage.md)为准。
 
 ## 7. 验证策略与交付门槛
 

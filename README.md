@@ -6,6 +6,8 @@
 
 实现基线：DL/T 698.45—2017。
 
+Python 版本位于同级 `python/`，直接绑定相同 C++ 内核并共用根 `VERSION`。同步/异步读取、写入、记录和专家扩展的安装与使用见 [Python 文档](python/README.md)，本地验证和外部验收范围见 [验证记录](python/verification.md)。C++ 默认构建保持独立。
+
 ## 启动服务端
 
 ```cpp
