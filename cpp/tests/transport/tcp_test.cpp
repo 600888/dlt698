@@ -83,8 +83,9 @@ TEST_CASE("TCP 连接建立时回调收到成功", "[transport][tcp]") {
     listener->async_accept([&](Result<std::shared_ptr<TcpChannel>> r) {
         if (r) server = std::move(r).value();
     });
-    TcpChannel::connect(runtime, "127.0.0.1", listener->local_port(),
-                        [&](Result<void> r) { connected = std::move(r); });
+    auto client = TcpChannel::connect(runtime, "127.0.0.1", listener->local_port(),
+                                      [&](Result<void> r) { connected = std::move(r); });
+    REQUIRE(client);
     until(runtime, [&] { return connected.has_value(); });
     REQUIRE(connected.has_value());
 
@@ -159,8 +160,9 @@ TEST_CASE("连接被拒绝时回调收到错误", "[transport][tcp]") {
         runtime->run_for(5ms);
     }
     std::optional<Result<void>> outcome;
-    TcpChannel::connect(runtime, "127.0.0.1", port,
-                        [&](Result<void> r) { outcome = std::move(r); });
+    auto client = TcpChannel::connect(runtime, "127.0.0.1", port,
+                                      [&](Result<void> r) { outcome = std::move(r); });
+    REQUIRE(client);
     until(runtime, [&] { return outcome.has_value(); });
     REQUIRE(outcome.has_value());
     CHECK_FALSE(static_cast<bool>(*outcome));
@@ -177,8 +179,9 @@ TEST_CASE("监听器关闭后不再接受连接", "[transport][tcp]") {
     runtime->run_for(5ms);
 
     std::optional<Result<void>> outcome;
-    TcpChannel::connect(runtime, "127.0.0.1", port,
-                        [&](Result<void> r) { outcome = std::move(r); });
+    auto client = TcpChannel::connect(runtime, "127.0.0.1", port,
+                                      [&](Result<void> r) { outcome = std::move(r); });
+    REQUIRE(client);
     until(runtime, [&] { return outcome.has_value(); });
     REQUIRE(outcome.has_value());
     CHECK_FALSE(static_cast<bool>(*outcome));
@@ -199,8 +202,9 @@ TEST_CASE("运行时停止后可重启并继续接受连接", "[transport][tcp]"
     listener->async_accept([&](Result<std::shared_ptr<TcpChannel>> r) {
         if (r) server = std::move(r).value();
     });
-    TcpChannel::connect(runtime, "127.0.0.1", port,
-                        [&](Result<void> r) { connected = std::move(r); });
+    auto client = TcpChannel::connect(runtime, "127.0.0.1", port,
+                                      [&](Result<void> r) { connected = std::move(r); });
+    REQUIRE(client);
     until(runtime, [&] { return connected.has_value(); });
     if (connected && !static_cast<bool>(*connected)) {
         listener->close();

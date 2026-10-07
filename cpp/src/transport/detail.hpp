@@ -11,6 +11,7 @@ struct IoRuntime::Impl {
     asio::io_context context;
     // 没有隐藏工作线程，工作守卫只维持应用主动驱动的空闲事件循环。
     asio::executor_work_guard<asio::io_context::executor_type> work{asio::make_work_guard(context)};
+    std::mutex work_mutex;
 };
 
 namespace detail {

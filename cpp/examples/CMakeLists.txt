@@ -18,6 +18,9 @@ dlt698_add_example(dlt698_standard_points_extended
 dlt698_add_example(dlt698_standard_records SOURCES service/standard_records.cpp LIBS dlt698_service)
 
 if(DLT698_BUILD_TRANSPORT)
+    # 普通入口：数据和启动由库托管，不在示例中组装会话或事件循环。
+    dlt698_add_example(dlt698_server SOURCES app/server.cpp LIBS dlt698_app)
+    dlt698_add_example(dlt698_client SOURCES app/client.cpp LIBS dlt698_app)
     # 传输层：真实 socket 和串口，服务端与客户端各一个独立程序。
     dlt698_add_example(dlt698_tcp_server SOURCES transport/tcp_server.cpp
         LIBS dlt698_service dlt698_transport)

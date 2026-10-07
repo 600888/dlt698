@@ -23,6 +23,16 @@ void IoRuntime::run_for(std::chrono::milliseconds duration) { impl_->context.run
 
 void IoRuntime::stop() { impl_->context.stop(); }
 
+void IoRuntime::finish() {
+    const auto impl = impl_;
+    // 将守卫释放排入事件循环；socket 取消回调、会话关闭及计时器取消仍属于在途工作。
+    // 自然耗尽工作后退出，而不是 stop() 强行中断并遗留尚未交付的完成通知。
+    asio::post(impl->context, [impl] {
+        std::lock_guard<std::mutex> lock(impl->work_mutex);
+        impl->work.reset();
+    });
+}
+
 void IoRuntime::restart() { impl_->context.restart(); }
 
 std::shared_ptr<IExecutor> IoRuntime::executor() {
@@ -393,6 +403,13 @@ Result<std::shared_ptr<TcpListener>> TcpListener::listen(std::shared_ptr<IoRunti
                                                          const std::string& address,
                                                          std::uint16_t port,
                                                          ChannelOptions options) {
+    return listen(std::move(runtime), address, port, options, false);
+}
+
+Result<std::shared_ptr<TcpListener>> TcpListener::listen(std::shared_ptr<IoRuntime> runtime,
+                                                         const std::string& address,
+                                                         std::uint16_t port, ChannelOptions options,
+                                                         bool exclusive_address) {
     if (!runtime) return Error{ErrorCode::invalid_value, 0, "null runtime"};
     validate(options);
     auto impl = std::make_shared<Impl>(std::move(runtime), options);
@@ -403,7 +420,20 @@ Result<std::shared_ptr<TcpListener>> TcpListener::listen(std::shared_ptr<IoRunti
     // 监听建立为同步步骤，逐项返回系统错误；端口为零时在绑定后保存实际分配端口。
     impl->acceptor.open(endpoint.protocol(), ec);
     if (ec) return io_error(ec);
+#ifdef _WIN32
+    if (exclusive_address) {
+        // Windows 的 SO_REUSEADDR 允许抢占已有监听端口；高层服务器要求启动时可靠报冲突。
+        const int exclusive = 1;
+        if (::setsockopt(impl->acceptor.native_handle(), SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
+                         reinterpret_cast<const char*>(&exclusive),
+                         static_cast<int>(sizeof(exclusive))) == SOCKET_ERROR)
+            ec = asio::error_code(::WSAGetLastError(), asio::error::get_system_category());
+    } else
+        impl->acceptor.set_option(asio::socket_base::reuse_address(true), ec);
+#else
+    (void)exclusive_address;
     impl->acceptor.set_option(asio::socket_base::reuse_address(true), ec);
+#endif
     if (ec) return io_error(ec);
     impl->acceptor.bind(endpoint, ec);
     if (ec) return io_error(ec);

@@ -1,4 +1,5 @@
 #include <dlt698/dlt698.hpp>
+#include <dlt698/service/device.hpp>
 #include <dlt698/service/memory_records.hpp>
 #include <dlt698/service/point_probe.hpp>
 #include <dlt698/service/service.hpp>
@@ -12,6 +13,12 @@
 #include <dlt698/transport/tcp.hpp>
 #endif
 int main() {
+    dlt698::service::Device device;
+    if (!device.set({0x200F, 2, 0}, dlt698::model::UInt16{5000}) ||
+        std::get<dlt698::model::Data>(device.get({0x200F, 2, 0}))
+                .as<dlt698::model::UInt16>()
+                .value != 5000)
+        return 20;
     // 新目录由 core 导出，绑定辅助由 service 导出；安装后的中文头文件需继承 /utf-8。
     namespace oi = dlt698::standard::oi;
     // 安装后的轻量头文件可在编译期使用常量构造 OAD。

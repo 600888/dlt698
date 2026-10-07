@@ -119,6 +119,9 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
     SetRequestHandler set_handler;
     ActionRequestHandler action_handler;
     DiagnosticHandler diagnostic;
+    CloseHandler close_handler;
+    StateHandler state_handler;
+    std::optional<Error> close_error;
     apdu::AssociationParameters agreement;
     std::shared_ptr<ITimer> idle_timer;
     model::DateTimeS established_at;
@@ -158,6 +161,15 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         }
     }
 
+    void change_state(State value) {
+        // 观察器只用于串行通知；协议后续清理仍按原路径进行，回调不能阻塞运行时。
+        if (state.exchange(value) == value) return;
+        try {
+            if (state_handler) state_handler(value);
+        } catch (...) {
+        }
+    }
+
     void report(const Error& error) {
         try {
             if (diagnostic) diagnostic(error);
@@ -182,7 +194,8 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
 
     void shutdown(Error error) {
         if (state == State::closed) return;
-        state = State::closed;
+        change_state(State::closed);
+        close_error = error;
         decoder.reset();
         reassembler.reset();
         outgoing.clear();
@@ -194,12 +207,18 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         if (idle_timer) idle_timer->cancel();
         channel->close();
         complete(std::move(error));
+        // 先终结事务再通知连接所有者；移出回调避免重入关闭造成重复通知。
+        auto handler = std::move(close_handler);
+        try {
+            if (handler) handler(*close_error);
+        } catch (...) {
+        }
     }
 
     void leave_association(Error error, State target = State::preconnected) {
         // 发送释放通知/应答可能已关闭物理通道，失败终态不能被后续迁移覆盖。
         if (state == State::closed) return;
-        state = target;
+        change_state(target);
         serving_blocks.clear();
         if (block_timer) block_timer->cancel();
         if (idle_timer) idle_timer->cancel();
@@ -485,7 +504,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         }
         if (id == 64) {
             if (kind == Kind::release) {
-                state = State::associated;
+                change_state(State::associated);
                 touch();
             }
             deliver(std::move(handler),
@@ -515,15 +534,15 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         auto bytes = wire(message);
         if (!bytes) {
             if (kind == Kind::release) {
-                state = State::associated;
+                change_state(State::associated);
                 touch();
             }
             deliver(std::move(handler), Result<apdu::Apdu>{bytes.error()});
             return;
         }
-        if (kind == Kind::connect) state = State::associating;
+        if (kind == Kind::connect) change_state(State::associating);
         if (kind == Kind::release) {
-            state = State::releasing;
+            change_state(State::releasing);
             if (idle_timer) idle_timer->cancel();
         }
         const std::weak_ptr<Impl> weak = shared_from_this();
@@ -534,9 +553,9 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                     self->shutdown({ErrorCode::timeout, 0, "session transaction timeout"});
             });
         } catch (...) {
-            if (kind == Kind::connect) state = State::preconnected;
+            if (kind == Kind::connect) change_state(State::preconnected);
             if (kind == Kind::release) {
-                state = State::associated;
+                change_state(State::associated);
                 touch();
             }
             deliver(std::move(handler), Result<apdu::Apdu>{Error{ErrorCode::invalid_value, 0,
@@ -937,7 +956,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                 leave_association({ErrorCode::not_associated, 0, "peer logout"},
                                   State::disconnected);
             else if (state == State::disconnected)
-                state = State::preconnected;
+                change_state(State::preconnected);
             return;
         }
         if (auto request = std::get_if<apdu::ConnectRequest>(&message)) {
@@ -979,7 +998,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             send(response);
             if (state != State::closed && !response.result) {
                 agreement = response.parameters;
-                state = State::associated;
+                change_state(State::associated);
                 touch();
             }
             return;
@@ -1085,7 +1104,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                 return;
             }
             const auto kind = pending->kind;
-            if (kind == Kind::connect || kind == Kind::release) state = State::preconnected;
+            if (kind == Kind::connect || kind == Kind::release) change_state(State::preconnected);
             complete(Error{ErrorCode::remote_error, 0, "remote ERROR-Response", error->type});
             return;
         }
@@ -1156,10 +1175,10 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                 agreement.receive_frame_bytes =
                     std::min(options.parameters.receive_frame_bytes, p.send_frame_bytes);
                 agreement.apdu_bytes = std::min(options.parameters.apdu_bytes, p.apdu_bytes);
-                state = State::associated;
+                change_state(State::associated);
                 touch();
             } else
-                state = State::preconnected;
+                change_state(State::preconnected);
             complete(std::move(message));
         } else if (pending->kind == Kind::link &&
                    std::holds_alternative<apdu::LinkResponse>(message)) {
@@ -1171,9 +1190,9 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
             }
             if (!(response.result & 7)) {
                 if (request.type == apdu::LinkRequestType::logout)
-                    state = State::disconnected;
+                    change_state(State::disconnected);
                 else if (state == State::disconnected)
-                    state = State::preconnected;
+                    change_state(State::preconnected);
             }
             complete(std::move(message));
             arm_heartbeat();
@@ -1183,7 +1202,7 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
                 report({ErrorCode::unsupported_service, 0, "release response TimeTag"});
                 return;
             }
-            state = State::preconnected;
+            change_state(State::preconnected);
             complete(std::move(message));
         } else
             report({ErrorCode::unsupported_service, 0, "unexpected response service"});
@@ -1233,9 +1252,9 @@ void Session::start() {
         if (!self) return;
         if (self->started || self->state == State::closed) return;
         self->started = true;
-        self->state = self->options.require_login ? State::disconnected : State::preconnected;
+        self->change_state(self->options.require_login ? State::disconnected : State::preconnected);
         if (self->options.preset_association) {
-            self->state = State::associated;
+            self->change_state(State::associated);
             const auto now = self->calendar();
             if (!now) return;
             self->established_at = seconds_calendar(*now);
@@ -1271,6 +1290,19 @@ void Session::set_diagnostic_handler(DiagnosticHandler handler) {
     const std::weak_ptr<Impl> weak = impl_;
     impl_->executor->post([weak, handler = std::move(handler)]() mutable {
         if (const auto self = weak.lock()) self->diagnostic = std::move(handler);
+    });
+}
+
+void Session::set_state_handler(StateHandler handler) {
+    const std::weak_ptr<Impl> weak = impl_;
+    impl_->executor->post([weak, handler = std::move(handler)]() mutable {
+        if (const auto self = weak.lock()) {
+            self->state_handler = std::move(handler);
+            try {
+                if (self->state_handler) self->state_handler(self->state.load());
+            } catch (...) {
+            }
+        }
     });
 }
 
@@ -1403,7 +1435,7 @@ void Session::async_release(ReleaseHandler handler) {
             return;
         }
         // 在发出释放前先改变状态，再交付取消回调，阻止回调重入提交新读取。
-        self->state = State::releasing;
+        self->change_state(State::releasing);
         self->complete(Error{ErrorCode::cancelled, 0, "transaction released"});
         self->submit(Impl::Kind::release, apdu::ReleaseRequest{},
                      [handler = std::move(handler)](Result<apdu::Apdu> r) mutable {
@@ -1428,4 +1460,16 @@ void Session::close() {
 }
 
 State Session::state() const noexcept { return impl_->state.load(); }
+
+void Session::set_close_handler(CloseHandler handler) {
+    const std::weak_ptr<Impl> weak = impl_;
+    impl_->executor->post([weak, handler = std::move(handler)]() mutable {
+        const auto self = weak.lock();
+        if (!self) return;
+        if (self->close_error) {
+            if (handler) handler(*self->close_error);
+        } else
+            self->close_handler = std::move(handler);
+    });
+}
 }  // namespace dlt698::session

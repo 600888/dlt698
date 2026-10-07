@@ -28,6 +28,15 @@ function(dlt698_target_setup target)
         endif()
     else()
         target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic)
+        # Data::Payload 是 30 路 std::variant，Debug 的 -O0 会让 libstdc++ 为每个
+        # 下标 × 每个 base class 生成独立 COMDAT 段，单个测试单元的段数会撞上
+        # GNU as 的 COFF 上限（报 too many sections / file too big）。这里只对
+        # Debug 追加 -O1，Release 的 -O3 与 MinSizeRel 的 -Os 不受影响。
+        if(CMAKE_CONFIGURATION_TYPES)
+            target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:-O1>)
+        elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            target_compile_options(${target} PRIVATE -O1)
+        endif()
         if(DLT698_WARNINGS_AS_ERRORS)
             target_compile_options(${target} PRIVATE -Werror)
         endif()
@@ -82,7 +91,7 @@ endif()
 target_link_libraries(dlt698_session PUBLIC dlt698_core)
 dlt698_target_setup(dlt698_session)
 
-add_library(dlt698_service src/service/object.cpp src/service/standard_object.cpp src/service/memory_records.cpp src/service/point_probe.cpp src/service/service.cpp src/service/sync.cpp)
+add_library(dlt698_service src/service/object.cpp src/service/device.cpp src/service/standard_object.cpp src/service/memory_records.cpp src/service/point_probe.cpp src/service/service.cpp src/service/sync.cpp)
 add_library(dlt698::service ALIAS dlt698_service)
 set_target_properties(dlt698_service PROPERTIES EXPORT_NAME service VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR} CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
@@ -98,8 +107,12 @@ target_link_libraries(dlt698 INTERFACE dlt698_service)
 set(dlt698_install_targets dlt698 dlt698_core dlt698_session dlt698_service)
 if(DLT698_BUILD_TRANSPORT)
     add_subdirectory(transport)
+    add_subdirectory(app)
     target_link_libraries(dlt698 INTERFACE dlt698_transport)
-    list(APPEND dlt698_install_targets dlt698_transport)
+    target_link_libraries(dlt698 INTERFACE dlt698_app)
+    list(APPEND dlt698_install_targets dlt698_transport dlt698_app)
+    install(DIRECTORY include/dlt698/app DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dlt698)
+    install(FILES include/dlt698/app.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dlt698)
 endif()
 if(DLT698_BUILD_EXAMPLES)
     add_subdirectory(examples)
@@ -111,7 +124,8 @@ install(TARGETS ${dlt698_install_targets} EXPORT dlt698Targets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(DIRECTORY include/dlt698 DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} PATTERN "transport" EXCLUDE)
+install(DIRECTORY include/dlt698 DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    PATTERN "transport" EXCLUDE PATTERN "app" EXCLUDE PATTERN "app.hpp" EXCLUDE)
 install(FILES include/dlt698/transport/channel.hpp include/dlt698/transport/memory.hpp
     include/dlt698/transport/serial_link.hpp
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dlt698/transport)

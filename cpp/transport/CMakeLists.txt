@@ -15,7 +15,9 @@ target_include_directories(dlt698_transport PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_include_directories(dlt698_transport SYSTEM PRIVATE "${DLT698_ASIO_INCLUDE_DIR}")
-target_compile_definitions(dlt698_transport PRIVATE ASIO_STANDALONE ASIO_NO_DEPRECATED)
+# 运行时允许跨线程投递，所有翻译单元必须使用同一套有线程 Asio 类型。
+# MinGW 的 _MT 可由标准库头文件间接定义；依赖 include 顺序会混用 TLS 键和普通指针。
+target_compile_definitions(dlt698_transport PRIVATE ASIO_STANDALONE ASIO_NO_DEPRECATED ASIO_HAS_THREADS)
 target_link_libraries(dlt698_transport PUBLIC dlt698_core PRIVATE Threads::Threads)
 if(WIN32)
     target_compile_definitions(dlt698_transport PRIVATE _WIN32_WINNT=0x0A00)

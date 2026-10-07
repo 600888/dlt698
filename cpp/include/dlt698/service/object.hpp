@@ -8,6 +8,7 @@
 #include <memory>
 
 namespace dlt698::service {
+class Device;
 using ObjectValue = std::variant<std::uint8_t, model::Data>;  ///< DAR 或精确类型 Data。
 
 struct ActionValue {
@@ -113,6 +114,13 @@ class ObjectRegistry {
                                           const model::Data& parameter) const;
 
    private:
+    /** @brief 原子发布设备已校验的 schema 和不可变数据提供者。
+     * @param[in] schema 由 Device 准备的完整对象定义，不改变已有属性类型和权限。
+     * @param[in] provider 拥有完整数据快照的非空提供者。
+     * @note 仅供 Device 使用；旧读取持有旧提供者，不观察半完成的属性扩充。
+     */
+    void publish_object(ObjectSchema schema, std::shared_ptr<IObjectProvider> provider);
+    friend class Device;
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };

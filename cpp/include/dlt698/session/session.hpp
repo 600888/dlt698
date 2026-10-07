@@ -63,6 +63,8 @@ class Session {
     using RecordRequestHandler =
         std::function<protocol::apdu::GetRecordResponse(const protocol::apdu::GetRecordRequest&)>;
     using DiagnosticHandler = std::function<void(const Error&)>;
+    using CloseHandler = std::function<void(const Error&)>;
+    using StateHandler = std::function<void(State)>;
     /** @brief 创建尚未启动的会话。
      * @param[in] channel 已连接的字节通道。
      * @param[in] executor 所有会话操作及定时器共用的串行执行器。
@@ -153,6 +155,19 @@ class Session {
     DLT698_SESSION_API void cancel();
     /** @brief 幂等关闭会话、通道和定时器，结束未完成事务。 */
     DLT698_SESSION_API void close();
+    /** @brief 设置会话关闭观察器，供连接所有者及时释放会话名额。
+     * @param[in] handler 在会话执行器内调用，接收拥有者可复制的关闭原因；空值移除观察器。
+     * @note 每次注册最多通知一次；已关闭时异步通知已保存的原因。
+     * 状态先变为 closed 并结束在途事务，再通知；不表示物理通道取消回调已全部排空。
+     * 回调不得同步等待本执行器，异常被隔离，不应强引用本会话形成引用环。
+     */
+    DLT698_SESSION_API void set_close_handler(CloseHandler handler);
+    /** @brief 注册状态变化观察器，供托管入口在 LINK 就绪后发起 CONNECT。
+     * @param[in] handler 在会话执行器内接收新状态，空值移除；异常被隔离。
+     * @note 注册任务执行时先通知当前状态，此后只通知实际变化。观察器不得阻塞或强引用会话。
+     * closed 状态通知不代表事务已完成，应通过关闭观察器观察终结原因和事务完成顺序。
+     */
+    DLT698_SESSION_API void set_state_handler(StateHandler handler);
     /** @brief 查询原子发布的会话状态。
      * @return 最近一次已执行的状态，投递但未执行的操作不立即改变状态。
      */

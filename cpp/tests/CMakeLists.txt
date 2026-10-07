@@ -1,7 +1,6 @@
 # Catch2 以 amalgamated 发行形式引入，只编译一次实现单元；main 位于 catch/catch_main.cpp。
 # 测试按被测层次分子目录，每个目录生成一个可执行文件，内部用 TEST_CASE 划分用例。
-# 实现单元用 OBJECT 库而不是 STATIC 库：MinGW 下把 Catch2 静态库强制
-# whole-archive 链接进可执行文件会与 Asio 的静态初始化顺序冲突，导致段错误。
+# 实现单元使用 OBJECT 库，让各测试直接复用实现及 main，无需 whole-archive 链接选项。
 add_library(dlt698_catch2 OBJECT
     "${CMAKE_CURRENT_SOURCE_DIR}/../../third/Catch2/catch_amalgamated.cpp"
     catch/catch_main.cpp)
@@ -66,6 +65,7 @@ add_subdirectory(service)
 add_subdirectory(session)
 if(DLT698_BUILD_TRANSPORT)
     add_subdirectory(transport)
+    add_subdirectory(app)
 endif()
 
 configure_file(package_test.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/package_test.cmake" @ONLY)

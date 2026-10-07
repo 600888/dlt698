@@ -41,6 +41,11 @@ class IoRuntime {
      * @note 不关闭通道；未处理的完成回调需要 restart 后继续驱动才能执行。
      */
     DLT698_TRANSPORT_API void stop();
+    /** @brief 释放空闲工作守卫，让 run 在所有排队任务和异步操作完成后自然返回。
+     * @note 不关闭通道或取消计时器；调用方须先请求关闭自己拥有的资源。
+     * 幂等且可跨线程调用，不丢弃完成回调；释放守卫不可逆，重新托管服务应创建新运行时。
+     */
+    DLT698_TRANSPORT_API void finish();
     /**
      * @brief 清除停止状态，允许再次驱动事件循环。
      * @pre 所有 run/run_for 调用均已返回。
@@ -145,6 +150,19 @@ class TcpListener {
     DLT698_TRANSPORT_API static Result<std::shared_ptr<TcpListener>> listen(
         std::shared_ptr<IoRuntime> runtime, const std::string& bind_address, std::uint16_t port,
         ChannelOptions options = {});
+    /** @brief 使用明确的地址独占策略建立监听，保留原 listen 的默认行为。
+     * @param[in] runtime 非空运行时，后续接受操作由应用驱动。
+     * @param[in] bind_address IPv4/IPv6 数字地址。
+     * @param[in] port 监听端口；零由系统分配。
+     * @param[in] options 接受通道的资源配置。
+     * @param[in] exclusive_address Windows 上启用 SO_EXCLUSIVEADDRUSE，防止同端口重复监听；
+     * POSIX 保持常规 SO_REUSEADDR，未启用 SO_REUSEPORT，内核仍拒绝同地址重复监听。
+     * @return 监听器或配置及绑定错误。
+     * @throws std::invalid_argument 非空运行时下通道配置非法。
+     */
+    DLT698_TRANSPORT_API static Result<std::shared_ptr<TcpListener>> listen(
+        std::shared_ptr<IoRuntime> runtime, const std::string& bind_address, std::uint16_t port,
+        ChannelOptions options, bool exclusive_address);
     /** @brief 释放监听 socket；挂起接受操作的完成仍需驱动运行时。 */
     DLT698_TRANSPORT_API ~TcpListener();
     /** @brief 禁止复制监听 socket。 */

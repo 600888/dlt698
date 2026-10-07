@@ -25,6 +25,15 @@ ObjectRegistry::ObjectRegistry() : impl_(std::make_unique<Impl>()) {}
 
 ObjectRegistry::~ObjectRegistry() = default;
 
+void ObjectRegistry::publish_object(ObjectSchema schema,
+                                    std::shared_ptr<IObjectProvider> provider) {
+    const auto oi = schema.oi;
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    // schema 与数据快照作为同一目录项切换，已开始的读取继续持有旧提供者。
+    // 仅 Device 的受控发布路径可替换；公开 register_object 仍拒绝重复 OI。
+    impl_->objects.insert_or_assign(oi, Impl::Entry{std::move(schema), std::move(provider)});
+}
+
 Result<void> ObjectRegistry::register_object(ObjectSchema schema,
                                              std::shared_ptr<IObjectProvider> provider) {
     if (!provider || (schema.attributes.empty() && schema.methods.empty()) ||
