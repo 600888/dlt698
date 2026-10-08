@@ -10881,7 +10881,7 @@
     {
       "cpp": "dlt698::ByteView::ByteView",
       "kind": "CONSTRUCTOR",
-      "signature": "ByteView ( const Bytes & data ) noexcept : data_ ( data . data ( ) ) , size_ ( data . size ( ) )",
+      "signature": "ByteView ( const Bytes & data ) noexcept",
       "header": "cpp/include/dlt698/common/bytes.hpp",
       "status": "internal",
       "reason": "Lifetime/operators are adapted by owning Python objects."
@@ -10897,7 +10897,7 @@
     {
       "cpp": "dlt698::ByteView::ByteView",
       "kind": "CONSTRUCTOR",
-      "signature": "ByteView ( const std :: uint8_t * data , std :: size_t size ) : data_ ( data ) , size_ ( size )",
+      "signature": "ByteView ( const std :: uint8_t * data , std :: size_t size )",
       "header": "cpp/include/dlt698/common/bytes.hpp",
       "status": "internal",
       "reason": "Lifetime/operators are adapted by owning Python objects."
@@ -10961,7 +10961,7 @@
     {
       "cpp": "dlt698::DecodeFailure::DecodeFailure",
       "kind": "CONSTRUCTOR",
-      "signature": "explicit DecodeFailure ( Error error ) : error ( std :: move ( error ) )",
+      "signature": "explicit DecodeFailure ( Error error )",
       "header": "cpp/include/dlt698/common/bytes.hpp",
       "status": "internal",
       "reason": "Lifetime/operators are adapted by owning Python objects."
@@ -11679,7 +11679,7 @@
     {
       "cpp": "dlt698::Reader::Reader",
       "kind": "CONSTRUCTOR",
-      "signature": "explicit Reader ( ByteView input ) : input_ ( input )",
+      "signature": "explicit Reader ( ByteView input )",
       "header": "cpp/include/dlt698/common/bytes.hpp",
       "status": "internal",
       "reason": "Lifetime/operators are adapted by owning Python objects."
@@ -11767,7 +11767,7 @@
     {
       "cpp": "dlt698::Result::Result",
       "kind": "CONSTRUCTOR",
-      "signature": "Result ( Error error ) : error_ ( std :: move ( error ) )",
+      "signature": "Result ( Error error )",
       "header": "cpp/include/dlt698/common/result.hpp",
       "status": "internal",
       "reason": "Lifetime/operators are adapted by owning Python objects."
@@ -11831,7 +11831,7 @@
     {
       "cpp": "dlt698::Writer::Writer",
       "kind": "CONSTRUCTOR",
-      "signature": "explicit Writer ( std :: size_t limit ) : limit_ ( limit )",
+      "signature": "explicit Writer ( std :: size_t limit )",
       "header": "cpp/include/dlt698/common/bytes.hpp",
       "status": "internal",
       "reason": "Lifetime/operators are adapted by owning Python objects."

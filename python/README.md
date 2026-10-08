@@ -195,6 +195,6 @@ MD5/ThenGet/PROXY，executor 必须与会话一致，transparent 为可选 Trans
 
 `.github/workflows/python-ci.yml` 在普通提交中执行安装、向量、类型、格式、AST、C++ 双向互操作及无 Git sdist 重建检查。`release.yml` 使用 `release-matrix.json` 的五个平台、四个 CPython 版本构建 20 个 wheel、1 个 sdist，不再重复调用 Python CI 或构建独立 C++ 动静态库包。所有 Python 制品必须满足完整矩阵，且同版本、同提交、同源码与 API 摘要，才能把草稿 Release 公开。发布清单和 SHA256SUMS 随制品交付。
 
-Python 单独修复也提升共享 `VERSION` 并重建两端；不使用 Python 专属标签、post 版本或覆盖公开制品。首期正式入口为联合 GitHub Release。PyPI、非 CPython、free-threaded 和子解释器尚未开放；新平台或渠道需共同版本验收后加入。
+Python 单独修复也提升共享 `VERSION` 并重建两端；不使用 Python 专属标签、post 版本或覆盖公开制品。正式发布先公开 GitHub Release，再通过独立任务将同一批已校验的 wheel 和 sdist 上传到 PyPI；首次启用需按 [PyPI 发布配置](../docs/releasing.md#自动发布到-pypi) 注册 Trusted Publisher。PR 和手动验证运行仅构建 Actions 产物。非 CPython、free-threaded 和子解释器尚未开放；新平台需共同版本验收后加入。
 
 本地已执行范围与外部待验收项目见 [验证记录](verification.md)。文档中的完整矩阵是 CI 发布目标，不能据此声称本机已经验证 Linux、macOS 或其他解释器。

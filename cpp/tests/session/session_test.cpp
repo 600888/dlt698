@@ -14,7 +14,8 @@
 using namespace dlt698;
 using namespace dlt698::session;
 namespace apdu = protocol::apdu;
-namespace link = protocol::link;
+// POSIX 在全局声明 link()，链路层别名使用不同名称以避免平台相关的重名冲突。
+namespace link_layer = protocol::link;
 using namespace std::chrono_literals;
 
 namespace {
@@ -112,9 +113,9 @@ struct Peers {
     }
 
     /// 构造一帧用户数据，control 与 address 允许调用方伪造方向位和地址。
-    Bytes user_frame(std::uint8_t control, const link::ServerAddress& address,
+    Bytes user_frame(std::uint8_t control, const link_layer::ServerAddress& address,
                      const Bytes& payload) {
-        auto encoded = link::encode_frame(link::Frame{control, address, 0, payload});
+        auto encoded = link_layer::encode_frame(link_layer::Frame{control, address, 0, payload});
         REQUIRE(static_cast<bool>(encoded));
         return std::move(encoded).value();
     }
@@ -767,8 +768,9 @@ TEST_CASE("诊断回调报告损坏帧与不匹配帧", "[session][diagnostic]")
 
     SECTION("地址不匹配被报告且不影响关联") {
         // 服务器地址与会话配置不一致。
-        peers.inject(peers.server_channel,
-                     peers.user_frame(0xC3, {link::AddressType::single, 0, {0x99}}, {1, 2, 3}));
+        peers.inject(
+            peers.server_channel,
+            peers.user_frame(0xC3, {link_layer::AddressType::single, 0, {0x99}}, {1, 2, 3}));
         const auto* mismatch = peers.diagnostic(ErrorCode::address_mismatch, "session SA/CA");
         REQUIRE(mismatch);
         CHECK(mismatch->offset == 0);
@@ -851,8 +853,8 @@ TEST_CASE("诊断回调报告损坏帧与不匹配帧", "[session][diagnostic]")
         auto client = std::make_shared<Session>(channels.first, executor, options);
         client->start();
         executor->run_ready();
-        auto frame = link::encode_frame(
-            link::Frame{0xC3, {link::AddressType::single, 0, {0x99}}, 0, {1, 2, 3}});
+        auto frame = link_layer::encode_frame(
+            link_layer::Frame{0xC3, {link_layer::AddressType::single, 0, {0x99}}, 0, {1, 2, 3}});
         REQUIRE(static_cast<bool>(frame));
         channels.second->async_write(std::move(frame).value(), [](Result<void>) {});
         CHECK_NOTHROW(executor->run_ready());
@@ -903,11 +905,11 @@ TEST_CASE("链路分帧重试与重组超时", "[session][fragment]") {
         // 请求超出单帧容量，以分片形式发出首片并等待确认。
         REQUIRE(received.size() == 1);
         {
-            link::FrameStreamDecoder decoder;
+            link_layer::FrameStreamDecoder decoder;
             const auto events = decoder.feed(ByteView{received.front()});
             REQUIRE(events.size() == 1);
-            REQUIRE(std::holds_alternative<link::Frame>(events.front()));
-            const auto& frame = std::get<link::Frame>(events.front());
+            REQUIRE(std::holds_alternative<link_layer::Frame>(events.front()));
+            const auto& frame = std::get<link_layer::Frame>(events.front());
             // 分片标志置位，功能码仍是用户数据。
             CHECK((frame.control & 0x20) != 0);
             CHECK((frame.control & 7) == 3);
@@ -951,11 +953,11 @@ TEST_CASE("链路分帧重试与重组超时", "[session][fragment]") {
         // 手工发送一个起始片段，之后不再补齐剩余分片。
         auto apdu_bytes = apdu::encode_apdu(apdu::GetRequest{7, false, {{0x2000, 2, 0}}, {}});
         REQUIRE(static_cast<bool>(apdu_bytes));
-        auto fragment = link::encode_fragment(
-            link::Fragment{link::FragmentType::first, 0, std::move(apdu_bytes).value()});
+        auto fragment = link_layer::encode_fragment(link_layer::Fragment{
+            link_layer::FragmentType::first, 0, std::move(apdu_bytes).value()});
         REQUIRE(static_cast<bool>(fragment));
-        auto frame =
-            link::encode_frame(link::Frame{0x40 | 0x20 | 0x03, {}, 0, std::move(fragment).value()});
+        auto frame = link_layer::encode_frame(
+            link_layer::Frame{0x40 | 0x20 | 0x03, {}, 0, std::move(fragment).value()});
         REQUIRE(static_cast<bool>(frame));
         channels.first->async_write(std::move(frame).value(), [](Result<void>) {});
         executor->run_ready();
@@ -1140,7 +1142,7 @@ TEST_CASE("会话构造校验配置", "[session][lifecycle]") {
 
     SECTION("非单地址被拒绝") {
         SessionOptions options;
-        options.server.type = link::AddressType::broadcast;
+        options.server.type = link_layer::AddressType::broadcast;
         CHECK_THROWS_AS(Session(channels.first, executor, options), std::invalid_argument);
     }
 

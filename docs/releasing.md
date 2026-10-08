@@ -20,7 +20,33 @@ git push origin v0.1.0
 
 工作流使用仓库自带的 `GITHUB_TOKEN`，只有发布任务具有 `contents: write` 权限，无需额外配置 PAT。仓库规则若限制创建 `v*` 标签，需允许该发布任务创建标签。由这个 token 自动创建的标签不会触发第二轮 Actions 工作流。
 
+主动推送标签前，先将标签对应的提交推送至远端 `main`。目标提交相对远端默认分支修改 `.github/workflows/` 时，GitHub 创建 Release 可能要求 `GITHUB_TOKEN` 无法获得的 Workflows 写权限并返回 403；参见 [GitHub Release API 权限说明](https://docs.github.com/en/rest/releases/releases#create-a-release)。
+
 上传先进入 Release 草稿，全部上传成功后才公开。上传失败可重跑失败任务，继续完成草稿。同一版本的发布串行执行；已有正式 Release 会保留原有产物，重复运行跳过发布。已有标签指向其他提交时会报错，须提升版本。
+
+## 自动发布到 PyPI
+
+GitHub Release 成功后，`publish-pypi` 任务从已公开的 Release 下载同一批 20 个 wheel、1 个 sdist、发布清单和 `SHA256SUMS`，先检查原始校验和，再核对版本、提交与完整矩阵。仅 wheel 和 sdist 会进入 PyPI 上传目录；任务不会重新构建发行包。PR 和手动验证运行不发布到 PyPI，GitHub Release 失败时也不会执行 PyPI 发布。
+
+首次启用前，需要完成以下账户配置：
+
+1. 在 [仓库 Environments 设置](https://github.com/600888/dlt698/settings/environments) 创建名称为 `pypi` 的环境。允许部署的分支和标签需覆盖 `main` 与 `v*`；如需全自动发布，不设置 required reviewers。
+2. 如果 PyPI 已有你管理的 `dlt698` 项目，在 [项目 Publishing 页面](https://pypi.org/manage/project/dlt698/settings/publishing/) 添加 GitHub Trusted Publisher。如果项目尚未创建，在 [账户 Publishing 页面](https://pypi.org/manage/account/publishing/) 添加 pending publisher，项目名填写 `dlt698`；名称必须可用，首次成功上传会创建项目。
+3. 两种情况都使用下面的配置，环境名称必须与工作流完全一致：
+
+| PyPI 字段 | 值 |
+| --- | --- |
+| PyPI Project Name（仅 pending publisher） | `dlt698` |
+| Owner | `600888` |
+| Repository name | `dlt698` |
+| Workflow name | `release.yml`（仅文件名） |
+| Environment name | `pypi` |
+
+任务通过 `id-token: write` 获取 OIDC 身份，并使用 `pypa/gh-action-pypi-publish` 交换短期上传凭据，无需设置 `PYPI_API_TOKEN` 或账户密码。权限仅授予 PyPI 发布任务。配置方式见 [已有项目的 Trusted Publisher](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) 和 [首次创建项目的 pending publisher](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/)。
+
+PyPI 上传不是整个版本的原子操作，网络中断可能只上传部分文件；修复配置或网络问题后，在原运行中重跑失败任务即可继续。`skip-existing: true` 保留 PyPI 已有的同名文件，补传其余发行包；不会覆盖已有文件。同版本的 PyPI 发布串行执行，重跑始终使用 GitHub Release 的原始附件。若 PyPI 的同名文件并非本次 Release 的产物，不能用重跑替换，须提升 `VERSION`。
+
+合入新增 PyPI 任务的提交后，需要发布包含此工作流的新版本；重跑旧 `v1.0.0` 运行仍会使用旧工作流，不会新增 PyPI 任务。完成真实发布后，用户可使用 `python -m pip install dlt698` 安装。账户授权与实际 PyPI 上传需在 GitHub Actions 中验收，本地检查不能代替。
 
 ## 发布前验证
 

@@ -175,3 +175,54 @@ jobs:
             release-assets/*.whl \
             release-assets/release-manifest.json release-assets/SHA256SUMS --clobber
           gh release edit "$RELEASE_TAG" --draft=false
+
+  publish-pypi:
+    name: Publish Python distributions to PyPI
+    if: github.event_name == 'push'
+    needs: [version, publish]
+    runs-on: ubuntu-22.04
+    environment:
+      name: pypi
+      url: https://pypi.org/p/dlt698
+    permissions:
+      contents: read
+      id-token: write
+    # 同版本的 main 与标签运行可能先后完成，避免并发上传到 PyPI。
+    concurrency:
+      group: dlt698-pypi-${{ needs.version.outputs.tag }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Download published GitHub Release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          # 复用已公开的附件，重跑时也不把重新构建的文件混入同一版本。
+          gh release download "$RELEASE_TAG" --dir release-assets \
+            --pattern '*.whl' --pattern '*.tar.gz' \
+            --pattern release-manifest.json --pattern SHA256SUMS
+      - name: Verify and stage Python distributions
+        shell: bash
+        run: |
+          # 先核对 Release 原始校验和，再检查完整矩阵及构建身份。
+          (cd release-assets && sha256sum --check SHA256SUMS)
+          python python/tools/joint_manifest.py release-assets --python-only \
+            --version '${{ needs.version.outputs.version }}' \
+            --commit '${{ needs.version.outputs.commit }}'
+          # PyPI 仅接收发行包，发布清单和校验和保留在 GitHub Release。
+          mkdir dist
+          cp release-assets/*.whl release-assets/*.tar.gz dist/
+      - name: Publish to PyPI with Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          # 部分上传失败后可重跑，也允许同一提交的 main/标签重复触发。
+          skip-existing: true

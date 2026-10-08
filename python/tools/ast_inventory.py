@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import subprocess
 import sys
@@ -11,6 +12,41 @@ from pathlib import Path
 from clang import cindex
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def declaration_signature(cursor: cindex.Cursor) -> str:
+    """保留声明、默认参数与限定符，排除函数体及构造函数的成员初始化列表。"""
+    kinds = cindex.CursorKind
+    tokens = [
+        token.spelling for token in cursor.get_tokens() if token.kind != cindex.TokenKind.COMMENT
+    ]
+    if cursor.kind in {
+        kinds.CXX_METHOD,
+        kinds.FUNCTION_DECL,
+        kinds.FUNCTION_TEMPLATE,
+        kinds.CONSTRUCTOR,
+        kinds.DESTRUCTOR,
+    }:
+        # 模板构造函数在 libclang 中是 FUNCTION_TEMPLATE，类外定义也用语义父级识别。
+        parent = cursor.semantic_parent
+        constructor = cursor.kind == kinds.CONSTRUCTOR or (
+            cursor.kind == kinds.FUNCTION_TEMPLATE
+            and parent.kind in {kinds.STRUCT_DECL, kinds.CLASS_DECL, kinds.CLASS_TEMPLATE}
+            and cursor.spelling == parent.spelling
+        )
+        depth = 0
+        for i, token in enumerate(tokens):
+            if token == "(":
+                depth += 1
+            elif token == ")":
+                depth -= 1
+            elif depth == 0 and (token == "{" or (constructor and token == ":")):
+                # Linux 的 cursor 范围包含初始化列表，MSVC 目标可能提前结束；统一只留签名。
+                tokens = tokens[:i]
+                break
+    else:
+        tokens = tokens[: tokens.index("{")] if "{" in tokens else tokens
+    return " ".join(tokens)
 
 
 def inventory(includes: list[str]) -> list[dict[str, str]]:
@@ -82,31 +118,8 @@ def inventory(includes: list[str]) -> list[dict[str, str]]:
         name = cursor.spelling
         if cursor.kind in declarations and name:
             symbol = "::".join([*parents, name])
-            tokens = [
-                token.spelling
-                for token in cursor.get_tokens()
-                if token.kind != cindex.TokenKind.COMMENT
-            ]
-            # 函数体不是签名；头文件摘要另行覆盖内联实现和约束变动。
-            if cursor.kind in {
-                kinds.CXX_METHOD,
-                kinds.FUNCTION_DECL,
-                kinds.FUNCTION_TEMPLATE,
-                kinds.CONSTRUCTOR,
-                kinds.DESTRUCTOR,
-            }:
-                depth = 0
-                for i, token in enumerate(tokens):
-                    if token == "(":
-                        depth += 1
-                    elif token == ")":
-                        depth -= 1
-                    elif token == "{" and depth == 0:
-                        tokens = tokens[:i]
-                        break
-            else:
-                tokens = tokens[: tokens.index("{")] if "{" in tokens else tokens
-            signature = " ".join(tokens)
+            # 内联实现和初始化行为由头文件摘要覆盖，不混入结构签名。
+            signature = declaration_signature(cursor)
             header = Path(str(cursor.location.file)).resolve().relative_to(ROOT).as_posix()
             result[(symbol, cursor.kind.name, signature)] = {
                 "cpp": symbol,
@@ -163,6 +176,18 @@ def main() -> None:
         {key: item[key] for key in ("cpp", "kind", "signature", "header")} for item in symbols
     ]
     if expected != actual:
+        print(
+            "\n".join(
+                difflib.unified_diff(
+                    json.dumps(expected, ensure_ascii=False, indent=2).splitlines(),
+                    json.dumps(actual, ensure_ascii=False, indent=2).splitlines(),
+                    fromfile="reviewed python/api-map.json",
+                    tofile="current public C++ AST",
+                    lineterm="",
+                )
+            ),
+            file=sys.stderr,
+        )
         raise SystemExit("Public C++ AST differs: update binding contracts and reviewed API map")
     print(f"AST inventory checked: {len(symbols)} public declarations")
 
