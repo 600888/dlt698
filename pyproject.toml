@@ -59,7 +59,8 @@ addopts = "-ra"
 [tool.cibuildwheel]
 build = "cp311-* cp312-* cp313-* cp314-*"
 skip = "*-win32 *-musllinux* *t-*"
-test-requires = ["pytest==9.0.3", "pytest-asyncio==1.4.0"]
+# 完整测试集包含 AST 契约检查，隔离的 wheel 测试环境也需要 libclang。
+test-requires = ["pytest==9.0.3", "pytest-asyncio==1.4.0", "libclang==18.1.1"]
 test-command = "python -m pytest {project}/python/tests"
 build-verbosity = 1
 
