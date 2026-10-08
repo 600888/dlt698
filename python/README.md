@@ -193,7 +193,7 @@ MD5/ThenGet/PROXY，executor 必须与会话一致，transparent 为可选 Trans
 
 `tools/api_contract.py --runtime` 核对公开头文件摘要及实际绑定；`tools/ast_inventory.py` 核对全部公开声明、重载、成员、枚举和默认参数；`tools/generate_stubs.py --check` 核对已安装扩展与冻结类型声明。修改 C++ 公开契约后必须同时审核对应清单、绑定、stub 与相关测试，再显式更新清单。
 
-`.github/workflows/python-ci.yml` 执行安装、向量、类型、格式、AST、C++ 双向互操作及无 Git sdist 重建检查。`release.yml` 使用 `release-matrix.json` 的五个平台、四个 CPython 版本与两种 C++ 库类型：10 个 C++ 包、20 个 wheel、1 个 sdist。所有制品必须同版本、同提交、同源码与 API 摘要，并通过验证工作流，才能把共同草稿 Release 公开。发布清单和 SHA256SUMS 随制品交付。
+`.github/workflows/python-ci.yml` 在普通提交中执行安装、向量、类型、格式、AST、C++ 双向互操作及无 Git sdist 重建检查。`release.yml` 使用 `release-matrix.json` 的五个平台、四个 CPython 版本构建 20 个 wheel、1 个 sdist，不再重复调用 Python CI 或构建独立 C++ 动静态库包。所有 Python 制品必须满足完整矩阵，且同版本、同提交、同源码与 API 摘要，才能把草稿 Release 公开。发布清单和 SHA256SUMS 随制品交付。
 
 Python 单独修复也提升共享 `VERSION` 并重建两端；不使用 Python 专属标签、post 版本或覆盖公开制品。首期正式入口为联合 GitHub Release。PyPI、非 CPython、free-threaded 和子解释器尚未开放；新平台或渠道需共同版本验收后加入。
 

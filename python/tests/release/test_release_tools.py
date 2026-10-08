@@ -84,3 +84,65 @@ def test_joint_release_rejects_altered_cpp_archive(joint):
     next(directory.glob("*.zip")).write_bytes(b"changed")
     with pytest.raises(ValueError, match="recorded hash"):
         tools.combine(directory, identity["version"], identity["commit"])
+
+
+@pytest.fixture
+def python_release(joint):
+    tools, directory, identity = joint
+    for record in directory.glob("*.provenance.json"):
+        (directory / json.loads(record.read_text())["filename"]).unlink()
+        record.unlink()
+    return tools, directory, identity
+
+
+def test_python_release_generates_manifest_and_checksums(python_release, monkeypatch):
+    tools, directory, identity = python_release
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "joint_manifest.py",
+            str(directory),
+            "--python-only",
+            "--version",
+            identity["version"],
+            "--commit",
+            identity["commit"],
+        ],
+    )
+    tools.main()
+    manifest = json.loads((directory / "release-manifest.json").read_text())
+    assert len(manifest["artifacts"]) == 21
+    assert manifest["matrix"]["linkages"] == []
+    checksums = (directory / "SHA256SUMS").read_text().splitlines()
+    assert len(checksums) == 22
+    for line in checksums:
+        digest, filename = line.split("  ")
+        assert hashlib.sha256((directory / filename).read_bytes()).hexdigest() == digest
+
+
+@pytest.mark.parametrize("pattern", ["*.whl", "*.tar.gz"])
+def test_python_release_rejects_missing_artifact(python_release, pattern):
+    tools, directory, identity = python_release
+    next(directory.glob(pattern)).unlink()
+    with pytest.raises(ValueError, match="incomplete"):
+        tools.combine(directory, identity["version"], identity["commit"], python_only=True)
+
+
+def test_python_release_rejects_mixed_commit(python_release):
+    tools, directory, identity = python_release
+    path = next(directory.glob("*.whl"))
+    with zipfile.ZipFile(path) as wheel:
+        contents = {name: wheel.read(name) for name in wheel.namelist()}
+    contents["dlt698/_build_info.json"] = json.dumps({**identity, "commit": "d" * 40}).encode()
+    with zipfile.ZipFile(path, "w") as wheel:
+        for name, payload in contents.items():
+            wheel.writestr(name, payload)
+    with pytest.raises(ValueError, match="mixed"):
+        tools.combine(directory, identity["version"], identity["commit"], python_only=True)
+
+
+def test_python_release_rejects_unexpected_cpp_archive(python_release):
+    tools, directory, identity = python_release
+    (directory / "unexpected.zip").write_bytes(b"C++ archive")
+    with pytest.raises(ValueError, match="unexpected archive"):
+        tools.combine(directory, identity["version"], identity["commit"], python_only=True)

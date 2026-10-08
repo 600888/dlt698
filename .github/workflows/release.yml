@@ -9,7 +9,6 @@ on:
     paths:
       - VERSION
       - .github/workflows/release.yml
-      - cmake/release-package.cmake
       - pyproject.toml
       - python/**
       - cpp/**
@@ -26,26 +25,22 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  verification:
-    uses: ./.github/workflows/python-ci.yml
   version:
     runs-on: ubuntu-22.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
       commit: ${{ steps.version.outputs.commit }}
-      cpp_matrix: ${{ steps.matrix.outputs.cpp_matrix }}
       wheel_matrix: ${{ steps.matrix.outputs.wheel_matrix }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Read frozen joint matrix
+      - name: Read frozen wheel matrix
         id: matrix
         shell: bash
         run: |
-          echo "cpp_matrix=$(python python/tools/release_matrix.py cpp)" >> "$GITHUB_OUTPUT"
           echo "wheel_matrix=$(python python/tools/release_matrix.py wheel)" >> "$GITHUB_OUTPUT"
       - name: Validate release version
         id: version
@@ -67,54 +62,6 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-  package:
-    needs: version
-    name: ${{ matrix.platform }} / ${{ matrix.linkage }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.version.outputs.cpp_matrix) }}
-    steps:
-      - uses: actions/checkout@v6
-      - name: Configure Release libraries and tests
-        run: >-
-          cmake -S . -B build/release
-          -DCMAKE_BUILD_TYPE=Release
-          -DBUILD_SHARED_LIBS=${{ matrix.shared }}
-          -DBUILD_TESTING=ON
-          -DDLT698_BUILD_TRANSPORT=ON
-          -DDLT698_BUILD_EXAMPLES=OFF
-          -DCMAKE_INSTALL_LIBDIR=lib
-          ${{ matrix.cmake_args }}
-      - name: Build
-        run: cmake --build build/release --config Release --parallel 2
-      - name: Test codecs, TCP and relocated installed consumer
-        run: ctest --test-dir build/release -C Release --output-on-failure
-      - name: Install and package libraries, headers and CMake exports
-        run: >-
-          cmake
-          -DBUILD_DIR=build/release
-          -DOUTPUT_DIR=build/release/packages
-          -DPLATFORM=${{ matrix.platform }}
-          -DLINKAGE=${{ matrix.linkage }}
-          -P cmake/release-package.cmake
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.11'
-      - name: Record same-source C++ artifact identity
-        env:
-          DLT698_RELEASE_COMMIT: ${{ needs.version.outputs.commit }}
-        run: python python/tools/joint_manifest.py build/release/packages --cpp-record
-      - name: Upload release package
-        uses: actions/upload-artifact@v7
-        with:
-          name: dlt698-${{ needs.version.outputs.version }}-${{ matrix.platform }}-${{ matrix.linkage }}
-          path: build/release/packages/*
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 14
 
   python-sdist:
     needs: version
@@ -165,7 +112,7 @@ jobs:
 
   publish:
     if: github.event_name == 'push'
-    needs: [version, verification, package, python-sdist, python-wheels]
+    needs: [version, python-sdist, python-wheels]
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -185,10 +132,10 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Verify complete same-version joint artifacts and collect checksums
+      - name: Verify complete same-version Python artifacts and collect checksums
         shell: bash
         run: |
-          python python/tools/joint_manifest.py release-assets \
+          python python/tools/joint_manifest.py release-assets --python-only \
             --version '${{ needs.version.outputs.version }}' \
             --commit '${{ needs.version.outputs.commit }}'
           cd release-assets
@@ -225,6 +172,6 @@ jobs:
           fi
           # 先上传至草稿，全部成功后再公开；失败后重跑可继续上传。
           gh release upload "$RELEASE_TAG" release-assets/*.tar.gz \
-            release-assets/*.zip release-assets/*.whl \
+            release-assets/*.whl \
             release-assets/release-manifest.json release-assets/SHA256SUMS --clobber
           gh release edit "$RELEASE_TAG" --draft=false

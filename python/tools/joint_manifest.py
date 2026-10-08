@@ -28,8 +28,13 @@ def cpp_record(directory: Path) -> None:
         )
 
 
-def combine(directory: Path, version: str, commit: str) -> dict[str, object]:
+def combine(
+    directory: Path, version: str, commit: str, *, python_only: bool = False
+) -> dict[str, object]:
     config = json.loads((ROOT / "python/release-matrix.json").read_text())
+    # 精简发布只要求 Python 制品，清单同步标明不包含 C++ 库矩阵。
+    if python_only:
+        config["linkages"] = []
     cpp_expected = {
         f"dlt698-{version}-{p['platform']}-{linkage}"
         + (".zip" if p["platform"].startswith("windows") else ".tar.gz")
@@ -99,13 +104,14 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", type=Path)
     parser.add_argument("--cpp-record", action="store_true")
+    parser.add_argument("--python-only", action="store_true")
     parser.add_argument("--version")
     parser.add_argument("--commit")
     args = parser.parse_args()
     if args.cpp_record:
         cpp_record(args.directory)
         return
-    manifest = combine(args.directory, args.version, args.commit)
+    manifest = combine(args.directory, args.version, args.commit, python_only=args.python_only)
     (args.directory / "release-manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
     )
