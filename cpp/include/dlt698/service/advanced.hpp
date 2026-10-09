@@ -5,7 +5,7 @@
 #include <dlt698/service/service.hpp>
 
 namespace dlt698::service {
-class DLT698_SERVICE_API IProxyProvider {
+class DLT698_API IProxyProvider {
    public:
     using Handler = session::Session::ExchangeHandler;
     using Cancel = std::function<void()>;
@@ -28,9 +28,9 @@ class DLT698_SERVICE_API IProxyProvider {
 class ProxyRouter final : public IProxyProvider {
    public:
     /** @brief 创建空路由表。 */
-    DLT698_SERVICE_API ProxyRouter();
+    DLT698_API ProxyRouter();
     /** @brief 释放路由；已提交任务仍由目标 Session 管理。 */
-    DLT698_SERVICE_API ~ProxyRouter() override;
+    DLT698_API ~ProxyRouter() override;
     /** @brief 禁止复制路由器。 */
     ProxyRouter(const ProxyRouter&) = delete;
     /** @brief 禁止复制赋值路由器。 */
@@ -40,8 +40,7 @@ class ProxyRouter final : public IProxyProvider {
      * @param[in] target 非空、由应用完成关联的客户机会话；路由持有其生命周期。
      * @return 成功或 invalid_value；应用负责设备对象能力和安全配置。
      */
-    DLT698_SERVICE_API Result<void> bind(model::Tsa server,
-                                         std::shared_ptr<session::Session> target);
+    DLT698_API Result<void> bind(model::Tsa server, std::shared_ptr<session::Session> target);
     /** @brief 查找并提交目标服务；未知地址异步错误由代理映射为逐项 DAR。
      * @param[in] server 精确 TSA。
      * @param[in] request 普通请求或 ThenGet。
@@ -49,8 +48,8 @@ class ProxyRouter final : public IProxyProvider {
      * @return 取消函数；调用将关闭目标会话以隔离迟到响应。
      * @note 同一目标最多一个在途事务；其他占用时返回 busy，不隐式排队有副作用请求。
      */
-    DLT698_SERVICE_API Cancel async_request(model::Tsa server, protocol::apdu::Apdu request,
-                                            Handler handler) override;
+    DLT698_API Cancel async_request(model::Tsa server, protocol::apdu::Apdu request,
+                                    Handler handler) override;
 
    private:
     struct Impl;
@@ -81,9 +80,9 @@ class AdvancedService {
      * provider 不得阻塞执行器；Session 关闭/释放后不再发起后续副作用。
      * 可与 ServerService 同时使用；对象目录与选项被处理器持有，不借用本对象地址。
      */
-    DLT698_SERVICE_API AdvancedService(std::shared_ptr<session::Session> session,
-                                       std::shared_ptr<ObjectRegistry> objects,
-                                       std::shared_ptr<IExecutor> executor,
-                                       AdvancedServiceOptions options = {});
+    DLT698_API AdvancedService(std::shared_ptr<session::Session> session,
+                               std::shared_ptr<ObjectRegistry> objects,
+                               std::shared_ptr<IExecutor> executor,
+                               AdvancedServiceOptions options = {});
 };
 }  // namespace dlt698::service

@@ -30,8 +30,8 @@ struct PointResult {
  * @note 已知不支持 List 时使用 Normal；已知无 Normal/List 时不发请求。未知功能信息不删除候选。
  * @note 关闭/超时后的后续批次由 Session 返回错误；不会重连或把事务失败当作点位不存在。
  */
-DLT698_SERVICE_API void async_probe_points(
-    std::shared_ptr<session::Session> session, standard::Capabilities capabilities,
-    std::vector<model::Oad> attributes, ProbeOptions options,
-    std::function<void(Result<std::vector<PointResult>>)> handler);
+DLT698_API void async_probe_points(std::shared_ptr<session::Session> session,
+                                   standard::Capabilities capabilities,
+                                   std::vector<model::Oad> attributes, ProbeOptions options,
+                                   std::function<void(Result<std::vector<PointResult>>)> handler);
 }  // namespace dlt698::service

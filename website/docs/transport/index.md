@@ -6,7 +6,7 @@ comments: false
 
 # 传输层
 
-`dlt698::transport` 提供字节流通道。TCP 和原始串口依赖 standalone Asio，但**只有传输模块**用它——消费方不需要 Asio 头文件。
+统一库 `dlt698::dlt698` 的传输接口提供字节流通道。TCP 和原始串口依赖 standalone Asio，但**只有传输模块**用它——消费方不需要 Asio 头文件。
 
 ## 这一部分的页面
 

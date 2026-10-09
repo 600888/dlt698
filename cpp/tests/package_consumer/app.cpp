@@ -1,5 +1,5 @@
 /** @file app.cpp
- * @brief 只通过安装包 app 目标验证高层入口与共享库导出。
+ * @brief 只通过安装包统一库目标验证高层入口与共享库导出。
  */
 #include <dlt698/app.hpp>
 

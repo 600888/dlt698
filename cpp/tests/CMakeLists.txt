@@ -23,14 +23,14 @@ set(DLT698_CATCH2_DIR "${DLT698_TEST_ROOT}/../../third/Catch2")
 # 声明一个分目录的测试可执行文件，须在对应的测试子目录中调用。
 # name: CTest 中的测试名，同时决定 dlt698_test_<name> 目标名。
 # SOURCES: 相对当前测试子目录的源文件列表。
-# LIBS: 额外链接的库目标，缺省链接 dlt698_core。
+# LIBS: 额外链接的库目标，缺省链接 dlt698。
 function(dlt698_add_test name)
     cmake_parse_arguments(ARG "" "" "SOURCES;LIBS" ${ARGN})
     if(NOT ARG_SOURCES)
         message(FATAL_ERROR "dlt698_add_test(${name}) 未指定 SOURCES")
     endif()
     if(NOT ARG_LIBS)
-        set(ARG_LIBS dlt698_core)
+        set(ARG_LIBS dlt698)
     endif()
     set(dlt698_test_target dlt698_test_${name})
     set(dlt698_test_sources "")

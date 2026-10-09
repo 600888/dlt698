@@ -27,10 +27,10 @@ class SerialChannel final : public IChannel {
      * @param[in] options 速率、字格式、流控和通道预算。
      * @return 已打开通道或参数/操作系统错误；失败自动释放已打开的端口。
      */
-    DLT698_TRANSPORT_API static Result<std::shared_ptr<SerialChannel>> open(
+    DLT698_API static Result<std::shared_ptr<SerialChannel>> open(
         std::shared_ptr<IoRuntime> runtime, const std::string& device, SerialOptions options = {});
     /** @brief 释放串口，挂起完成仍须驱动运行时。 */
-    DLT698_TRANSPORT_API ~SerialChannel() override;
+    DLT698_API ~SerialChannel() override;
     /** @brief 禁止复制端口所有权。 */
     SerialChannel(const SerialChannel&) = delete;
     /** @brief 禁止复制赋值端口。 */
@@ -38,14 +38,14 @@ class SerialChannel final : public IChannel {
     /** @brief 读取任意非空字节块。
      * @param[in] handler 完成回调；同时第二个读取返回 busy。
      */
-    DLT698_TRANSPORT_API void async_read(ReadHandler handler) override;
+    DLT698_API void async_read(ReadHandler handler) override;
     /** @brief 保序全量写入原始字节，不添加 FE。
      * @param[in] bytes 操作接管的缓冲区。
      * @param[in] handler 全部交给驱动后返回，不等价于物理线路已经发送完毕；预算不足返回 resource_limit。
      */
-    DLT698_TRANSPORT_API void async_write(Bytes bytes, WriteHandler handler) override;
+    DLT698_API void async_write(Bytes bytes, WriteHandler handler) override;
     /** @brief 幂等关闭串口，结束挂起队列。 */
-    DLT698_TRANSPORT_API void close() override;
+    DLT698_API void close() override;
 
    private:
     struct Impl;

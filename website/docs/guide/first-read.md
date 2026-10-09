@@ -24,10 +24,10 @@ Visual Studio 等多配置生成器必须带 `--config Release`，`-DCMAKE_BUILD
 
 ```cmake
 find_package(dlt698 1.0 CONFIG REQUIRED)
-target_link_libraries(your_app PRIVATE dlt698::app)
+target_link_libraries(your_app PRIVATE dlt698::dlt698)
 ```
 
-`dlt698::app` 包含托管客户端和服务器，**需要构建时启用 `DLT698_BUILD_TRANSPORT`**（默认开启）。只做编解码或内存中的离线验证时，链接 `dlt698::core` 就够了，它不依赖 Asio。全部导出目标见[安装与构建](../getting-started/installation.md)。
+`dlt698::dlt698` 包含托管客户端和服务器，**需要构建时启用 `DLT698_BUILD_TRANSPORT`**（默认开启）。只做编解码或内存中的离线验证时，可设置 `DLT698_BUILD_TRANSPORT=OFF`，仍链接同一个库。安装目标见[安装与构建](../getting-started/installation.md)。
 
 ## 先用配套示例验证环境
 

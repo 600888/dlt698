@@ -3,12 +3,12 @@
  */
 #pragma once
 #include <dlt698/common/executor.hpp>
+#include <dlt698/export.hpp>
 #include <dlt698/protocol/apdu/apdu.hpp>
 #include <dlt698/protocol/link/fragment.hpp>
 #include <dlt698/protocol/link/frame.hpp>
 #include <dlt698/security/backend.hpp>
 #include <dlt698/session/traffic.hpp>
-#include <dlt698/session_export.hpp>
 #include <dlt698/transport/channel.hpp>
 
 namespace dlt698::session {
@@ -52,7 +52,7 @@ struct SessionOptions {
  * @return 成功或 invalid_value；工厂返回值及实例独占性在实际构造会话时检查。
  * @note 托管入口可在创建监听器或线程前调用，避免预校验消耗认证材料。
  */
-DLT698_SESSION_API Result<void> validate_options(const SessionOptions& options);
+DLT698_API Result<void> validate_options(const SessionOptions& options);
 
 /**
  * @brief 一个通道上的会话，支持公共连接、读写/方法、记录及两类分段事务。
@@ -92,31 +92,31 @@ class Session {
      * @note 每个发起方最多一个在途事务；请求不重试，REPORT 按 report_retries 重发。
      * 超时或取消关闭通道；ThenGet/PROXY 超时不表示远端未执行。
      */
-    DLT698_SESSION_API void async_exchange(protocol::apdu::Apdu request, ExchangeHandler handler);
+    DLT698_API void async_exchange(protocol::apdu::Apdu request, ExchangeHandler handler);
     /** @brief 注册高级请求的异步服务器后端。
      * @param[in] handler 接收拥有型请求及完成回调，不得阻塞同一执行器；空值移除。
      * @note 完成回调可从任意线程调用，但只接受首次结果；释放/关闭后结果被丢弃。
      * 处理器返回非阻塞取消函数，释放/关闭时调用；应弱引用会话并自行管理资源和超时。
      */
-    DLT698_SESSION_API void set_advanced_handler(AdvancedRequestHandler handler);
+    DLT698_API void set_advanced_handler(AdvancedRequestHandler handler);
     /** @brief 注册客户机主动上报接收器。
      * @param[in] handler 执行器内调用，成功接收返回 true 才发送确认；false/异常不确认。
      * @note 没有处理器时不确认；确认过的完全相同重发在隔离期内重发确认，不重复交付。
      */
-    DLT698_SESSION_API void set_report_handler(ReportHandler handler);
+    DLT698_API void set_report_handler(ReportHandler handler);
     /** @brief 注册已匹配响应与合法通知的跟随上报观察器。
      * @param[in] handler 执行器内借用数据，需跨回调使用时复制；异常被隔离。
      */
-    DLT698_SESSION_API void set_follow_handler(FollowHandler handler);
+    DLT698_API void set_follow_handler(FollowHandler handler);
     /** @brief 注册 ACD 请求访问通知；应用根据业务选择事件读取 OAD。
      * @param[in] handler 在合法响应/通知带 ACD 且已协商时调用；不得阻塞，异常被隔离。
      * @note ACD 不指定事件 OAD，因此不会隐式发起 GET；可投递后续业务读取。
      */
-    DLT698_SESSION_API void set_acd_handler(std::function<void()> handler);
+    DLT698_API void set_acd_handler(std::function<void()> handler);
     /** @brief 设置服务器待访问状态，后续服务器 APDU 按协商结果携带 ACD。
      * @param[in] pending true 有待处理事件，false 清除；仅影响服务器发送。
      */
-    DLT698_SESSION_API void set_access_demand(bool pending);
+    DLT698_API void set_access_demand(bool pending);
     /** @brief 创建尚未启动的会话。
      * @param[in] channel 已连接的字节通道。
      * @param[in] executor 所有会话操作及定时器共用的串行执行器。
@@ -124,44 +124,44 @@ class Session {
      * @throws std::invalid_argument 通道/执行器为空、配置非法、工厂返回空值或后端已被其他存活会话持有。
      * @note 工厂在构造线程调用一次，异常向调用者传播；工厂不得返回其他会话使用中的实例。
      */
-    DLT698_SESSION_API Session(std::shared_ptr<transport::IChannel> channel,
-                               std::shared_ptr<IExecutor> executor, SessionOptions options = {});
+    DLT698_API Session(std::shared_ptr<transport::IChannel> channel,
+                       std::shared_ptr<IExecutor> executor, SessionOptions options = {});
     /** @brief 关闭通道，未完成事务以 closed 结束；仍需驱动执行器交付回调。 */
-    DLT698_SESSION_API ~Session();
+    DLT698_API ~Session();
     /** @brief 禁止复制会话身份及事务。 */
     Session(const Session&) = delete;
     /** @brief 禁止复制赋值会话。 */
     Session& operator=(const Session&) = delete;
     /** @brief 启动持续接收泵；预设连接只在显式配置后启用，重复启动无额外效果。 */
-    DLT698_SESSION_API void start();
+    DLT698_API void start();
     /** @brief 注册服务器 GET 处理器。
      * @param[in] handler 在会话执行器内同步调用的处理器，不得阻塞等待同一执行器。
      */
-    DLT698_SESSION_API void set_request_handler(RequestHandler handler);
+    DLT698_API void set_request_handler(RequestHandler handler);
     /** @brief 注册记录查询处理器，返回拥有全部行数据的快照。
      * @param[in] handler 在串行执行器内调用，不得阻塞；缺省返回 DAR=4。
      * @note Session 缓存本次结果直到分块完成/超时，后续分页不再次调用 provider。
      */
-    DLT698_SESSION_API void set_record_handler(RecordRequestHandler handler);
+    DLT698_API void set_record_handler(RecordRequestHandler handler);
     /** @brief 读取记录或记录列表，并自动收齐 GET Next 数据块。
      * @param[in] records 非空查询；每项保存完整 RSD/RCSD。
      * @param[in] list false 恰好一项，true 使用 RecordList。
      * @param[in] handler 返回有精确列类型的完整快照或错误。
      */
-    DLT698_SESSION_API void async_get_record(std::vector<protocol::apdu::GetRecord> records,
-                                             bool list, RecordHandler handler);
+    DLT698_API void async_get_record(std::vector<protocol::apdu::GetRecord> records, bool list,
+                                     RecordHandler handler);
     /** @brief 注册服务器 SET 处理器。
      * @param[in] handler 在执行器内同步执行，不得阻塞；未注册时逐项返回拒绝 DAR。
      */
-    DLT698_SESSION_API void set_set_handler(SetRequestHandler handler);
+    DLT698_API void set_set_handler(SetRequestHandler handler);
     /** @brief 注册服务器 ACTION 处理器。
      * @param[in] handler 在执行器内同步执行，不得阻塞；未注册时逐项返回拒绝 DAR。
      */
-    DLT698_SESSION_API void set_action_handler(ActionRequestHandler handler);
+    DLT698_API void set_action_handler(ActionRequestHandler handler);
     /** @brief 注册不会抢占当前事务的诊断回调。
      * @param[in] handler 接收损坏帧、不匹配地址/方向、迟到响应等诊断。
      */
-    DLT698_SESSION_API void set_diagnostic_handler(DiagnosticHandler handler);
+    DLT698_API void set_diagnostic_handler(DiagnosticHandler handler);
     /** @brief 注册通道收发观察器，不改变协议处理与事务匹配。
      * @param[in] handler 在会话执行器内借用事件和字节；空值移除，异常被隔离。
      * @note 注册异步生效，建议在 start 前调用；RX 使用处理时的观察器，TX 使用提交时的观察器。
@@ -170,70 +170,69 @@ class Session {
      * 不得阻塞或同步等待本执行器；跨回调保存数据须复制，不应强引用会话形成环。
      * 未注册时不为发送观察复制缓冲区；注册后每个在途写入额外保留一份完整帧。
      */
-    DLT698_SESSION_API void set_traffic_handler(TrafficHandler handler);
+    DLT698_API void set_traffic_handler(TrafficHandler handler);
     /** @brief 由协议客户机发起公共 CONNECT。
      * @param[in] handler 返回协商响应或本地错误，远端拒绝原码保存在响应 result 中。
      */
-    DLT698_SESSION_API void async_connect(ConnectHandler handler);
+    DLT698_API void async_connect(ConnectHandler handler);
     /** @brief 由协议服务器发起登录、单次心跳或退出登录。
      * @param[in] type 预连接请求类型。
      * @param[in] heartbeat_seconds 线上心跳周期（秒），自动周期另由 options 配置。
      * @param[in] handler 返回响应或错误。
      */
-    DLT698_SESSION_API void async_link(protocol::apdu::LinkRequestType type,
-                                       std::uint16_t heartbeat_seconds, LinkHandler handler);
+    DLT698_API void async_link(protocol::apdu::LinkRequestType type,
+                               std::uint16_t heartbeat_seconds, LinkHandler handler);
     /** @brief 由已关联客户机读取属性，最多一个在途事务。
      * @param[in] attributes 非空的精确 OAD 列表。
      * @param[in] list false 时必须恰好一个属性，true 使用 NormalList。
      * @param[in] handler 返回按原顺序保留 Data/DAR 的响应或错误。
      * @note 自动收齐分块；TimeTag 由 options 配置，超时/取消关闭通道隔离迟到结果。
      */
-    DLT698_SESSION_API void async_get(std::vector<model::Oad> attributes, bool list,
-                                      GetHandler handler);
+    DLT698_API void async_get(std::vector<model::Oad> attributes, bool list, GetHandler handler);
     /** @brief 发起 SET 普通或列表事务，不自动重试或回滚部分成功。
      * @param[in] attributes 属性与精确 Data 值，非空。
      * @param[in] list false 时恰好一项，true 使用列表。
      * @param[in] handler 返回逐项 DAR 或本地错误，超时不能证明远端未执行。
      */
-    DLT698_SESSION_API void async_set(std::vector<protocol::apdu::SetAttribute> attributes,
-                                      bool list, SetHandler handler);
+    DLT698_API void async_set(std::vector<protocol::apdu::SetAttribute> attributes, bool list,
+                              SetHandler handler);
     /** @brief 发起 ACTION 普通或列表事务，不自动重试有副作用的方法。
      * @param[in] methods 精确 OMD 与参数 Data，非空。
      * @param[in] list false 时恰好一项，true 使用列表。
      * @param[in] handler 返回逐项 DAR/可选 Data 或本地错误，超时后远端执行结果未知。
      */
-    DLT698_SESSION_API void async_action(std::vector<protocol::apdu::ActionMethod> methods,
-                                         bool list, ActionHandler handler);
+    DLT698_API void async_action(std::vector<protocol::apdu::ActionMethod> methods, bool list,
+                                 ActionHandler handler);
     /** @brief 检查当前线程是否正在驱动本会话的执行环境。
      * @return 在执行器/所属 I/O 运行时的回调中为 true，此时不得同步等待同一环境。
      */
-    DLT698_SESSION_API bool in_executor_thread() const noexcept;
+    DLT698_API bool in_executor_thread() const noexcept;
     /** @brief 结束在途事务的本地等待并发起应用连接释放，物理通道仍可继续使用。
      * @param[in] handler 释放完成或错误回调。
      * @note SET/ACTION 已发出或已进入通道队列时，释放不保证远端未执行。
      */
-    DLT698_SESSION_API void async_release(ReleaseHandler handler);
+    DLT698_API void async_release(ReleaseHandler handler);
     /** @brief 取消在途事务并关闭物理通道，避免旧响应被后续事务匹配。 */
-    DLT698_SESSION_API void cancel();
+    DLT698_API void cancel();
     /** @brief 幂等关闭会话、通道和定时器，结束未完成事务。 */
-    DLT698_SESSION_API void close();
+    DLT698_API void close();
     /** @brief 设置会话关闭观察器，供连接所有者及时释放会话名额。
      * @param[in] handler 在会话执行器内调用，接收拥有者可复制的关闭原因；空值移除观察器。
      * @note 每次注册最多通知一次；已关闭时异步通知已保存的原因。
      * 状态先变为 closed 并结束在途事务，再通知；不表示物理通道取消回调已全部排空。
      * 回调不得同步等待本执行器，异常被隔离，不应强引用本会话形成引用环。
      */
-    DLT698_SESSION_API void set_close_handler(CloseHandler handler);
+    DLT698_API void set_close_handler(CloseHandler handler);
     /** @brief 注册状态变化观察器，供托管入口在 LINK 就绪后发起 CONNECT。
      * @param[in] handler 在会话执行器内接收新状态，空值移除；异常被隔离。
      * @note 注册任务执行时先通知当前状态，此后只通知实际变化。观察器不得阻塞或强引用会话。
      * closed 状态通知不代表事务已完成，应通过关闭观察器观察终结原因和事务完成顺序。
      */
-    DLT698_SESSION_API void set_state_handler(StateHandler handler);
+    DLT698_API void set_state_handler(StateHandler handler);
     /** @brief 查询原子发布的会话状态。
      * @return 最近一次已执行的状态，投递但未执行的操作不立即改变状态。
      */
-    DLT698_SESSION_API State state() const noexcept;
+    DLT698_API State state() const noexcept;
 
    private:
     struct Impl;

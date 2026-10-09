@@ -28,9 +28,9 @@ class Device {
      * @param[in] options 设备布局、单值和设备总量上限。
      * @throws std::invalid_argument 布局非法或预算为零。
      */
-    DLT698_SERVICE_API explicit Device(DeviceOptions options = {});
+    DLT698_API explicit Device(DeviceOptions options = {});
     /** @brief 释放设备持有的数据，正在读取的快照仍由读取方持有。 */
-    DLT698_SERVICE_API ~Device();
+    DLT698_API ~Device();
     /** @brief 禁止复制设备身份。 */
     Device(const Device&) = delete;
     /** @brief 禁止复制赋值设备。 */
@@ -41,30 +41,30 @@ class Device {
      * @return 成功或定义、类型、布局、资源错误；失败保留旧值和目录。
      * @note 可在运行中由业务线程调用；本地更新不授予远端 SET 权限。
      */
-    DLT698_SERVICE_API Result<void> set(model::Oad attribute, model::Data value);
+    DLT698_API Result<void> set(model::Oad attribute, model::Data value);
     /** @brief 更新已发布数组或结构的一个一级元素。
      * @param[in] attribute 特征零、非零索引的 OAD；索引从 1 开始。
      * @param[in] value 元素的精确类型值。
      * @return 成功或属性不存在、索引、类型、布局及资源错误；失败不改旧值。
      */
-    DLT698_SERVICE_API Result<void> set_element(model::Oad attribute, model::Data value);
+    DLT698_API Result<void> set_element(model::Oad attribute, model::Data value);
     /** @brief 本地读取完整属性或一级元素的拥有内存的快照。
      * @param[in] attribute 完整 OAD；索引零读取整体。
      * @return Data 或原始 DAR：3 拒绝、4 未发布、8 非法索引。
      */
-    DLT698_SERVICE_API ObjectValue get(model::Oad attribute) const;
+    DLT698_API ObjectValue get(model::Oad attribute) const;
     /** @brief 声明厂家自定义只读数据对象，不发布未设置的属性。
      * @param[in] schema 未收录的 OI，至少一个普通只读属性；不支持方法或记录声明。
      * @return 成功或重复定义、标准 OI 冲突、非法 schema 及资源错误。
      * @note 类型声明后不能替换；远端写入和动态 provider 使用现有高级分层 API。
      */
-    DLT698_SERVICE_API Result<void> define(ObjectSchema schema);
+    DLT698_API Result<void> define(ObjectSchema schema);
 
    private:
     /** @brief 向高层服务器提供受控目录，不允许调用方绕过数据发布约定。
      * @return 保持目录和已发布快照存活的共享引用。
      */
-    DLT698_SERVICE_API std::shared_ptr<ObjectRegistry> objects() const;
+    DLT698_API std::shared_ptr<ObjectRegistry> objects() const;
     friend class dlt698::app::Server;
     struct Impl;
     std::unique_ptr<Impl> impl_;

@@ -5,8 +5,8 @@
 #pragma once
 #include <chrono>
 #include <dlt698/common/executor.hpp>
+#include <dlt698/export.hpp>
 #include <dlt698/transport/channel.hpp>
-#include <dlt698/transport_export.hpp>
 #include <memory>
 
 namespace dlt698::transport {
@@ -18,9 +18,9 @@ namespace dlt698::transport {
 class IoRuntime {
    public:
     /** @brief 创建带工作守卫的 I/O 运行时。 */
-    DLT698_TRANSPORT_API IoRuntime();
+    DLT698_API IoRuntime();
     /** @brief 停止运行时，调用方须事先结束外部运行线程。 */
-    DLT698_TRANSPORT_API ~IoRuntime();
+    DLT698_API ~IoRuntime();
     /** @brief 禁止复制运行时及其事件循环。 */
     IoRuntime(const IoRuntime&) = delete;
     /** @brief 禁止通过复制赋值共享事件循环。 */
@@ -29,33 +29,33 @@ class IoRuntime {
      * @brief 在当前线程处理 I/O 事件，直到运行时停止。
      * @note 工作守卫使空闲运行时继续等待；多个运行线程间的通道状态由 strand 串行化。
      */
-    DLT698_TRANSPORT_API void run();
+    DLT698_API void run();
     /**
      * @brief 在当前线程处理 I/O 事件，直到时限到达或运行时停止。
      * @param[in] duration 本次驱动事件循环的时间预算，不是单个操作的超时。
      * @note 正在执行的用户回调不会被时限中断。
      */
-    DLT698_TRANSPORT_API void run_for(std::chrono::milliseconds duration);
+    DLT698_API void run_for(std::chrono::milliseconds duration);
     /**
      * @brief 请求事件循环停止，使运行调用尽快返回。
      * @note 不关闭通道；未处理的完成回调需要 restart 后继续驱动才能执行。
      */
-    DLT698_TRANSPORT_API void stop();
+    DLT698_API void stop();
     /** @brief 释放空闲工作守卫，让 run 在所有排队任务和异步操作完成后自然返回。
      * @note 不关闭通道或取消计时器；调用方须先请求关闭自己拥有的资源。
      * 幂等且可跨线程调用，不丢弃完成回调；释放守卫不可逆，重新托管服务应创建新运行时。
      */
-    DLT698_TRANSPORT_API void finish();
+    DLT698_API void finish();
     /**
      * @brief 清除停止状态，允许再次驱动事件循环。
      * @pre 所有 run/run_for 调用均已返回。
      */
-    DLT698_TRANSPORT_API void restart();
+    DLT698_API void restart();
     /** @brief 创建由当前运行时驱动的串行会话执行器。
      * @return 独立 strand 上的执行器和单调计时器实现，允许从不同线程投递任务。
      * @note 调用方仍须驱动 run/run_for；执行器会保持运行时内部上下文存活。
      */
-    DLT698_TRANSPORT_API std::shared_ptr<IExecutor> executor();
+    DLT698_API std::shared_ptr<IExecutor> executor();
 
    private:
     struct Impl;
@@ -91,11 +91,12 @@ class TcpChannel final : public IChannel {
      * @return 立即返回的通道对象，此时连接可能尚未完成。
      * @throws std::invalid_argument 运行时为空或通道配置非法。
      */
-    DLT698_TRANSPORT_API static std::shared_ptr<TcpChannel> connect(
-        std::shared_ptr<IoRuntime> runtime, std::string host, std::uint16_t port,
-        ConnectHandler handler, ChannelOptions options = {});
+    DLT698_API static std::shared_ptr<TcpChannel> connect(std::shared_ptr<IoRuntime> runtime,
+                                                          std::string host, std::uint16_t port,
+                                                          ConnectHandler handler,
+                                                          ChannelOptions options = {});
     /** @brief 释放通道；销毁导致的失败回调仍需驱动运行时才能处理。 */
-    DLT698_TRANSPORT_API ~TcpChannel() override;
+    DLT698_API ~TcpChannel() override;
     /** @brief 禁止复制 socket 所属通道。 */
     TcpChannel(const TcpChannel&) = delete;
     /** @brief 禁止复制赋值 socket 所属通道。 */
@@ -105,7 +106,7 @@ class TcpChannel final : public IChannel {
      * @param[in] handler 完成回调，返回字节块或 closed、busy、I/O 等错误。
      * @note 一次只允许一个在途读取；回调在该通道的 strand 中执行。
      */
-    DLT698_TRANSPORT_API void async_read(ReadHandler handler) override;
+    DLT698_API void async_read(ReadHandler handler) override;
     /**
      * @brief 将完整缓冲区加入发送队列，串行执行写操作。
      * @param[in] bytes 移入通道的待发送数据。
@@ -113,12 +114,12 @@ class TcpChannel final : public IChannel {
      * @note 字节和条数预算包含已投递但尚未进入 strand 的操作，空写也占一条预算。
      * 写操作按进入 strand 的顺序执行，并发调用之间的先后顺序由执行器决定。
      */
-    DLT698_TRANSPORT_API void async_write(Bytes bytes, WriteHandler handler) override;
+    DLT698_API void async_write(Bytes bytes, WriteHandler handler) override;
     /**
      * @brief 投递幂等关闭操作，取消解析和 socket 操作并结束待发送队列。
      * @note 关闭和挂起操作的回调需要应用继续驱动运行时。
      */
-    DLT698_TRANSPORT_API void close() override;
+    DLT698_API void close() override;
 
    private:
     struct Impl;
@@ -147,7 +148,7 @@ class TcpListener {
      * @return 监听器，或运行时为空、地址解析及 socket 操作失败的错误。
      * @throws std::invalid_argument 非空运行时下通道配置非法。
      */
-    DLT698_TRANSPORT_API static Result<std::shared_ptr<TcpListener>> listen(
+    DLT698_API static Result<std::shared_ptr<TcpListener>> listen(
         std::shared_ptr<IoRuntime> runtime, const std::string& bind_address, std::uint16_t port,
         ChannelOptions options = {});
     /** @brief 使用明确的地址独占策略建立监听，保留原 listen 的默认行为。
@@ -160,11 +161,11 @@ class TcpListener {
      * @return 监听器或配置及绑定错误。
      * @throws std::invalid_argument 非空运行时下通道配置非法。
      */
-    DLT698_TRANSPORT_API static Result<std::shared_ptr<TcpListener>> listen(
+    DLT698_API static Result<std::shared_ptr<TcpListener>> listen(
         std::shared_ptr<IoRuntime> runtime, const std::string& bind_address, std::uint16_t port,
         ChannelOptions options, bool exclusive_address);
     /** @brief 释放监听 socket；挂起接受操作的完成仍需驱动运行时。 */
-    DLT698_TRANSPORT_API ~TcpListener();
+    DLT698_API ~TcpListener();
     /** @brief 禁止复制监听 socket。 */
     TcpListener(const TcpListener&) = delete;
     /** @brief 禁止通过复制赋值共享监听 socket。 */
@@ -173,18 +174,18 @@ class TcpListener {
      * @brief 查询监听器实际绑定的本地端口。
      * @return 绑定完成时记录的 TCP 端口号。
      */
-    DLT698_TRANSPORT_API std::uint16_t local_port() const noexcept;
+    DLT698_API std::uint16_t local_port() const noexcept;
     /**
      * @brief 异步接受一个 TCP 连接，最多允许一个在途接受操作。
      * @param[in] handler 完成回调，返回已连接通道或 closed、busy、I/O 等错误。
      * @note 回调在监听器的 strand 中执行；应用须持有监听器至操作完成。
      */
-    DLT698_TRANSPORT_API void async_accept(AcceptHandler handler);
+    DLT698_API void async_accept(AcceptHandler handler);
     /**
      * @brief 投递幂等关闭操作，取消尚未完成的接受请求。
      * @note 不关闭此前已接受的通道，应用须继续驱动运行时以处理完成回调。
      */
-    DLT698_TRANSPORT_API void close();
+    DLT698_API void close();
 
    private:
     struct Impl;

@@ -73,8 +73,7 @@ def inventory(includes: list[str]) -> list[dict[str, str]]:
         )[0]
         includes += [line.strip() for line in block.splitlines() if line.strip().startswith("/")]
     args.extend("-I" + str(Path(p).resolve()) for p in includes)
-    for component in ("", "_SESSION", "_SERVICE", "_TRANSPORT", "_APP"):
-        args.append("-DDLT698" + component + "_STATIC")
+    args.append("-DDLT698_STATIC")
     unit = cindex.Index.create().parse(
         str(source_path), args=args, unsaved_files=[(str(source_path), source)]
     )

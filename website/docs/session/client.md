@@ -5,7 +5,7 @@ description: 直接连接、读取和写入，自动管理运行线程及协议�
 
 # 托管客户端
 
-包含 `<dlt698/app.hpp>`，链接 `dlt698::app`，开启 `DLT698_BUILD_TRANSPORT`。核心调用只需创建、连接、读取三步：
+包含 `<dlt698/app.hpp>`，链接 `dlt698::dlt698`，开启 `DLT698_BUILD_TRANSPORT`。核心调用只需创建、连接、读取三步：
 
 ```cpp
 dlt698::app::Client client;

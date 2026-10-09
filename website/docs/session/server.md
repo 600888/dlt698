@@ -7,7 +7,7 @@ description: 直接设置数据并启动 TCP 或串口，自动管理连接和�
 
 `app::Server` 是普通应用的服务器入口：直接设置数据，启动 TCP 或串口，库会驱动事件循环、接入连接、处理协议登录及请求。`service::Device` 保存数据，连接断开和服务器停止都不会清空它。
 
-需要开启 `DLT698_BUILD_TRANSPORT`，包含 `<dlt698/app.hpp>` 并链接 `dlt698::app`，也可以使用聚合目标 `dlt698::dlt698`。独立的 Device 仅依赖 `dlt698::service`，关闭 transport 后仍可用。
+需要开启 `DLT698_BUILD_TRANSPORT`，包含 `<dlt698/app.hpp>` 并链接 `dlt698::dlt698`。Device 同样由统一库提供，关闭 transport 后仍可用。
 
 ## 最小程序
 

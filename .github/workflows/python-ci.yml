@@ -43,7 +43,7 @@ jobs:
           ctest --test-dir build/cpp-independent --output-on-failure
           cmake --install build/cpp-independent --prefix "$PWD/build/independent-sdk"
       - name: Check the full public C++ AST
-        run: python python/tools/ast_inventory.py --include build/cpp-independent/include --include build/cpp-independent/transport/include
+        run: python python/tools/ast_inventory.py --include build/cpp-independent/include
       - name: Build and test the independent C++ consumer
         run: |
           cmake -S python/tests/interop -B build/interop -DCMAKE_PREFIX_PATH="$PWD/build/independent-sdk"

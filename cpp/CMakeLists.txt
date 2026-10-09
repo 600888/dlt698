@@ -8,6 +8,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(GenerateExportHeader)
 find_package(Threads REQUIRED)
+option(BUILD_SHARED_LIBS "Build the dlt698 shared library" ON)
 option(DLT698_BUILD_TRANSPORT "Build standalone Asio transport" ON)
 option(DLT698_BUILD_EXAMPLES "Build examples" ON)
 option(DLT698_WARNINGS_AS_ERRORS "Treat project warnings as errors" OFF)
@@ -21,7 +22,7 @@ function(dlt698_target_setup target)
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
     get_target_property(dlt698_target_type ${target} TYPE)
     if(dlt698_target_type STREQUAL "SHARED_LIBRARY")
-        # 安装后的各组件共享库位于同一目录，间接依赖也须由加载它的库自行定位。
+        # 共享库使用相对自身的运行时搜索路径，支持安装目录迁移。
         # 使用相对库自身的路径，使安装前缀移动后仍可加载，避免依赖构建目录或环境变量。
         if(APPLE)
             set_property(TARGET ${target} APPEND PROPERTY INSTALL_RPATH "@loader_path")
@@ -53,7 +54,7 @@ function(dlt698_target_setup target)
     endif()
 endfunction()
 
-add_library(dlt698_core
+add_library(dlt698
     src/standard/catalog.cpp
     src/standard/records.cpp
     src/standard/capabilities.cpp
@@ -75,57 +76,41 @@ add_library(dlt698_core
     src/protocol/apdu/security.cpp
     src/protocol/apdu/exchange.cpp
     src/protocol/apdu/advanced.cpp
-    src/protocol/apdu/apdu.cpp)
-add_library(dlt698::core ALIAS dlt698_core)
-set_target_properties(dlt698_core PROPERTIES EXPORT_NAME core VERSION ${PROJECT_VERSION}
+    src/protocol/apdu/apdu.cpp
+    src/session/session.cpp
+    src/service/advanced.cpp
+    src/service/object.cpp
+    src/service/device.cpp
+    src/service/standard_object.cpp
+    src/service/memory_records.cpp
+    src/service/point_probe.cpp
+    src/service/service.cpp
+    src/service/sync.cpp)
+add_library(dlt698::dlt698 ALIAS dlt698)
+set_target_properties(dlt698 PROPERTIES EXPORT_NAME dlt698 VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR} CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
-generate_export_header(dlt698_core EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/include/dlt698/export.hpp"
+# 所有层共享同一个导出宏；Windows 下所有实现均由 dlt698_EXPORTS 控制 dllexport。
+generate_export_header(dlt698 EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/include/dlt698/export.hpp"
     EXPORT_MACRO_NAME DLT698_API STATIC_DEFINE DLT698_STATIC)
 if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(dlt698_core PUBLIC DLT698_STATIC)
+    target_compile_definitions(dlt698 PUBLIC DLT698_STATIC)
 endif()
-target_include_directories(dlt698_core PUBLIC
+target_include_directories(dlt698 PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-dlt698_target_setup(dlt698_core)
-target_link_libraries(dlt698_core PRIVATE Threads::Threads)
-
-add_library(dlt698 INTERFACE)
-add_library(dlt698::dlt698 ALIAS dlt698)
-target_link_libraries(dlt698 INTERFACE dlt698_core)
-add_library(dlt698_session src/session/session.cpp)
-add_library(dlt698::session ALIAS dlt698_session)
-set_target_properties(dlt698_session PROPERTIES EXPORT_NAME session VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR} CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
-generate_export_header(dlt698_session EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/include/dlt698/session_export.hpp"
-    EXPORT_MACRO_NAME DLT698_SESSION_API STATIC_DEFINE DLT698_SESSION_STATIC)
-if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(dlt698_session PUBLIC DLT698_SESSION_STATIC)
-endif()
-target_link_libraries(dlt698_session PUBLIC dlt698_core)
-dlt698_target_setup(dlt698_session)
-
-add_library(dlt698_service src/service/advanced.cpp src/service/object.cpp src/service/device.cpp src/service/standard_object.cpp src/service/memory_records.cpp src/service/point_probe.cpp src/service/service.cpp src/service/sync.cpp)
-add_library(dlt698::service ALIAS dlt698_service)
-set_target_properties(dlt698_service PROPERTIES EXPORT_NAME service VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR} CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
-generate_export_header(dlt698_service EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/include/dlt698/service_export.hpp"
-    EXPORT_MACRO_NAME DLT698_SERVICE_API STATIC_DEFINE DLT698_SERVICE_STATIC)
-if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(dlt698_service PUBLIC DLT698_SERVICE_STATIC)
-endif()
-target_link_libraries(dlt698_service PUBLIC dlt698_session)
-target_link_libraries(dlt698_service PRIVATE Threads::Threads)
-dlt698_target_setup(dlt698_service)
-target_link_libraries(dlt698 INTERFACE dlt698_service)
-set(dlt698_install_targets dlt698 dlt698_core dlt698_session dlt698_service)
+dlt698_target_setup(dlt698)
+target_link_libraries(dlt698 PRIVATE Threads::Threads)
+# 保留旧组件目标的拼写，别名不生成或安装独立库。
+foreach(component core session service)
+    add_library(dlt698::${component} ALIAS dlt698)
+endforeach()
 if(DLT698_BUILD_TRANSPORT)
     add_subdirectory(transport)
     add_subdirectory(app)
-    target_link_libraries(dlt698 INTERFACE dlt698_transport)
-    target_link_libraries(dlt698 INTERFACE dlt698_app)
-    list(APPEND dlt698_install_targets dlt698_transport dlt698_app)
+    foreach(component transport app)
+        add_library(dlt698::${component} ALIAS dlt698)
+    endforeach()
     install(DIRECTORY include/dlt698/app DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dlt698)
     install(FILES include/dlt698/app.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dlt698)
 endif()
@@ -135,7 +120,7 @@ endif()
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
-install(TARGETS ${dlt698_install_targets} EXPORT dlt698Targets
+install(TARGETS dlt698 EXPORT dlt698Targets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -145,8 +130,6 @@ install(FILES include/dlt698/transport/channel.hpp include/dlt698/transport/memo
     include/dlt698/transport/serial_link.hpp
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dlt698/transport)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/dlt698/export.hpp"
-    "${CMAKE_CURRENT_BINARY_DIR}/include/dlt698/session_export.hpp"
-    "${CMAKE_CURRENT_BINARY_DIR}/include/dlt698/service_export.hpp"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dlt698)
 set(dlt698_package_dir "${CMAKE_INSTALL_LIBDIR}/cmake/dlt698")
 configure_package_config_file("${CMAKE_CURRENT_SOURCE_DIR}/../cmake/dlt698Config.cmake.in"

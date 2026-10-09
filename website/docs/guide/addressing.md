@@ -154,7 +154,7 @@ if (definition && definition->scaling) {
 }
 ```
 
-完整目录也可以直接遍历 `standard::objects()`。这些接口在客户端不需要创建会话，属于 `dlt698::core`。
+完整目录也可以直接遍历 `standard::objects()`。这些接口在客户端不需要创建会话，属于 `dlt698::dlt698`。
 
 ## 校验地址和取值
 

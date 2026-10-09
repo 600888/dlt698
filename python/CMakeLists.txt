@@ -38,13 +38,13 @@ target_include_directories(_native PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/bindings/app"
     "${CMAKE_CURRENT_SOURCE_DIR}/bindings/session"
     "${CMAKE_CURRENT_SOURCE_DIR}/bindings/transport")
-target_link_libraries(_native PRIVATE dlt698::app)
+target_link_libraries(_native PRIVATE dlt698::dlt698)
 # sdist 文件时间可能固定且早于缓存对象；不能只依赖 mtime 判断源码是否变化。
 # 将完整输入摘要放入每个项目目标的私有编译参数，摘要变化使核心及绑定一起重新编译。
 # 此配置仅存在于 Python 独立构建树，不进入 C++ 的默认构建或安装接口。
 file(READ "${CMAKE_CURRENT_BINARY_DIR}/_build_info.json" dlt698_python_identity)
 string(JSON dlt698_python_source_sha GET "${dlt698_python_identity}" source_sha256)
-foreach(dlt698_python_target dlt698_core dlt698_session dlt698_service dlt698_transport dlt698_app _native)
+foreach(dlt698_python_target dlt698 _native)
     target_compile_definitions(${dlt698_python_target} PRIVATE
         "DLT698_PY_SOURCE_SHA256=\"${dlt698_python_source_sha}\"")
 endforeach()

@@ -9,10 +9,10 @@ description: 仓库示例的分类、用途、构建与运行方式。
 
 | 目录 | 层次 | 依赖 | 是否需要设备 |
 | --- | --- | --- | --- |
-| `app/` | 托管服务器/客户端，直接设置、连接和读取 | `dlt698::app` | TCP 不需要，串口需要 |
-| `codec/` | 链路帧与 APDU 编解码 | `dlt698::core` | 否 |
-| `service/` | 对象目录、读写方法、记录查询 | `dlt698::service` | 否 |
-| `transport/` | 真实 TCP 与串口链路 | `dlt698::service` + `dlt698::transport` | TCP 不需要，串口需要 |
+| `app/` | 托管服务器/客户端，直接设置、连接和读取 | `dlt698::dlt698` | TCP 不需要，串口需要 |
+| `codec/` | 链路帧与 APDU 编解码 | `dlt698::dlt698` | 否 |
+| `service/` | 对象目录、读写方法、记录查询 | `dlt698::dlt698` | 否 |
+| `transport/` | 真实 TCP 与串口链路 | `dlt698::dlt698` | TCP 不需要，串口需要 |
 
 构建后输出到 `bin/`（Visual Studio 多配置构建为 `bin/Release/`）。
 `app/` 和 `transport/` 示例的电表地址均在源码中配置，默认 `000000000000`（六个 `0x00` 字节），
@@ -234,10 +234,10 @@ target_link_libraries(your_app PRIVATE dlt698::dlt698)
 
 ```cmake
 add_subdirectory(third-party/dlt698)
-target_link_libraries(your_app PRIVATE dlt698::service)
+target_link_libraries(your_app PRIVATE dlt698::dlt698)
 ```
 
-按需链接 `dlt698::core`、`dlt698::session`、`dlt698::service`、`dlt698::transport` 可以显著缩短编译时间。详见[构建选项](../getting-started/build-options.md)。
+所有示例均链接 `dlt698::dlt698`；不需要 TCP/串口时可在构建库时关闭传输功能。详见[构建选项](../getting-started/build-options.md)。
 
 ## 测试向量
 

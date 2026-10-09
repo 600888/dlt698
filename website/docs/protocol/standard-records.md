@@ -7,7 +7,7 @@ description: 日/月冻结、常用事件的行列查询、内存记录模拟及
 
 第三阶段加入日冻结、月冻结和两类常用事件的只读查询模板，复用 GET Record、GET Next 和标准 provider 绑定。记录对象的 OI 是固定的，时间、序号、关联量使用 `RSD` 与 `RCSD` 定位。
 
-包含 `<dlt698/standard/records.hpp>` 使用查询模板；包含 `<dlt698/service/memory_records.hpp>` 使用模拟后端。模板在 `dlt698::core`，后端在 `dlt698::service`。
+包含 `<dlt698/standard/records.hpp>` 使用查询模板；包含 `<dlt698/service/memory_records.hpp>` 使用模拟后端。模板和模拟后端均由 `dlt698::dlt698` 提供。
 
 ## 本批记录定义
 

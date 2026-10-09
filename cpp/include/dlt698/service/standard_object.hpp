@@ -14,8 +14,8 @@ namespace dlt698::service {
  * @return 拥有名称及属性列表的 schema；未知定义/非法选择返回错误。
  * @note 手写 schema 仍可用于厂家扩展；此接口不会修改对象目录。
  */
-DLT698_SERVICE_API Result<ObjectSchema> make_object_schema(
-    std::uint16_t oi, const std::vector<std::uint8_t>& attributes);
+DLT698_API Result<ObjectSchema> make_object_schema(std::uint16_t oi,
+                                                   const std::vector<std::uint8_t>& attributes);
 /**
  * @brief 通过只读校验适配器把选定标准属性绑定到对象目录。
  * @param[in,out] registry 目标目录，重复 OI 拒绝且不覆盖已有 provider。
@@ -29,8 +29,9 @@ DLT698_SERVICE_API Result<ObjectSchema> make_object_schema(
  * @note 非零特征返回 DAR=3，非法索引为 8，Data 不符合标准或超限为 7；provider 的 DAR 原样返回，异常由目录隔离为 255。
  * @note 记录请求超出编码资源预算返回 DAR=3；响应投影不符合表头/类型/资源约定返回 7。
  */
-DLT698_SERVICE_API Result<void> register_standard_object(
-    ObjectRegistry& registry, std::uint16_t oi, const std::vector<std::uint8_t>& attributes,
-    std::shared_ptr<IObjectProvider> provider, const standard::DeviceLayout& layout = {},
-    const Limits& limits = {});
+DLT698_API Result<void> register_standard_object(ObjectRegistry& registry, std::uint16_t oi,
+                                                 const std::vector<std::uint8_t>& attributes,
+                                                 std::shared_ptr<IObjectProvider> provider,
+                                                 const standard::DeviceLayout& layout = {},
+                                                 const Limits& limits = {});
 }  // namespace dlt698::service

@@ -72,7 +72,7 @@ description: 已实现能力、限制、待办事项和验证状态。
 | 原始串口 | 部分实现 | 速率/字格式/流控、串行队列与关闭；**真实设备收发未验证** | tcp，参数/打开失败路径 |
 | 串行时序适配 | 已实现 | 四 FE、收发 33 位间隔、投递前预算、方向与真实排空 hooks | serial_link、memory_mutation 闭环 |
 | RS-485 物理验收 | **未验证** | 手动切换必须有真实排空驱动；USB/流控/适配器需硬件测量 | 待设备 |
-| 安装包 | 已实现 | 导出 core/session/service/transport/聚合目标；不安装 Asio 头文件，MSVC 传递 `/utf-8` | installed_consumer |
+| 安装包 | 已实现 | 导出单一 dlt698 库及旧组件兼容别名；不安装 Asio 头文件，MSVC 传递 `/utf-8` | installed_consumer |
 
 ## Data 标签覆盖
 

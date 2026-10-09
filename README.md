@@ -20,7 +20,7 @@ auto started = server.start_tcp("0.0.0.0", 6980);
 
 检查 `value` 和 `started` 后，应用可以继续自己的业务，运行中仍可调用 `server.set(...)`。频率 `5000` 表示 `50.00 Hz`；库自动运行 I/O、接入连接、登录和应答。串口使用 `server.start_serial("COM3", 9600)`。结束时调用 `server.stop()`，析构也会收尾，设备数据跨连接和同实例重启保留。
 
-链接 `dlt698::app` 或聚合目标，开启 `DLT698_BUILD_TRANSPORT`。完整错误处理、地址/布局配置与高级入口见[托管服务器](website/docs/session/server.md)，可直接运行新示例 `dlt698_server`。
+链接 `dlt698::dlt698`，开启 `DLT698_BUILD_TRANSPORT`。完整错误处理、地址/布局配置与高级入口见[托管服务器](website/docs/session/server.md)，可直接运行新示例 `dlt698_server`。
 
 ## 连接客户端
 
@@ -118,10 +118,10 @@ cmake --install build --config Release --prefix ./build/stage
 | 选项 | 说明 |
 | --- | --- |
 | `-DDLT698_BUILD_TRANSPORT=OFF` | 关闭 Asio TCP/串口；内存通道、SerialLinkChannel、会话、同步/异步服务仍可用 |
-| `-DBUILD_SHARED_LIBS=ON` | 构建共享库 |
+| `-DBUILD_SHARED_LIBS=ON` | 构建单一共享库（默认 ON）；设为 OFF 可构建单一静态库 |
 | `-DDLT698_WARNINGS_AS_ERRORS=ON` | 严格警告检查 |
 
-也支持 `cmake -S cpp -B build/core` 只构建核心。需要 C++17、CMake 3.20+ 和匹配的 C++ 编译器，不依赖 Python。所有构建树都在 `build/` 下，`build/core` 只编核心、`build/shared` 编共享库，CI 默认用 `build/`。
+也支持 `cmake -S cpp -B build/core` 使用独立 C++ 构建入口。需要 C++17、CMake 3.20+ 和匹配的 C++ 编译器，不依赖 Python。所有构建树都在 `build/` 下，`build/core` 使用独立入口、`build/shared` 编共享库，CI 默认用 `build/`。
 
 ### 单元测试
 
@@ -152,7 +152,7 @@ ctest --test-dir build -R codec --output-on-failure        # 按测试名
 ```
 
 `transport_tcp` 和 `app` 默认参与 CTest，带 `network` 标签，需要真实回环 socket。
-transport 目标统一启用 Asio 线程支持，已修复 MinGW 因头文件包含顺序不同而混用
+传输实现统一启用 Asio 线程支持，已修复 MinGW 因头文件包含顺序不同而混用
 有线程/无线程类型的静态链接崩溃。可用 `ctest --test-dir build -L network --output-on-failure`
 单独执行网络回归；受限环境不能联网时应记录未执行范围。
 
@@ -168,7 +168,7 @@ transport 目标统一启用 Asio 线程支持，已修复 MinGW 因头文件包
 | Windows | x64 / MSVC、Release `/MD` | 静态 `.lib`、动态 `.dll` + 导入 `.lib`，分别打包为 `.zip` |
 | macOS | Intel x64、Apple Silicon ARM64 / AppleClang | 静态 `.a`、动态 `.dylib`，分别打包为 `.tar.gz` |
 
-文件名例如 `dlt698-1.0.0-windows-x64-msvc-shared.zip`。每个包均含全部五个库组件、公开头文件（包括生成的导出头）、CMake 配置、项目与 Asio 许可证、`VERSION` 和 README；不含测试和示例程序。静态与动态包各有独立安装前缀，不能混合覆盖。Unix 解压请保留共享库符号链接。
+文件名例如 `dlt698-1.0.0-windows-x64-msvc-shared.zip`。每个包均含一个 `dlt698` 库、公开头文件（包括生成的导出头）、CMake 配置、项目与 Asio 许可证、`VERSION` 和 README；不含测试和示例程序。静态与动态包各有独立安装前缀，不能混合覆盖。Unix 解压请保留共享库符号链接。
 
 解压后将包根目录加入 `CMAKE_PREFIX_PATH`，再使用下面的 `find_package` / `target_link_libraries`。Windows 需兼容的 MSVC 工具链和运行库，动态包的 `bin/` 中 DLL 需放在程序旁边或加入 `PATH`。Linux 需兼容构建环境的 glibc、libstdc++；各系统的 C++ ABI 不保证跨工具链兼容。本地打包生成的独立 `.sha256` 文件可用于校验压缩包。
 
@@ -179,15 +179,13 @@ find_package(dlt698 1.0 CONFIG REQUIRED)
 target_link_libraries(your_app PRIVATE dlt698::dlt698)
 ```
 
-| 目标 | 用途 |
+| CMake 目标 | 当前内容 |
 | --- | --- |
-| `dlt698::core` | 编解码、执行器、内存通道、SerialLinkChannel |
-| `dlt698::session` | 会话、同步 / 异步服务 |
-| `dlt698::service` | 对象服务与 provider 分发 |
-| `dlt698::transport` | TCP 与原始串口（需开启传输构建） |
-| `dlt698::app` | 托管 TCP/串口两端，直接发布数据或连接读写（需开启传输构建） |
+| `dlt698::dlt698` | 单一库，包含编解码、内存通道、会话、对象服务，以及启用时的 TCP/串口和托管 Server/Client |
 
-各目标自动传递其依赖。Windows 共享库运行时需将安装目录的 DLL 放在程序旁边或加入 PATH。
+旧组件名称 `dlt698::core`、`dlt698::session`、`dlt698::service` 保留为统一库的兼容别名；启用传输时也提供 `dlt698::transport` 和 `dlt698::app` 别名，均不生成独立库。
+
+默认动态构建在 Windows 生成 `dlt698.dll` 和导入库 `dlt698.lib`，Linux/macOS 生成 `libdlt698.so` / `libdlt698.dylib`。Windows 共享库运行时需将安装目录的 DLL 放在程序旁边或加入 PATH。
 
 ## 示例程序
 

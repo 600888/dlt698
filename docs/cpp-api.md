@@ -10,12 +10,9 @@
 
 | CMake 目标 | 当前内容 |
 | --- | --- |
-| `dlt698::core` | 基础模型、Data/帧/APDU codec、ManualExecutor、IChannel、MemoryChannel、SerialLinkChannel |
-| `dlt698::session` | Session，公开依赖 core |
-| `dlt698::service` | ObjectRegistry、MemoryObject、ClientService、ServerService、SyncClientService，公开依赖 session |
-| `dlt698::transport` | IoRuntime、TCP 通道/监听器、原始 SerialChannel；仅在启用传输构建时提供 |
-| `dlt698::app` | Server/Client 托管 TCP/串口、关联、线程、数据发布和同步请求；仅在启用传输构建时提供 |
-| `dlt698::dlt698` | 聚合 core/session/service，以及启用时的 transport/app |
+| `dlt698::dlt698` | 单一库，包含编解码、内存通道、会话、对象服务，以及启用时的 TCP/串口和托管 Server/Client |
+
+旧组件名称 `dlt698::core`、`dlt698::session`、`dlt698::service` 保留为统一库的兼容别名；启用传输时也提供 `dlt698::transport` 和 `dlt698::app` 别名，均不生成独立库。
 
 `DLT698_BUILD_TRANSPORT=OFF` 不会移除内存通道、会话或对象服务。静态/共享目标均有安装导出；MSVC 的 `/utf-8` 编译选项会传递给安装包调用方。生产方和消费方须使用兼容编译器、标准库和运行库，MSVC 与 MinGW 库不可混用；共享库不承诺跨工具链 C++ ABI。Asio 类型只出现在实现文件，消费方不需要 Asio 头文件。
 

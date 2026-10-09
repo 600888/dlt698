@@ -60,7 +60,7 @@ PyPI 上传不是整个版本的原子操作，网络中断可能只上传部分
 
 ```text
 include/dlt698/       公开头文件和生成的导出头
-lib/                 五个组件的静态库、共享库或 Windows 导入库
+lib/                 单一 dlt698 静态库、共享库或 Windows 导入库
 lib/cmake/dlt698/     find_package 配置和导出目标
 bin/                 Windows 动态包中的 DLL
 share/dlt698/        项目和 Asio 许可证
@@ -77,7 +77,7 @@ sha256sum --check dlt698-1.0.0-linux-x64-gcc-static.tar.gz.sha256
 cmake -S your-app -B your-app/build -DCMAKE_PREFIX_PATH=/absolute/path/to/dlt698-1.0.0-linux-x64-gcc-static
 ```
 
-消费方通过 `find_package(dlt698 CONFIG REQUIRED)` 和 `dlt698::dlt698`（或细分组件）链接。工具链、运行库和 ABI 要求见 [README](../README.md#预编译发布包)。
+消费方通过 `find_package(dlt698 CONFIG REQUIRED)` 和 `dlt698::dlt698`链接。工具链、运行库和 ABI 要求见 [README](../README.md#预编译发布包)。
 
 ## 本地打包
 
@@ -92,4 +92,4 @@ cmake -DBUILD_DIR=build/release-local -DOUTPUT_DIR=build/release-local/packages 
 
 `PLATFORM` 按实际工具链选择 `linux-x64-gcc`、`linux-arm64-gcc`、`windows-x64-msvc`、`macos-x64-appleclang` 或 `macos-arm64-appleclang`。动态构建需同时设置 `BUILD_SHARED_LIBS=ON`、`LINKAGE=shared`；Windows 使用 Visual Studio 生成器及 `-A x64 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL`。
 
-打包脚本调用 `cmake --install`，检查五个组件的库、导出头、CMake 配置和许可证是否齐全，再生成压缩包及独立 `.sha256` 文件。Unix 使用 tar.gz 保留版本化共享库符号链接，Windows 使用 zip。脚本拒绝复用已有的 `release-stage/<包名>` 目录，重新打包时请使用新的构建目录，或先手动清理该暂存目录。
+打包脚本调用 `cmake --install`，检查统一 dlt698 库、导出头、CMake 配置和许可证是否齐全，再生成压缩包及独立 `.sha256` 文件。Unix 使用 tar.gz 保留版本化共享库符号链接，Windows 使用 zip。脚本拒绝复用已有的 `release-stage/<包名>` 目录，重新打包时请使用新的构建目录，或先手动清理该暂存目录。

@@ -60,7 +60,7 @@ int main() {
                 .as<dlt698::model::UInt16>()
                 .value != 5000)
         return 20;
-    // 新目录由 core 导出，绑定辅助由 service 导出；安装后的中文头文件需继承 /utf-8。
+    // 目录和绑定辅助均由统一库导出；安装后的中文头文件需继承 /utf-8。
     namespace oi = dlt698::standard::oi;
     // 安装后的轻量头文件可在编译期使用常量构造 OAD。
     constexpr dlt698::model::Oad voltage_point{oi::voltage, 2, 1};

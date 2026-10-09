@@ -32,18 +32,13 @@ find_package(dlt698 1.0 CONFIG REQUIRED)
 target_link_libraries(your_app PRIVATE dlt698::dlt698)
 ```
 
-按需选择更细的导出目标，各目标会自动传递其依赖：
-
 | CMake 目标 | 当前内容 |
 | --- | --- |
-| `dlt698::core` | 基础模型、Data/帧/APDU codec、ManualExecutor、IChannel、MemoryChannel、SerialLinkChannel |
-| `dlt698::session` | Session，公开依赖 core |
-| `dlt698::service` | ObjectRegistry、MemoryObject、ClientService、ServerService、SyncClientService，公开依赖 session |
-| `dlt698::app` | 托管 Server/Client，公开依赖 service/transport，仅启用传输构建时提供 |
-| `dlt698::transport` | IoRuntime、TCP 通道/监听器、原始 SerialChannel；仅在启用传输构建时提供 |
-| `dlt698::dlt698` | 聚合 core/session/service，以及启用时的 transport/app |
+| `dlt698::dlt698` | 单一库，包含编解码、内存通道、会话、对象服务，以及启用时的 TCP/串口和托管 Server/Client |
 
-只使用编解码、虚拟执行器和内存通道时链接 `dlt698::core` 就够了。
+旧组件名称 `dlt698::core`、`dlt698::session`、`dlt698::service` 保留为统一库的兼容别名；启用传输时也提供 `dlt698::transport` 和 `dlt698::app` 别名，均不生成独立库。
+
+默认构建单一动态库；设置 `BUILD_SHARED_LIBS=OFF` 可生成单一静态库。
 
 ## 调用方注意事项
 

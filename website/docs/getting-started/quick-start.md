@@ -5,7 +5,7 @@ description: 用托管服务器直接发布数据，也可通过内存示例了�
 
 # 第一个程序
 
-普通服务端使用 `<dlt698/app.hpp>` 和 `dlt698::app`：创建服务器、设置数据、启动即可，库管理监听、连接、会话和运行线程。
+普通服务端使用 `<dlt698/app.hpp>` 和 `dlt698::dlt698`：创建服务器、设置数据、启动即可，库管理监听、连接、会话和运行线程。
 
 ```cpp
 #include <dlt698/app.hpp>
@@ -32,7 +32,7 @@ int main() {
 
 ```cmake
 find_package(dlt698 1.0 CONFIG REQUIRED)
-target_link_libraries(your_app PRIVATE dlt698::app)
+target_link_libraries(your_app PRIVATE dlt698::dlt698)
 ```
 
 构建后运行 `dlt698_server`，或 `dlt698_server COM3`。默认 TCP 会自动 LINK 登录并等待客户端 CONNECT；本地和预设关联、共享设备、布局/预算及退出约定见[托管服务器与设备数据](../session/server.md)。

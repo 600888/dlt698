@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "headers": {
-    "cpp/include/dlt698/app/client.hpp": "deed0b69a85308f0f7c4082042b8ef86c90d091cf7dd1910aabfc50a36fc15b2",
+    "cpp/include/dlt698/app/client.hpp": "3f5dcd811d43bfbaefbeaf2322a3110db168036363ffb4a7bed719099544a270",
     "cpp/include/dlt698/app/connection.hpp": "ec7cb0c6e8a9e6023aedd64eaab64d08cd61cfd56f376e171863b1d1fdc84a87",
-    "cpp/include/dlt698/app/server.hpp": "f22cb0eccab2834108010c690ab1cdeee68de2fcc59eeee4e2fab4fab80ab429",
+    "cpp/include/dlt698/app/server.hpp": "bf6d52cf43eac919c0bc72e1629cd146ac6403fb8f164cbc90f1499344384f46",
     "cpp/include/dlt698/app.hpp": "1f00f357cd3e79f26ec4fdc9996a0560e619f72e8843c39a43f91eb709758e09",
     "cpp/include/dlt698/codec/data_codec.hpp": "73ae5389910ee7d6915e33eccfd5b6c1b0664a90d48bcba3c6ce12512e15646d",
     "cpp/include/dlt698/codec/record_codec.hpp": "4b38e8595fffaaef5495dc042b30c1bb07216b3bc4e5ceef62314f38a1c6c3f4",
@@ -25,15 +25,15 @@
     "cpp/include/dlt698/protocol/link/fragment.hpp": "30cee08ada77b00b91efa6156729ec010967565340ff9f4017e8a4c6e880dc36",
     "cpp/include/dlt698/protocol/link/frame.hpp": "ab911f17ce2a4218777bb942667f3da853155240e3ca9f73f4693edb33340722",
     "cpp/include/dlt698/security/backend.hpp": "c7b17049b7f9a3a7d62df8c8f9518b9c96cf35d8bca92c366e61c6c88ef16551",
-    "cpp/include/dlt698/service/advanced.hpp": "00b1139cee3db03cc84521edc232b8eab66f97caf999ca3aea4777294af03a44",
-    "cpp/include/dlt698/service/device.hpp": "9f9f41331429d1db78384da2cac5f793cc6161bbf5f39016a1f7768395fb405f",
-    "cpp/include/dlt698/service/memory_records.hpp": "4d3b8d673917b8970ebc88ae03186255eab6d7c5efb140980c9dab20a6aa4c77",
-    "cpp/include/dlt698/service/object.hpp": "1a96063c45198ed507cbdd8519dd7fe0cd3cc718067cdb256d67984360751b7d",
-    "cpp/include/dlt698/service/point_probe.hpp": "7eb029860db4891fe2563c1f7ddfd48768bfaec99ee0ba02e0eed4025a13dab0",
-    "cpp/include/dlt698/service/service.hpp": "684a964f6dbc60692627d6858944f7c9e86672c7d8827e9ab1ac3b26883dc972",
-    "cpp/include/dlt698/service/standard_object.hpp": "3dcea17f55649e9b68a70fc646a6e2e635f97cf951362bf2232097b21fa5d734",
-    "cpp/include/dlt698/service/sync.hpp": "d8086b0804855049b06410eea624816cd27ab4eed938b715816b12b54d54f300",
-    "cpp/include/dlt698/session/session.hpp": "57f91aab44c64afffa1cbb5be4d1e3d4fb109ce0e3ddd5bcc8c35a27f1445015",
+    "cpp/include/dlt698/service/advanced.hpp": "fbdd06b85ede79edf074db703148532cee61940047cc0366727797296079a9e0",
+    "cpp/include/dlt698/service/device.hpp": "fa1381ea200bbe8bb0f0c65fcfe6e7df5c91054d3cec8162d3c76eb411a6d824",
+    "cpp/include/dlt698/service/memory_records.hpp": "9cca3bb9dddbd3e7207662f0ffecabf92bb0d722292ae8555d1c40535b8ebae4",
+    "cpp/include/dlt698/service/object.hpp": "01371a43fd027f16a7566931773f263035f99ffbe3012712f88dfb52e9f5cf9a",
+    "cpp/include/dlt698/service/point_probe.hpp": "2232fa670c8b6c4ec3d672fb8c1e4a1f685d3a2c3ba9442d35dac4ef87a606b6",
+    "cpp/include/dlt698/service/service.hpp": "325507767b2398f6384160cc13534291944f09e49ccb0d3216e102aa71a81b2e",
+    "cpp/include/dlt698/service/standard_object.hpp": "f91aa3e9fdee86defa1bede0e36ae2b9d5acf1fb76938a2a5adf2b17d187911d",
+    "cpp/include/dlt698/service/sync.hpp": "649ebc6f1d1f4a35627140d326d99730f1e1fd5e163535d8d46acafe5c884832",
+    "cpp/include/dlt698/session/session.hpp": "668d3270807b081073ea20c27d33120b9a8952ab09b2b048a2c9a3498b9902c3",
     "cpp/include/dlt698/session/traffic.hpp": "6fb82fa1406f9fdb360d8745f5578bdc0a9264b498a340a93104fe43df2e6d39",
     "cpp/include/dlt698/standard/capabilities.hpp": "7e3e38b9f4b85824a7537e4a19a73c83af62323a03cd6286de72c809059dd40c",
     "cpp/include/dlt698/standard/catalog.hpp": "edbef8c116a90bf9bcbd6854ec0050d37b8cffffe1d8a730dd983e748925e286",
@@ -41,9 +41,9 @@
     "cpp/include/dlt698/standard/records.hpp": "abfbd1cff5b4e2ed42fae206ad15d9eadda1960430aead7b0f886ae7a1e430a4",
     "cpp/include/dlt698/transport/channel.hpp": "8939faef7527b0e3441a0e5c1aa2d17de8cd8cd4c35c91d66e9ec00e6ef901d2",
     "cpp/include/dlt698/transport/memory.hpp": "9c125e5617cefe274073fa03861cf75e0cd18c9c959893a50582a2722ecfd955",
-    "cpp/include/dlt698/transport/serial.hpp": "bcd90edb990d30a4f4b04675f285f43184229d79f7599a19539563d1ed2c3c36",
+    "cpp/include/dlt698/transport/serial.hpp": "386dd13150a66a166df6b5cdf51428fcfc144a21bd9ea126493f084b4ccd6c16",
     "cpp/include/dlt698/transport/serial_link.hpp": "93271932a899faff17ca28564a535febb8e902d487d1f34fa049e4f20ca57664",
-    "cpp/include/dlt698/transport/tcp.hpp": "f0bfb40a63f4a211783fd03c97623fd274488605bf61ad50ea6c88a27c24f870"
+    "cpp/include/dlt698/transport/tcp.hpp": "c6062422474280c03467b8360b96f6ca6f22bad5d97315048add424ef97d156e"
   },
   "entries": [
     {
@@ -20562,7 +20562,7 @@
     {
       "cpp": "dlt698::service::IObjectProvider",
       "kind": "CLASS_DECL",
-      "signature": "class DLT698_SERVICE_API IObjectProvider",
+      "signature": "class DLT698_API IObjectProvider",
       "header": "cpp/include/dlt698/service/object.hpp",
       "python": "dlt698._native.ObjectProvider",
       "status": "exposed",
@@ -20640,7 +20640,7 @@
     {
       "cpp": "dlt698::service::IProxyProvider",
       "kind": "CLASS_DECL",
-      "signature": "class DLT698_SERVICE_API IProxyProvider",
+      "signature": "class DLT698_API IProxyProvider",
       "header": "cpp/include/dlt698/service/advanced.hpp",
       "python": "dlt698._native.ProxyProvider",
       "status": "exposed",

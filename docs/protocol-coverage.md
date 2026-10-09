@@ -24,7 +24,7 @@
 | 连接与异常 APDU | LINK/CONNECT/RELEASE/ERROR 双向 codec 已实现 | LINK 不附加 Client/Server 尾部；认证机制仅表示线格式 | connection，附录 D.1/D.2 及规范构造向量 |
 | 异步执行器 | ManualExecutor、IoRuntime::executor 已实现 | 串行投递与单调计时；应用负责驱动，没有隐藏工作线程 | session、tcp，取消/异常/销毁 |
 | 内存通道 | MemoryChannel 已实现 | 分块读取，接收缓存及投递前写字节/条数预算；无部分写入 | session，缓存/待写超限、EOF、未驱动销毁 |
-| 安装包 | 静态/共享目标已实现 | 导出 core/session/service/transport/聚合目标；不安装 Asio 头文件，MSVC 传递 /utf-8 | installed_consumer |
+| 安装包 | 静态/共享目标已实现 | 导出单一 dlt698 库及旧组件兼容别名；不安装 Asio 头文件，MSVC 传递 /utf-8 | installed_consumer |
 | 预连接与应用会话 | 基础 Session 已实现 | 公共 CONNECT、版本/能力/尺寸协商、单次/自动周期 LINK、预设连接、RELEASE/闲置通知；精确单地址、单在途事务 | session、tcp，两种拨号方向 |
 | 请求路由与生命周期 | 已实现基础行为 | SA/CA/DIR/PRM/PIID/OAD/列表匹配、序号隔离、超时/取消关闭、重入；自动周期心跳、日历 TimeTag 判断/回传及响应匹配已实现 | session，错配/重复/迟到/耗尽/时钟异常/析构 |
 | ClientService/ServerService/providers | GET/SET/ACTION 普通、列表及记录异步服务已实现 | 每项 Data/DAR/可选 Data，按顺序独立执行；超时后远端副作用结果未知 | mutation、session、tcp、内存示例 |
