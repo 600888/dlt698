@@ -1,12 +1,12 @@
 # 版本与二进制发布
 
-`.github/workflows/release.yml` 构建一个 Python sdist，并从同一份 sdist 为五个平台 / 架构组合、四个 CPython 版本构建 20 个 wheel：Linux x64/ARM64、Windows x64、macOS Intel/Apple Silicon，CPython 3.11–3.14。发布前检查制品矩阵完整性、版本、提交、源码与 API 摘要，并生成发布清单和校验和。
+`.github/workflows/release.yml` 为 Linux x64/ARM64、Windows x64、macOS Intel/Apple Silicon 五个平台 / 架构组合分别构建静态库和动态库，共发布 10 个 C++ SDK 压缩包。Windows 使用 `.zip`，Linux/macOS 使用 `.tar.gz`；每个包均含 `include/` 公开头文件、对应库、CMake 配置和许可证。发布前检查完整矩阵与每个包的校验和，并生成 `release-manifest.json` 和 `SHA256SUMS`。
 
-C++ 动静态库构建和测试由普通提交的 `cpp-ci.yml` 执行，Python 契约与互操作检查由 `python-ci.yml` 执行。Release 不再重复调用 Python CI，也不再构建或上传独立 C++ 库包。
+普通提交的 `cpp-ci.yml` 继续执行 C++ 动静态库构建和测试，`python-ci.yml` 继续执行 Python 契约与互操作检查。Release 的 C++ 矩阵会运行现有 CTest，包括安装目录迁移后的消费方构建与运行，再调用 `cmake/release-package.cmake` 打包。Python sdist 和 20 个 wheel 仍由各自任务构建，仅保存为 Actions artifacts 并供 PyPI 发布，不上传到 GitHub Release。
 
 ## 发布版本
 
-推荐修改根目录 `VERSION` 为新的 `X.Y.Z`（例如 `0.1.1`），将变更合入 `main`。CI 自动生成 `v0.1.1` 标签、GitHub Release、更新说明、20 个 wheel、1 个 sdist、`release-manifest.json` 和 `SHA256SUMS`。标签绑定到触发构建的提交，不会使用构建完成时的新 `main` 提交。
+推荐修改根目录 `VERSION` 为新的 `X.Y.Z`（例如 `0.1.1`），将变更合入 `main`。CI 自动生成 `v0.1.1` 标签、GitHub Release、更新说明、10 个 C++ SDK 压缩包、各包的 `.sha256`、`release-manifest.json` 和 `SHA256SUMS`。标签绑定到触发构建的提交，不会使用构建完成时的新 `main` 提交。
 
 也可主动推送标签来发布当前版本，包括首次发布：
 
@@ -26,7 +26,7 @@ git push origin v0.1.0
 
 ## 自动发布到 PyPI
 
-GitHub Release 成功后，`publish-pypi` 任务从已公开的 Release 下载同一批 20 个 wheel、1 个 sdist、发布清单和 `SHA256SUMS`，先检查原始校验和，再核对版本、提交与完整矩阵。仅 wheel 和 sdist 会进入 PyPI 上传目录；任务不会重新构建发行包。PR 和手动验证运行不发布到 PyPI，GitHub Release 失败时也不会执行 PyPI 发布。
+GitHub Release 成功且 Python 构建完成后，`publish-pypi` 任务从本次运行的 Actions artifacts 下载 20 个 wheel 和 1 个 sdist，核对完整矩阵、版本、提交、源码与 API 摘要，再生成并检查 Python 发布清单和校验和。仅 wheel 和 sdist 会进入 PyPI 上传目录；任务不会重新构建发行包，也不下载 C++ SDK。PR 和手动验证运行不发布到 PyPI，GitHub Release 失败时也不会执行 PyPI 发布。
 
 首次启用前，需要完成以下账户配置：
 
@@ -44,19 +44,19 @@ GitHub Release 成功后，`publish-pypi` 任务从已公开的 Release 下载�
 
 任务通过 `id-token: write` 获取 OIDC 身份，并使用 `pypa/gh-action-pypi-publish` 交换短期上传凭据，无需设置 `PYPI_API_TOKEN` 或账户密码。权限仅授予 PyPI 发布任务。配置方式见 [已有项目的 Trusted Publisher](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) 和 [首次创建项目的 pending publisher](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/)。
 
-PyPI 上传不是整个版本的原子操作，网络中断可能只上传部分文件；修复配置或网络问题后，在原运行中重跑失败任务即可继续。`skip-existing: true` 保留 PyPI 已有的同名文件，补传其余发行包；不会覆盖已有文件。同版本的 PyPI 发布串行执行，重跑始终使用 GitHub Release 的原始附件。若 PyPI 的同名文件并非本次 Release 的产物，不能用重跑替换，须提升 `VERSION`。
+PyPI 上传不是整个版本的原子操作，网络中断可能只上传部分文件；修复配置或网络问题后，在原运行中重跑失败任务即可继续。`skip-existing: true` 保留 PyPI 已有的同名文件，补传其余发行包；不会覆盖已有文件。同版本的 PyPI 发布串行执行，重跑失败的 PyPI 任务复用本次运行的 Actions artifacts；这些产物受仓库保留期限限制，过期后无法直接重跑发布任务。若 PyPI 的同名文件并非本次运行的产物，不能用重跑替换，须提升 `VERSION`。
 
 合入新增 PyPI 任务的提交后，需要发布包含此工作流的新版本；重跑旧 `v1.0.0` 运行仍会使用旧工作流，不会新增 PyPI 任务。完成真实发布后，用户可使用 `python -m pip install dlt698` 安装。账户授权与实际 PyPI 上传需在 GitHub Actions 中验收，本地检查不能代替。
 
 ## 发布前验证
 
-在 Actions 中手动运行 **Release** 会构建 sdist，并构建和测试当前选中 ref 的 wheel，仅上传 Actions artifacts，不创建标签或 Release。涉及版本、工作流或 Python/C++ 源码的 PR 也会运行相同构建。Actions artifacts 使用仓库默认保留期限，正式 Release 的附件不受此期限影响。
+在 Actions 中手动运行 **Release** 会构建和测试当前选中 ref 的 10 个 C++ SDK 包，同时构建供 PyPI 使用的 sdist 和 wheel；仅上传 Actions artifacts，不创建标签或 Release。涉及版本、工作流、CMake 或 Python/C++ 源码的 PR 也会运行相同构建。Actions artifacts 使用仓库默认保留期限，正式 Release 的附件不受此期限影响。
 
-下载后先用 `sha256sum --check --ignore-missing SHA256SUMS` 校验，再用 `python -m pip install <wheel路径>` 安装匹配平台和解释器的 wheel。macOS 可用 `shasum -a 256 -c SHA256SUMS`，Windows 可用 PowerShell `Get-FileHash <包路径> -Algorithm SHA256` 比对对应条目。
+从 Release 下载 C++ 包后，用 `sha256sum --check --ignore-missing SHA256SUMS` 校验；只下载单个包或从 Actions 下载时，可用其独立 `.sha256` 校验。macOS 可用 `shasum -a 256 -c <包名>.sha256`，Windows 可用 PowerShell `Get-FileHash <包路径> -Algorithm SHA256` 比对对应条目。随后解压并使用下面的 `CMAKE_PREFIX_PATH` 接入。
 
-## 本地 C++ 包布局与使用
+## C++ 包布局与使用
 
-使用下面的本地打包命令生成的 C++ 包具有一个 `dlt698-<版本>-<平台>-<库类型>/` 根目录：
+Release 与本地打包生成的 C++ 包具有一个 `dlt698-<版本>-<平台>-<库类型>/` 根目录：
 
 ```text
 include/dlt698/       公开头文件和生成的导出头

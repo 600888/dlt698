@@ -10,7 +10,7 @@ python -m venv .venv
 .venv/Scripts/python -m pytest python/tests
 ```
 
-从联合 GitHub Release 下载对应解释器和平台的 wheel 后，使用 `python -m pip install 文件名.whl`。源码开发也支持上面的 editable 安装；构建后端固定为 scikit-build-core 0.11.6，pybind11 使用仓库内 3.1.0。包没有运行时第三方 Python 依赖。源码包自带内核与需要的第三方头文件，无 Git 也可重建。
+通过 `python -m pip install dlt698` 从 PyPI 安装，或从 Release 工作流的 Actions artifacts 下载对应解释器和平台的 wheel 后，使用 `python -m pip install 文件名.whl`。源码开发也支持上面的 editable 安装；构建后端固定为 scikit-build-core 0.11.6，pybind11 使用仓库内 3.1.0。包没有运行时第三方 Python 依赖。源码包自带内核与需要的第三方头文件，无 Git 也可重建。
 
 ```python
 from dlt698 import Client, Data, Oad, Server
@@ -187,14 +187,14 @@ MD5/ThenGet/PROXY，executor 必须与会话一致，transparent 为可选 Trans
 
 根 CMake 和 `cpp/` 不查找 Python 或 pybind11。Python 单独从 `python/CMakeLists.txt` 构建，并在自己的构建树静态链接 core/session/service/transport/app；`/utf-8` 沿用原生目标。wheel 不依赖外部 dlt698 DLL/SDK。Windows 仍需系统支持的 MSVC 运行时，Linux 使用 manylinux 2.28 基线。
 
-## 同步检查与联合发布
+## 同步检查与发布
 
 唯一版本源是根 `VERSION`。包 metadata、原生扩展和包装层构建记录在 import 时一致性校验；正式构建还要求干净提交、源码摘要和绑定清单摘要。sdist 保存身份并在无 Git 重建前核对源码，拒绝修改后的源码冒充原归档。
 
 `tools/api_contract.py --runtime` 核对公开头文件摘要及实际绑定；`tools/ast_inventory.py` 核对全部公开声明、重载、成员、枚举和默认参数；`tools/generate_stubs.py --check` 核对已安装扩展与冻结类型声明。修改 C++ 公开契约后必须同时审核对应清单、绑定、stub 与相关测试，再显式更新清单。
 
-`.github/workflows/python-ci.yml` 在普通提交中执行安装、向量、类型、格式、AST、C++ 双向互操作及无 Git sdist 重建检查。`release.yml` 使用 `release-matrix.json` 的五个平台、四个 CPython 版本构建 20 个 wheel、1 个 sdist，不再重复调用 Python CI 或构建独立 C++ 动静态库包。所有 Python 制品必须满足完整矩阵，且同版本、同提交、同源码与 API 摘要，才能把草稿 Release 公开。发布清单和 SHA256SUMS 随制品交付。
+`.github/workflows/python-ci.yml` 在普通提交中执行安装、向量、类型、格式、AST、C++ 双向互操作及无 Git sdist 重建检查。`release.yml` 使用 `release-matrix.json` 的五个平台、四个 CPython 版本构建 20 个 wheel、1 个 sdist，保存为 Actions artifacts 并供 PyPI 发布。所有 Python 制品必须满足完整矩阵，且同版本、同提交、同源码与 API 摘要，才能上传到 PyPI。GitHub Release 另行发布带公开头文件的 C++ 动静态库压缩包。
 
-Python 单独修复也提升共享 `VERSION` 并重建两端；不使用 Python 专属标签、post 版本或覆盖公开制品。正式发布先公开 GitHub Release，再通过独立任务将同一批已校验的 wheel 和 sdist 上传到 PyPI；首次启用需按 [PyPI 发布配置](../docs/releasing.md#自动发布到-pypi) 注册 Trusted Publisher。PR 和手动验证运行仅构建 Actions 产物。非 CPython、free-threaded 和子解释器尚未开放；新平台需共同版本验收后加入。
+Python 单独修复也提升共享 `VERSION` 并重建两端；不使用 Python 专属标签、post 版本或覆盖公开制品。正式发布先公开 C++ GitHub Release，再通过独立任务从本次 Actions artifacts 取得已校验的 wheel 和 sdist 并上传到 PyPI；首次启用需按 [PyPI 发布配置](../docs/releasing.md#自动发布到-pypi) 注册 Trusted Publisher。PR 和手动验证运行仅构建 Actions 产物。非 CPython、free-threaded 和子解释器尚未开放；新平台需共同版本验收后加入。
 
 本地已执行范围与外部待验收项目见 [验证记录](verification.md)。文档中的完整矩阵是 CI 发布目标，不能据此声称本机已经验证 Linux、macOS 或其他解释器。

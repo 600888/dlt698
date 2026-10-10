@@ -9,10 +9,16 @@ on:
     paths:
       - VERSION
       - .github/workflows/release.yml
+      - CMakeLists.txt
+      - cmake/**
+      - LICENSE
+      - .clang-format
       - pyproject.toml
       - python/**
       - cpp/**
       - tests/vectors/**
+      - third/asio/**
+      - third/Catch2/**
       - third/pybind11/**
   # 手动运行只构建和上传 Actions 产物，便于正式发布前验证。
   workflow_dispatch:
@@ -63,6 +69,61 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+  cpp-packages:
+    name: C++ SDK (${{ matrix.platform }}, ${{ matrix.linkage }})
+    needs: version
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [linux-x64-gcc, linux-arm64-gcc, windows-x64-msvc, macos-x64-appleclang, macos-arm64-appleclang]
+        linkage: [static, shared]
+        include:
+          - platform: linux-x64-gcc
+            os: ubuntu-22.04
+            cmake_args: ''
+          - platform: linux-arm64-gcc
+            os: ubuntu-22.04-arm
+            cmake_args: ''
+          - platform: windows-x64-msvc
+            os: windows-2022
+            cmake_args: '-G "Visual Studio 17 2022" -A x64 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL'
+          - platform: macos-x64-appleclang
+            os: macos-15-intel
+            cmake_args: '-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0'
+          - platform: macos-arm64-appleclang
+            os: macos-15
+            cmake_args: '-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0'
+          - linkage: static
+            shared: 'OFF'
+          - linkage: shared
+            shared: 'ON'
+    steps:
+      - uses: actions/checkout@v6
+      - name: Configure C++ Release library
+        shell: bash
+        run: >-
+          cmake -S . -B build/release
+          -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=${{ matrix.shared }}
+          -DBUILD_TESTING=ON -DDLT698_BUILD_TRANSPORT=ON -DDLT698_BUILD_EXAMPLES=OFF
+          -DCMAKE_INSTALL_LIBDIR=lib ${{ matrix.cmake_args }}
+      - name: Build
+        run: cmake --build build/release --config Release --parallel 2
+      - name: Test C++ library and relocated installed consumer
+        run: ctest --test-dir build/release -C Release --output-on-failure
+      - name: Package public headers and native library
+        run: >-
+          cmake -DBUILD_DIR=build/release -DOUTPUT_DIR=release-assets
+          -DPLATFORM=${{ matrix.platform }} -DLINKAGE=${{ matrix.linkage }}
+          -P cmake/release-package.cmake
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dlt698-${{ needs.version.outputs.version }}-cpp-${{ matrix.platform }}-${{ matrix.linkage }}
+          path: release-assets/*
+          if-no-files-found: error
+          compression-level: 0
+
   python-sdist:
     needs: version
     runs-on: ubuntu-22.04
@@ -112,7 +173,7 @@ jobs:
 
   publish:
     if: github.event_name == 'push'
-    needs: [version, python-sdist, python-wheels]
+    needs: [version, cpp-packages]
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -126,18 +187,16 @@ jobs:
           fetch-depth: 0
       - uses: actions/download-artifact@v8
         with:
-          pattern: dlt698-${{ needs.version.outputs.version }}-*
+          pattern: dlt698-${{ needs.version.outputs.version }}-cpp-*
           path: release-assets
           merge-multiple: true
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.11'
-      - name: Verify complete same-version Python artifacts and collect checksums
+      - name: Verify complete C++ SDK matrix and collect checksums
         shell: bash
         run: |
-          python python/tools/joint_manifest.py release-assets --python-only \
-            --version '${{ needs.version.outputs.version }}' \
-            --commit '${{ needs.version.outputs.commit }}'
+          cmake -DASSET_DIR=release-assets \
+            -DRELEASE_VERSION='${{ needs.version.outputs.version }}' \
+            -DRELEASE_COMMIT='${{ needs.version.outputs.commit }}' \
+            -P cmake/release-manifest.cmake
           cd release-assets
           sha256sum --check SHA256SUMS
       - name: Publish GitHub Release
@@ -172,14 +231,14 @@ jobs:
           fi
           # 先上传至草稿，全部成功后再公开；失败后重跑可继续上传。
           gh release upload "$RELEASE_TAG" release-assets/*.tar.gz \
-            release-assets/*.whl \
+            release-assets/*.zip release-assets/*.sha256 \
             release-assets/release-manifest.json release-assets/SHA256SUMS --clobber
           gh release edit "$RELEASE_TAG" --draft=false
 
   publish-pypi:
     name: Publish Python distributions to PyPI
     if: github.event_name == 'push'
-    needs: [version, publish]
+    needs: [version, python-sdist, python-wheels, publish]
     runs-on: ubuntu-22.04
     environment:
       name: pypi
@@ -198,28 +257,26 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Download published GitHub Release assets
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ needs.version.outputs.tag }}
-        run: |
-          # 复用已公开的附件，重跑时也不把重新构建的文件混入同一版本。
-          gh release download "$RELEASE_TAG" --dir release-assets \
-            --pattern '*.whl' --pattern '*.tar.gz' \
-            --pattern release-manifest.json --pattern SHA256SUMS
+      # Python 发行包直接复用本次 Actions 构建，不作为 GitHub Release 附件。
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: dlt698-${{ needs.version.outputs.version }}-wheels-*
+          path: python-assets
+          merge-multiple: true
+      - uses: actions/download-artifact@v8
+        with:
+          name: dlt698-${{ needs.version.outputs.version }}-sdist
+          path: python-assets
       - name: Verify and stage Python distributions
         shell: bash
         run: |
-          # 先核对 Release 原始校验和，再检查完整矩阵及构建身份。
-          (cd release-assets && sha256sum --check SHA256SUMS)
-          python python/tools/joint_manifest.py release-assets --python-only \
+          python python/tools/joint_manifest.py python-assets --python-only \
             --version '${{ needs.version.outputs.version }}' \
             --commit '${{ needs.version.outputs.commit }}'
-          # PyPI 仅接收发行包，发布清单和校验和保留在 GitHub Release。
+          (cd python-assets && sha256sum --check SHA256SUMS)
+          # PyPI 仅接收 Python 发行包，不能混入 C++ SDK 压缩包。
           mkdir dist
-          cp release-assets/*.whl release-assets/*.tar.gz dist/
+          cp python-assets/*.whl python-assets/*.tar.gz dist/
       - name: Publish to PyPI with Trusted Publishing
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

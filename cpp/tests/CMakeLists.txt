@@ -72,3 +72,8 @@ configure_file(package_test.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/package_test.c
 add_test(NAME installed_consumer COMMAND ${CMAKE_COMMAND}
     -DCONFIG=$<CONFIG> -P "${CMAKE_CURRENT_BINARY_DIR}/package_test.cmake")
 set_tests_properties(installed_consumer PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
+
+add_test(NAME release_manifest COMMAND ${CMAKE_COMMAND}
+    "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/release-manifest-test"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/tests/release-manifest-test.cmake")
+set_tests_properties(release_manifest PROPERTIES TIMEOUT 30)
