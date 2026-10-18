@@ -18,3 +18,4 @@ __pycache__/
 /.mypy_cache/
 /.pytest_cache/
 CMakeUserPresets.json
+.clangd

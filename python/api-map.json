@@ -33,7 +33,7 @@
     "cpp/include/dlt698/service/service.hpp": "325507767b2398f6384160cc13534291944f09e49ccb0d3216e102aa71a81b2e",
     "cpp/include/dlt698/service/standard_object.hpp": "f91aa3e9fdee86defa1bede0e36ae2b9d5acf1fb76938a2a5adf2b17d187911d",
     "cpp/include/dlt698/service/sync.hpp": "649ebc6f1d1f4a35627140d326d99730f1e1fd5e163535d8d46acafe5c884832",
-    "cpp/include/dlt698/session/session.hpp": "4ef3b32fc52e1d337be249aae62c7cee70d80f967901ea2ac41c239b3e826a33",
+    "cpp/include/dlt698/session/session.hpp": "668d3270807b081073ea20c27d33120b9a8952ab09b2b048a2c9a3498b9902c3",
     "cpp/include/dlt698/session/traffic.hpp": "6fb82fa1406f9fdb360d8745f5578bdc0a9264b498a340a93104fe43df2e6d39",
     "cpp/include/dlt698/standard/capabilities.hpp": "7e3e38b9f4b85824a7537e4a19a73c83af62323a03cd6286de72c809059dd40c",
     "cpp/include/dlt698/standard/catalog.hpp": "edbef8c116a90bf9bcbd6854ec0050d37b8cffffe1d8a730dd983e748925e286",

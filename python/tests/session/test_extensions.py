@@ -108,22 +108,53 @@ def test_probe_preserves_data_dar_validation_failure_duplicates_and_native_callb
         peers.close()
 
 
-def test_clock_exception_closes_native_session_without_late_python_callbacks():
+@pytest.mark.parametrize("failure_stage", ["start", "request"])
+def test_clock_exception_closes_native_session_without_late_python_callbacks(failure_stage):
     calls = []
+    fail_clock = failure_stage == "start"
 
     def failing_clock():
         calls.append(threading.get_ident())
-        raise ValueError("clock failed")
+        if fail_clock:
+            raise ValueError("clock failed")
+        return n.DateTime(value=[7, 234, 10, 18, 7, 0, 0, 0, 0, 0])
 
-    peers = Peers(client_options=n.SessionOptions(calendar_clock=failing_clock))
+    peers = Peers(
+        client_options=n.SessionOptions(
+            calendar_clock=failing_clock,
+            request_time_tag=n.Ti(unit=0, interval=60) if failure_stage == "request" else None,
+        )
+    )
     try:
+        if failure_stage == "request":
+            # 预设关联启动也会读取日历；等启动完成后再让请求时间标签触发异常。
+            deadline = time.monotonic() + 3
+            while not calls:
+                assert time.monotonic() < deadline, "session clock was not initialized"
+                peers.client.poll()
+            assert peers.client.session_at().state == n.SessionState.associated
+            assert calls == [threading.get_ident()]
+            calls.clear()
+            fail_clock = True
+
         token = peers.client.release()
-        events = peers.client.poll()
-        assert any(event.token == token and event.error for event in events)
+        completions = []
+        deadline = time.monotonic() + 3
+        # poll() 仅推进给定时间预算，不保证单次调用就执行到 RELEASE 完成回调。
+        while not completions:
+            assert time.monotonic() < deadline, "RELEASE did not complete after clock failure"
+            completions.extend(event for event in peers.client.poll() if event.token == token)
+        assert len(completions) == 1
+        assert completions[0].error is not None
+        assert completions[0].error.code == (
+            d.ErrorCode.closed if failure_stage == "start" else d.ErrorCode.invalid_value
+        )
         assert peers.client.session_at().state == n.SessionState.closed
         assert calls == [threading.get_ident()]
     finally:
         peers.close()
+    # close() 排空原生回调后仍只能调用一次失败时钟，不能在清理阶段重入 Python。
+    assert calls == [threading.get_ident()]
 
 
 def test_managed_thread_interfaces_reject_python_protocol_and_serial_hooks():
