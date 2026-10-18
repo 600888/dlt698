@@ -231,12 +231,17 @@ struct Session::Impl : std::enable_shared_from_this<Impl> {
         pending.reset();
         collecting.reset();
         item.timer->cancel();
-        // 成功或被释放打断的序号均进入隔离期，避免序号循环后立即命中重复响应。
+        // 普通事务已收到完整且匹配的响应，可以按 6 位序号轮转复用；
+        // 不能冻结所有成功事务，否则同一连接连续 64 次请求就会停顿。
+        // 异常结束以及允许重发的 REPORT 仍保留隔离期，防止迟到响应/确认串单。
         const auto now = executor->now();
         const auto remaining =
             std::chrono::duration_cast<std::chrono::milliseconds>(Clock::time_point::max() - now);
-        reusable[item.id] = options.id_reuse_delay < remaining ? now + options.id_reuse_delay
-                                                               : Clock::time_point::max();
+        if (result && !std::holds_alternative<apdu::ReportNotification>(item.request))
+            reusable[item.id] = now;
+        else
+            reusable[item.id] = options.id_reuse_delay < remaining ? now + options.id_reuse_delay
+                                                                   : Clock::time_point::max();
         if (result) {
             // 前续块的跟随数据在完整事务描述符匹配后交付，不能将中途错配的块作为事件。
             if (negotiated(18))

@@ -31,7 +31,7 @@ struct SessionOptions {
     bool protect_application = true;  ///< 有后端时，关联后的业务必须使用 SECURITY，拒绝明文降级。
     std::chrono::milliseconds request_timeout{5000};
     std::chrono::milliseconds id_reuse_delay{
-        120000};                      ///< 成功事务的序号隔离期，须覆盖对端最大响应寿命。
+        120000};                      ///< 异常事务和 REPORT 的序号隔离期，须覆盖对端最大响应寿命。
     bool require_login = false;       ///< 远程场景可要求先由协议服务器发起 LINK 登录。
     bool preset_association = false;  ///< 显式启用本地通道的预设连接，使用本地能力和限制。
     bool clock_trusted = false;

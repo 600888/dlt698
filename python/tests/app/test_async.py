@@ -169,3 +169,25 @@ async def test_disconnect_finishes_old_probe_before_reused_tokens_can_affect_rec
             result = (await asyncio.gather(task, return_exceptions=True))[0]
         assert isinstance(result, (list, d.Dlt698Error))
         assert (await client.get(d.Oad(oi=0xFFFF, attribute=2))).dar == 4
+
+
+@pytest.mark.parametrize(
+    "profile", [d.ConnectionProfile.remote_public, d.ConnectionProfile.local_preset]
+)
+@pytest.mark.asyncio
+async def test_consecutive_large_reads_reuse_piid_on_same_connection(profile):
+    """每轮超过 PIID 空间；同一 TCP 连接必须连续读到最新值。"""
+    attribute = d.Oad(oi=0x200F, attribute=2)
+    with d.Server() as server:
+        server.set(attribute, d.Data.uint16(5000))
+        server.start_tcp("127.0.0.1", 0, profile)
+        async with d.AsyncClient() as client:
+            await client.connect_tcp("127.0.0.1", server.local_port, profile)
+            engine = client._engine
+            for round_number in range(5):
+                value = 5000 + round_number
+                server.set(attribute, d.Data.uint16(value))
+                points = await asyncio.wait_for(client.probe_points([attribute] * 1000), timeout=5)
+                assert len(points) == 1000
+                assert all(point.outcome.as_uint16() == value for point in points)
+                assert client._engine is engine

@@ -86,12 +86,13 @@ Session 绑定已连接的 IChannel、串行 IExecutor 和 SessionOptions。协�
 | 第二个在途请求 | 返回 busy，不进入请求队列 |
 | 错地址、方向、服务、PIID 或 OAD/重复响应 | 进入诊断回调，不抢占正确事务 |
 | 请求超时或 `cancel()` | 结束事务并关闭物理通道，隔离迟到响应 |
-| 成功完成或被释放打断 | PIID 进入 id_reuse_delay 隔离期；64 个序号暂时不可用时返回 resource_limit |
+| 普通事务成功完成 | 收齐响应并核对完整事务描述符后，PIID 回到 0～63 的轮转分配；同一连接可连续读取任意多轮 |
+| 异常结束、被释放打断或 REPORT 完成 | PIID 进入 id_reuse_delay 隔离期；64 个序号暂时不可用时返回 resource_limit |
 | `async_release()` | 先取消在途事务，再释放应用连接；成功后物理通道可再次 CONNECT |
 | 协商空闲时限到期 | 退出应用连接；服务器发送 RELEASE-Notification |
 | `close()`/析构 | 关闭通道及计时器，未完成请求以 closed 完成；仍须驱动执行器交付回调 |
 
-默认 request_timeout 为 5 秒、id_reuse_delay 为 120 秒，后者须由应用配置为覆盖对端最大响应寿命且不短于请求超时；线上没有 generation 字段。state() 读取原子发布状态，刚投递的操作尚未立即生效。公共请求与完成回调都在会话执行器内处理，用户回调异常被隔离；服务器同步 GET 处理器和 provider 不得阻塞等待同一执行器。calendar_clock 默认空时使用 UTC；注入函数抛异常会以 invalid_value 关闭会话，不发送伪造时间。
+默认 request_timeout 为 5 秒、id_reuse_delay 为 120 秒，后者用于异常事务及可重发的 REPORT，须覆盖对端最大响应寿命且不短于请求超时；线上没有 generation 字段。普通事务成功后的序号循环使用不消耗隔离预算，6 位 PIID 不限制累计请求数或测点总数，也不要求轮次之间重建 TCP。state() 读取原子发布状态，刚投递的操作尚未立即生效。公共请求与完成回调都在会话执行器内处理，用户回调异常被隔离；服务器同步 GET 处理器和 provider 不得阻塞等待同一执行器。calendar_clock 默认空时使用 UTC；注入函数抛异常会以 invalid_value 关闭会话，不发送伪造时间。
 
 SessionOptions.request_time_tag 可为客户机请求自动添加时间标签；服务器验证具体日历与允许延时，过期请求不调用 provider，响应原样回传，客户机严格匹配回显。Release 通知的标签也执行有效性检查。Session 对象需要由应用持有；排队任务不会永久保活它。正常退出时保留执行器并继续驱动直到挂起回调完成，然后结束运行线程及运行时。
 

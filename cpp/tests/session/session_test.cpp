@@ -661,7 +661,38 @@ TEST_CASE("取消与超时都会关闭物理通道", "[session][timeout][cancel]
     }
 }
 
-TEST_CASE("序号隔离避免重用可能被迟到响应匹配的标识", "[session][timeout]") {
+TEST_CASE("成功事务在同一连接连续多轮复用六位序号", "[session][piid]") {
+    Peers peers;
+    unsigned value = 0;
+    peers.server->set_request_handler([&](const apdu::GetRequest& request) {
+        apdu::GetResponse response;
+        for (const auto& attribute : request.attributes)
+            response.attributes.push_back(
+                {attribute, model::Data{model::UInt16{static_cast<std::uint16_t>(++value)}}});
+        return response;
+    });
+    peers.executor->run_ready();
+    // 不推进虚拟时钟；每轮超过完整 PIID 空间，成功响应必须继续交给当前请求。
+    for (unsigned round = 0; round < 3; ++round) {
+        for (unsigned i = 0; i < 1000; ++i) {
+            std::optional<Result<apdu::GetResponse>> response;
+            peers.client->async_get({{0x2000, 2, 0}}, false,
+                                    [&](auto result) { response = std::move(result); });
+            peers.executor->run_ready();
+            REQUIRE(response);
+            REQUIRE(static_cast<bool>(*response));
+            REQUIRE(std::get<model::UInt16>(
+                        std::get<model::Data>(response->value().attributes[0].result).payload)
+                        .value == round * 1000 + i + 1);
+        }
+        check_state(*peers.client, State::associated);
+    }
+    peers.client->close();
+    peers.server->close();
+    peers.executor->run_ready();
+}
+
+TEST_CASE("异常事务的序号隔离避免迟到响应串单", "[session][timeout]") {
     // 使用较长的隔离期，让已用序号在虚拟时间推进前保持不可用。
     auto executor = std::make_shared<ManualExecutor>();
     auto channels = transport::MemoryChannel::pair(executor);
@@ -678,32 +709,31 @@ TEST_CASE("序号隔离避免重用可能被迟到响应匹配的标识", "[sess
     client->start();
     server->start();
     executor->run_ready();
-    server->set_request_handler([](const apdu::GetRequest& request) {
-        apdu::GetResponse response;
-        for (const auto& attribute : request.attributes)
-            response.attributes.push_back({attribute, model::Data{model::UInt16{1}}});
-        return response;
+    server->set_request_handler([](const apdu::GetRequest&) -> apdu::GetResponse {
+        throw std::runtime_error("remote failure");
     });
     executor->run_ready();
 
     // PIID 只有六位，用满 64 个后必须等到隔离期结束才能继续。
-    unsigned succeeded = 0, quarantined = 0;
+    unsigned failed = 0, quarantined = 0;
     for (int i = 0; i < 66; ++i) {
         std::optional<Result<apdu::GetResponse>> response;
         client->async_get({{0x2000, 2, 0}}, false,
                           [&](auto result) { response = std::move(result); });
         executor->run_ready();
         REQUIRE(response);
-        if (!*response) {
+        REQUIRE_FALSE(static_cast<bool>(*response));
+        if (response->error().code == ErrorCode::resource_limit) {
             // 序号耗尽时明确返回资源限制，而不是复用仍在隔离期的标识。
             test::require_error(*response, ErrorCode::resource_limit);
             CHECK(response->error().context == "PIID quarantine");
             ++quarantined;
         } else {
-            ++succeeded;
+            test::require_error(*response, ErrorCode::remote_error);
+            ++failed;
         }
     }
-    CHECK(succeeded == 64);
+    CHECK(failed == 64);
     CHECK(quarantined == 2);
 
     SECTION("隔离期结束后序号重新可用") {
@@ -713,7 +743,7 @@ TEST_CASE("序号隔离避免重用可能被迟到响应匹配的标识", "[sess
                           [&](auto result) { response = std::move(result); });
         executor->run_ready();
         REQUIRE(response);
-        REQUIRE(static_cast<bool>(*response));
+        test::require_error(*response, ErrorCode::remote_error);
     }
 
     SECTION("隔离期短于请求超时的配置被拒绝") {
